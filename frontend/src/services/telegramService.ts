@@ -1,4 +1,4 @@
-import { WebApp } from '@tma.js/sdk';
+import { initMiniApp } from '@tma.js/sdk';
 import { useAppStore } from '../store/useAppStore';
 import type { TelegramUser } from '../store/useAppStore';
 
@@ -12,7 +12,7 @@ class TelegramService {
 
   private async initialize() {
     try {
-      this.webApp = new WebApp();
+      this.webApp = initMiniApp();
       await this.webApp.ready();
       
       // Get user data from initDataUnsafe
