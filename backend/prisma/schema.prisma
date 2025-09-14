@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  telegramId Int     @unique
+  username  String?
+  firstName String
+  lastName  String?
+  rating    Int      @default(1200)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  whiteGames Game[] @relation("WhitePlayer")
+  blackGames Game[] @relation("BlackPlayer")
+  moves      Move[]
+
+  @@map("users")
+}
+
+model Game {
+  id           String   @id @default(cuid())
+  whitePlayerId String
+  blackPlayerId String?
+  status       GameStatus @default(WAITING)
+  winner       Winner?
+  fen          String   @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  moveNumber   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  whitePlayer User  @relation("WhitePlayer", fields: [whitePlayerId], references: [id])
+  blackPlayer User? @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
+  moves       Move[]
+
+  @@map("games")
+}
+
+model Move {
+  id          String   @id @default(cuid())
+  gameId      String
+  userId      String
+  moveNumber  Int
+  uci         String
+  from        String
+  to          String
+  piece       String
+  captured    String?
+  promotion   String?
+  san         String
+  fen         String
+  timestamp   DateTime @default(now())
+
+  // Relations
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("moves")
+}
+
+enum GameStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+}
+
+enum Winner {
+  WHITE
+  BLACK
+  DRAW
+}
