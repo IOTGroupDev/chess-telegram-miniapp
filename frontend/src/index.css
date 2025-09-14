@@ -2,34 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Telegram Mini App specific styles */
-:root {
-  --tg-theme-bg-color: #ffffff;
-  --tg-theme-text-color: #000000;
-  --tg-theme-hint-color: #999999;
-  --tg-theme-link-color: #2481cc;
-  --tg-theme-button-color: #2481cc;
-  --tg-theme-button-text-color: #ffffff;
-  --tg-theme-secondary-bg-color: #f1f1f1;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--tg-theme-bg-color);
-  color: var(--tg-theme-text-color);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #ffffff;
   overflow-x: hidden;
 }
 
-/* Chess board specific styles */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Game board styles */
 .chess-board {
-  width: 100%;
-  max-width: 400px;
-  aspect-ratio: 1;
+  background: linear-gradient(45deg, #f0d9b5, #b58863);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+  border: 4px solid #8b4513;
+  overflow: hidden;
 }
 
 .chess-square {
@@ -37,6 +66,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.chess-square:hover {
+  transform: scale(1.05);
+  z-index: 10;
 }
 
 .chess-square.light {
@@ -47,21 +83,212 @@ body {
   background-color: #b58863;
 }
 
-.chess-square.highlight {
-  background-color: #ffff00 !important;
-  opacity: 0.8;
-}
-
 .chess-square.selected {
-  background-color: #4ade80 !important;
-  opacity: 0.8;
+  background: linear-gradient(45deg, #4ade80, #22c55e) !important;
+  box-shadow: inset 0 0 0 3px #16a34a;
+  transform: scale(1.1);
+  z-index: 20;
 }
 
+.chess-square.possible-move {
+  background: rgba(34, 197, 94, 0.3) !important;
+  position: relative;
+}
+
+.chess-square.possible-move::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(34, 197, 94, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+}
+
+.chess-square.capture-move {
+  background: rgba(239, 68, 68, 0.3) !important;
+}
+
+.chess-square.capture-move::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: rgba(239, 68, 68, 0.8);
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+}
+
+/* Piece styles */
 .chess-piece {
-  width: 100%;
-  height: 100%;
+  font-size: 2.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
   cursor: pointer;
-  user-select: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.chess-piece:hover {
+  transform: scale(1.15);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.chess-piece.dragging {
+  transform: scale(1.2);
+  z-index: 100;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+}
+
+.btn-secondary {
+  @apply bg-white/20 text-white font-semibold py-4 px-8 rounded-2xl shadow-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-300 backdrop-blur-sm border border-white/30;
+}
+
+.btn-danger {
+  @apply bg-gradient-to-r from-red-500 to-pink-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+}
+
+.btn-success {
+  @apply bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+}
+
+.btn-warning {
+  @apply bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+}
+
+/* Card styles */
+.game-card {
+  @apply glass rounded-3xl p-8 shadow-2xl border border-white/20;
+}
+
+.menu-card {
+  @apply glass rounded-2xl p-6 shadow-xl border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer group;
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Input styles */
+.input-field {
+  @apply bg-white/20 text-white placeholder-white/70 border border-white/30 rounded-xl px-4 py-3 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300;
+}
+
+/* Modal styles */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+}
+
+.modal-content {
+  @apply glass rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/20;
+}
+
+/* Game info styles */
+.game-info {
+  @apply glass rounded-2xl p-6 shadow-xl border border-white/20;
+}
+
+.player-info {
+  @apply flex items-center space-x-3 p-4 rounded-xl bg-white/10 backdrop-blur-sm;
+}
+
+.player-avatar {
+  @apply w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg;
+}
+
+/* Animation keyframes */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40%, 43% {
+    transform: translateY(-10px);
+  }
+  70% {
+    transform: translateY(-5px);
+  }
+  90% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.5s ease-out;
+}
+
+.animate-slide-in-down {
+  animation: slideInDown 0.5s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.animate-glow {
+  animation: glow 2s infinite;
 }
 
 /* Mobile optimizations */
@@ -69,27 +296,81 @@ body {
   .chess-board {
     max-width: calc(100vw - 2rem);
   }
+  
+  .chess-piece {
+    font-size: 2rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-success,
+  .btn-warning {
+    @apply py-3 px-6 text-sm;
+  }
+  
+  .game-card {
+    @apply p-6;
+  }
+  
+  .menu-card {
+    @apply p-4;
+  }
 }
 
-/* Smooth transitions */
-* {
-  transition: all 0.2s ease-in-out;
+/* Loading spinner */
+.spinner {
+  @apply inline-block w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
+/* Status indicators */
+.status-online {
+  @apply w-3 h-3 bg-green-500 rounded-full animate-pulse;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--tg-theme-secondary-bg-color);
+.status-offline {
+  @apply w-3 h-3 bg-gray-500 rounded-full;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--tg-theme-hint-color);
-  border-radius: 2px;
+.status-playing {
+  @apply w-3 h-3 bg-blue-500 rounded-full animate-pulse;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--tg-theme-text-color);
+/* Game over overlay */
+.game-over-overlay {
+  @apply fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+}
+
+.game-over-content {
+  @apply glass rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/20 text-center;
+}
+
+/* Chat styles */
+.chat-container {
+  @apply glass rounded-2xl p-4 shadow-xl border border-white/20 max-h-64 overflow-y-auto;
+}
+
+.chat-message {
+  @apply mb-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm;
+}
+
+.chat-input {
+  @apply input-field flex-1 mr-2;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .chess-board {
+    border-radius: 12px;
+  }
+  
+  .chess-square.possible-move::after {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .chess-square.capture-move::after {
+    width: 24px;
+    height: 24px;
+  }
 }

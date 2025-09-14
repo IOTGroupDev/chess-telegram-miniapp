@@ -76,73 +76,99 @@ export const MainMenu: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-telegram-bg">
-      {/* Header */}
-      <div className="text-center py-8 px-4">
-        <h1 className="text-4xl font-bold text-telegram-text mb-2">
-          ♔ Шахматы
-        </h1>
-        <p className="text-telegram-hint text-lg">
-          Добро пожаловать{user ? `, ${user.first_name}` : ''}!
-        </p>
-      </div>
-
-      {/* Menu Buttons */}
-      <div className="px-4 space-y-4 max-w-md mx-auto">
-        <Button
-          onClick={handlePlayOnline}
-          size="lg"
-          className="w-full py-4 text-lg"
-          disabled={isCreatingGame}
-        >
-          {isCreatingGame ? '⏳ Поиск игры...' : '👥 Играть с человеком'}
-        </Button>
-
-        <Button
-          onClick={handleCreateInviteLink}
-          size="lg"
-          variant="secondary"
-          className="w-full py-4 text-lg"
-        >
-          🔗 Создать приглашение
-        </Button>
-
-        <Button
-          onClick={handlePlayAI}
-          size="lg"
-          variant="secondary"
-          className="w-full py-4 text-lg"
-        >
-          🤖 Играть с ИИ
-        </Button>
-
-        <Button
-          onClick={handleViewHistory}
-          size="lg"
-          variant="secondary"
-          className="w-full py-4 text-lg"
-        >
-          📚 История игр
-        </Button>
-      </div>
-
-      {/* User Info */}
-      {user && (
-        <div className="mt-8 px-4">
-          <div className="bg-telegram-secondary-bg rounded-lg p-4 text-center">
-            <p className="text-sm text-telegram-hint">
-              Игрок: {user.first_name} {user.last_name || ''}
-              {user.username && ` (@${user.username})`}
-            </p>
+    <div className="min-h-screen p-4">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12 animate-slide-in-down">
+          <div className="inline-block p-6 rounded-3xl glass mb-6">
+            <h1 className="text-6xl font-black text-white mb-2 drop-shadow-2xl">♔</h1>
+            <h2 className="text-3xl font-bold text-white mb-2">Chess Master</h2>
+            <p className="text-white/80 text-lg">Challenge your mind, master the game</p>
           </div>
         </div>
-      )}
 
-      {/* Footer */}
-      <div className="mt-12 text-center px-4">
-        <p className="text-sm text-telegram-hint">
-          Выберите режим игры
-        </p>
+        {/* User Welcome */}
+        {user && (
+          <div className="game-card mb-8 animate-fade-in">
+            <div className="flex items-center space-x-4">
+              <div className="player-avatar">
+                {user.first_name?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-lg">Welcome back!</h3>
+                <p className="text-white/70">{user.first_name} {user.last_name}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Game Options */}
+        <div className="space-y-6 animate-slide-in-up">
+          <div className="menu-card" onClick={handlePlayOnline}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🎮</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Play Online</h3>
+                <p className="text-white/70">Challenge players worldwide</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
+          <div className="menu-card" onClick={handlePlayAI}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🤖</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Play vs AI</h3>
+                <p className="text-white/70">Test your skills against Stockfish</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
+          <div className="menu-card" onClick={handleCreateInviteLink}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🔗</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Create Invite</h3>
+                <p className="text-white/70">Share game with friends</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
+          <div className="menu-card" onClick={handleViewHistory}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">📚</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Game History</h3>
+                <p className="text-white/70">Review your past games</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
+          <div className="menu-card" onClick={handleViewProfile}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">👤</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Profile</h3>
+                <p className="text-white/70">View your statistics</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Loading Overlay */}
+        {isCreatingGame && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="glass rounded-3xl p-8 text-center">
+              <div className="spinner w-12 h-12 mx-auto mb-4"></div>
+              <p className="text-white text-lg">Searching for game...</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
