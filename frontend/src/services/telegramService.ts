@@ -1,10 +1,25 @@
-import { initMiniApp } from '@tma.js/sdk';
+/**
+ * Telegram Mini Apps Service
+ * Official integration with Telegram WebApp API
+ * Documentation: https://core.telegram.org/bots/webapps
+ */
+
 import { useAppStore } from '../store/useAppStore';
 import type { TelegramUser } from '../store/useAppStore';
+
+// Extend Window interface for Telegram WebApp
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: any;
+    };
+  }
+}
 
 class TelegramService {
   private webApp: any = null;
   private store = useAppStore.getState();
+  private isReady = false;
 
   constructor() {
     this.initialize();
@@ -12,12 +27,32 @@ class TelegramService {
 
   private async initialize() {
     try {
-      this.webApp = initMiniApp();
-      await this.webApp.ready();
-      
+      // Check if Telegram WebApp is available
+      if (!window.Telegram?.WebApp) {
+        console.warn('Telegram WebApp not available (running outside Telegram)');
+        this.setupMockEnvironment();
+        return;
+      }
+
+      this.webApp = window.Telegram.WebApp;
+
+      // IMPORTANT: Expand to full height
+      this.webApp.expand();
+
+      // Set header color to match theme
+      this.webApp.setHeaderColor('secondary_bg_color');
+
+      // Enable closing confirmation
+      this.webApp.enableClosingConfirmation();
+
+      // Signal that Mini App is ready
+      this.webApp.ready();
+
+      this.isReady = true;
+
       // Get user data from initDataUnsafe
       const userData = this.webApp.initDataUnsafe?.user;
-      
+
       if (userData) {
         const user: TelegramUser = {
           id: userData.id,
@@ -28,19 +63,75 @@ class TelegramService {
           is_premium: userData.is_premium,
           photo_url: userData.photo_url,
         };
-        
+
         this.store.setUser(user);
         this.store.setAuthorized(true);
-        
-        console.log('Telegram user authorized:', user);
+
+        console.log('✅ Telegram Mini App initialized:', {
+          version: this.webApp.version,
+          platform: this.webApp.platform,
+          colorScheme: this.webApp.colorScheme,
+          user: user.first_name,
+        });
       } else {
-        console.log('No user data available');
+        console.log('⚠️ No user data available from Telegram');
         this.store.setAuthorized(false);
       }
+
+      // Apply Telegram theme colors
+      this.applyTelegramTheme();
+
+      // Listen to theme changes
+      this.webApp.onEvent('themeChanged', () => {
+        this.applyTelegramTheme();
+      });
+
     } catch (error) {
-      console.error('Failed to initialize Telegram WebApp:', error);
+      console.error('❌ Failed to initialize Telegram WebApp:', error);
       this.store.setError('Failed to initialize Telegram WebApp');
+      this.setupMockEnvironment();
     }
+  }
+
+  /**
+   * Apply Telegram theme colors to CSS variables
+   */
+  private applyTelegramTheme(): void {
+    if (!this.webApp) return;
+
+    const theme = this.webApp.themeParams;
+    const root = document.documentElement;
+
+    // Apply theme colors as CSS variables
+    if (theme.bg_color) root.style.setProperty('--tg-theme-bg-color', theme.bg_color);
+    if (theme.text_color) root.style.setProperty('--tg-theme-text-color', theme.text_color);
+    if (theme.hint_color) root.style.setProperty('--tg-theme-hint-color', theme.hint_color);
+    if (theme.link_color) root.style.setProperty('--tg-theme-link-color', theme.link_color);
+    if (theme.button_color) root.style.setProperty('--tg-theme-button-color', theme.button_color);
+    if (theme.button_text_color) root.style.setProperty('--tg-theme-button-text-color', theme.button_text_color);
+    if (theme.secondary_bg_color) root.style.setProperty('--tg-theme-secondary-bg-color', theme.secondary_bg_color);
+
+    console.log('🎨 Telegram theme applied:', this.webApp.colorScheme);
+  }
+
+  /**
+   * Setup mock environment for development/testing
+   */
+  private setupMockEnvironment(): void {
+    console.log('🔧 Running in mock mode (outside Telegram)');
+
+    const mockUser: TelegramUser = {
+      id: 12345678,
+      first_name: 'Test',
+      last_name: 'User',
+      username: 'testuser',
+      language_code: 'ru',
+      is_premium: false,
+    };
+
+    this.store.setUser(mockUser);
+    this.store.setAuthorized(true);
+    this.isReady = true;
   }
 
   // Getters
@@ -85,17 +176,39 @@ class TelegramService {
     this.webApp?.showPopup(params, callback);
   }
 
-  // Haptic feedback
+  /**
+   * Haptic Feedback - vibration for user interactions
+   * Makes the app feel more native
+   */
+  public hapticFeedback(type: 'impact' | 'notification' | 'selection', style?: string): void {
+    if (!this.webApp?.HapticFeedback) return;
+
+    switch (type) {
+      case 'impact':
+        // style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'
+        this.webApp.HapticFeedback.impactOccurred(style || 'medium');
+        break;
+      case 'notification':
+        // style: 'error' | 'success' | 'warning'
+        this.webApp.HapticFeedback.notificationOccurred(style || 'success');
+        break;
+      case 'selection':
+        this.webApp.HapticFeedback.selectionChanged();
+        break;
+    }
+  }
+
+  // Convenience methods for haptic feedback
   public impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'medium'): void {
-    this.webApp?.HapticFeedback?.impactOccurred(style);
+    this.hapticFeedback('impact', style);
   }
 
   public notificationOccurred(type: 'error' | 'success' | 'warning' = 'success'): void {
-    this.webApp?.HapticFeedback?.notificationOccurred(type);
+    this.hapticFeedback('notification', type);
   }
 
   public selectionChanged(): void {
-    this.webApp?.HapticFeedback?.selectionChanged();
+    this.hapticFeedback('selection');
   }
 
   // Theme

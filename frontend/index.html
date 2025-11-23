@@ -1,10 +1,25 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <link rel="icon" type="image/svg+xml" href="/chess-icon.svg" />
+
+    <!-- Telegram Mini Apps viewport settings -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- Telegram Web App SDK - MUST be loaded before app -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <title>Chess Master - Telegram Mini App</title>
+
+    <!-- Preconnect to backend API -->
+    <link rel="preconnect" href="https://api.yourdomain.com" />
+
+    <!-- PWA meta tags for better mobile experience -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#000000" />
   </head>
   <body>
     <div id="root"></div>
