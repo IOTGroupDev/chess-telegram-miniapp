@@ -16,6 +16,7 @@ import { EngineModule } from './engine/engine.module';
 import { RatingModule } from './rating/rating.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { TournamentModule } from './tournament/tournament.module';
+import { PuzzleModule } from './puzzle/puzzle.module';
 
 @Module({
   imports: [
@@ -36,6 +37,9 @@ import { TournamentModule } from './tournament/tournament.module';
 
     // Tournament management system
     TournamentModule,
+
+    // Tactical puzzle system
+    PuzzleModule,
   ],
 })
 export class AppModule {}

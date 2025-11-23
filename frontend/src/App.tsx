@@ -8,6 +8,8 @@ import { HistoryPage } from './pages/HistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import TournamentsPage from './pages/TournamentsPage';
 import TournamentDetailsPage from './pages/TournamentDetailsPage';
+import PuzzlePage from './pages/PuzzlePage';
+import PuzzleStatsPage from './pages/PuzzleStatsPage';
 import { telegramService } from './services/telegramService';
 
 function App() {
@@ -59,6 +61,8 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/tournaments" element={<TournamentsPage />} />
           <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
+          <Route path="/puzzles" element={<PuzzlePage />} />
+          <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
         </Routes>
       </div>
     </Router>
