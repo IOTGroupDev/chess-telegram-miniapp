@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
-import { telegramService } from '../services/telegramService';
 
 export const StartPage: React.FC = () => {
   const navigate = useNavigate();

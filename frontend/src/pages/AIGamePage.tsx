@@ -8,7 +8,6 @@ import { Navigation } from '../components/Navigation';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { telegramService } from '../services/telegramService';
-import { useAppStore } from '../store/useAppStore';
 
 export const AIGamePage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +16,6 @@ export const AIGamePage: React.FC = () => {
   
   const chess = useChess();
   const stockfish = useStockfish();
-  const { user } = useAppStore();
 
   const initializeGame = useCallback(async () => {
     try {
@@ -26,14 +24,14 @@ export const AIGamePage: React.FC = () => {
       
       // Initialize AI game
       chess.resetGame();
-      telegram.hapticFeedback('success');
+      telegramService.notificationOccurred('success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize game');
-      telegram.showAlert('Ошибка инициализации игры');
+      telegramService.showAlert('Ошибка инициализации игры');
     } finally {
       setIsLoading(false);
     }
-  }, [chess, telegram]);
+  }, [chess]);
 
   const handleSquareClick = useCallback((square: Square) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
@@ -41,8 +39,8 @@ export const AIGamePage: React.FC = () => {
     }
 
     chess.selectSquare(square);
-    telegram.hapticFeedback('selection');
-  }, [chess, telegram, stockfish.isThinking]);
+    telegramService.hapticFeedback('selection');
+  }, [chess, stockfish.isThinking]);
 
   const handlePieceDrop = useCallback((sourceSquare: Square, targetSquare: Square) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
@@ -50,10 +48,10 @@ export const AIGamePage: React.FC = () => {
     }
 
     const success = chess.makeMove(sourceSquare, targetSquare);
-    
+
     if (success) {
-      telegram.hapticFeedback('success');
-      
+      telegramService.notificationOccurred('success');
+
       // Get AI move after player move
       if (!chess.gameState.isGameOver) {
         setTimeout(async () => {
@@ -63,46 +61,44 @@ export const AIGamePage: React.FC = () => {
               const from = aiMove.slice(0, 2) as Square;
               const to = aiMove.slice(2, 4) as Square;
               chess.makeMove(from, to);
-              telegram.hapticFeedback('success');
+              telegramService.notificationOccurred('success');
             }
           } catch (err) {
             console.error('AI move failed:', err);
-            telegram.hapticFeedback('error');
+            telegramService.notificationOccurred('error');
           }
         }, 500);
       }
     } else {
-      telegram.hapticFeedback('error');
+      telegramService.notificationOccurred('error');
     }
 
     return success;
-  }, [chess, stockfish, telegram]);
+  }, [chess, stockfish]);
 
   const handleNewGame = useCallback(() => {
     chess.resetGame();
-    telegram.hapticFeedback('success');
-  }, [chess, telegram]);
+    telegramService.notificationOccurred('success');
+  }, [chess]);
 
-  const handleSurrender = useCallback(() => {
-    telegram.showConfirm('Вы уверены, что хотите сдаться?').then((confirmed) => {
+  const handleSurrender = useCallback(async () => {
+    const confirmed = await telegramService.showConfirm('Вы уверены, что хотите сдаться?');
+    if (confirmed) {
+      chess.resetGame();
+      navigate('/');
+    }
+  }, [chess, navigate]);
+
+  const handleBack = useCallback(async () => {
+    if (chess.gameState.selectedSquare || chess.history().length > 0) {
+      const confirmed = await telegramService.showConfirm('Вы уверены, что хотите покинуть игру?');
       if (confirmed) {
-        chess.resetGame();
         navigate('/');
       }
-    });
-  }, [chess, telegram, navigate]);
-
-  const handleBack = useCallback(() => {
-    if (chess.gameState.selectedSquare || chess.history().length > 0) {
-      telegram.showConfirm('Вы уверены, что хотите покинуть игру?').then((confirmed) => {
-        if (confirmed) {
-          navigate('/');
-        }
-      });
     } else {
       navigate('/');
     }
-  }, [chess, telegram, navigate]);
+  }, [chess, navigate]);
 
   useEffect(() => {
     initializeGame();

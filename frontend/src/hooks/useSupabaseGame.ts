@@ -5,14 +5,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Chess } from 'chess.js';
-import { RealtimeChannel } from '@supabase/supabase-js';
-import supabase from '../lib/supabase';
+import supabase from '../lib/supabaseClient';
 import type {
   Game,
   Move,
   GameWithPlayers,
   ClockTickPayload,
-  User,
 } from '../types/supabase';
 
 interface GameState {
@@ -40,7 +38,6 @@ export function useSupabaseGame(
   const [chess, setChess] = useState<Chess | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   // Fetch game data
   const fetchGame = useCallback(async () => {
@@ -76,7 +73,7 @@ export function useSupabaseGame(
       setMoves(movesData || []);
 
       // Initialize chess.js with current FEN
-      const chessInstance = new Chess(gameData.fen);
+      const chessInstance = new Chess((gameData as any).fen);
       setChess(chessInstance);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load game');
@@ -153,8 +150,6 @@ export function useSupabaseGame(
       })
       .subscribe();
 
-    setChannel(gameChannel);
-
     // Cleanup
     return () => {
       gameChannel.unsubscribe();
@@ -183,7 +178,7 @@ export function useSupabaseGame(
         }
 
         // Insert move into database
-        const { data: newMove, error: moveError } = await supabase
+        const { error: moveError } = await supabase
           .from('moves')
           .insert({
             game_id: gameId,
@@ -196,7 +191,7 @@ export function useSupabaseGame(
             clock_time: game.white_player_id === userId
               ? game.white_time_remaining
               : game.black_time_remaining,
-          })
+          } as any)
           .select()
           .single();
 
@@ -238,7 +233,7 @@ export function useSupabaseGame(
             winner: winner as any,
             end_reason: endReason as any,
             finished_at: isGameOver ? new Date().toISOString() : null,
-          })
+          } as any)
           .eq('id', gameId);
 
         if (updateError) throw updateError;
@@ -267,7 +262,7 @@ export function useSupabaseGame(
           winner: winner as any,
           end_reason: 'resignation',
           finished_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', gameId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resign');
@@ -287,7 +282,7 @@ export function useSupabaseGame(
         .update({
           white_offered_draw: isWhite ? true : game.white_offered_draw,
           black_offered_draw: !isWhite ? true : game.black_offered_draw,
-        })
+        } as any)
         .eq('id', gameId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to offer draw');
@@ -307,7 +302,7 @@ export function useSupabaseGame(
           winner: 'draw',
           end_reason: 'draw_agreement',
           finished_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', gameId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to accept draw');

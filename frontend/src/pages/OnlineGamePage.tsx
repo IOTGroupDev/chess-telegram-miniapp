@@ -23,7 +23,7 @@ export const OnlineGamePage: React.FC = () => {
     makeMove: makeSupabaseMove,
     resign: resignGame,
     offerDraw: offerDrawGame,
-  } = useSupabaseGame(gameId || '', user?.id || '');
+  } = useSupabaseGame(gameId || '', String(user?.id || ''));
 
   // Derived state
   const isWaiting = game?.status === 'waiting';
@@ -31,8 +31,8 @@ export const OnlineGamePage: React.FC = () => {
   const winner = game?.winner;
   const isMyTurn =
     game?.status === 'active' &&
-    ((game.move_number % 2 === 0 && game.white_player_id === user?.id) ||
-     (game.move_number % 2 === 1 && game.black_player_id === user?.id));
+    ((game.move_number % 2 === 0 && game.white_player_id === String(user?.id)) ||
+     (game.move_number % 2 === 1 && game.black_player_id === String(user?.id)));
 
   const handleSquareClick = async (square: string) => {
     if (!chess || !isMyTurn || gameStatus === 'finished') return;
@@ -135,10 +135,10 @@ export const OnlineGamePage: React.FC = () => {
                   selectedSquare: selectedSquare,
                   possibleMoves: [],
                   isGameOver: gameStatus === 'finished',
-                  winner: winner,
+                  winner: (winner || null) as 'white' | 'black' | 'draw' | null,
                   fen: chess?.fen() || 'start',
-                  moves: moves,
-                  status: gameStatus,
+                  moves: moves as any,
+                  status: (gameStatus === 'aborted' ? 'finished' : gameStatus) as 'waiting' | 'active' | 'finished',
                 }}
                 boardWidth={400}
               />
@@ -153,10 +153,10 @@ export const OnlineGamePage: React.FC = () => {
                   selectedSquare: selectedSquare,
                   possibleMoves: [],
                   isGameOver: gameStatus === 'finished',
-                  winner: winner,
+                  winner: (winner || null) as 'white' | 'black' | 'draw' | null,
                   fen: chess?.fen() || 'start',
-                  moves: moves,
-                  status: gameStatus,
+                  moves: moves as any,
+                  status: (gameStatus === 'aborted' ? 'finished' : gameStatus) as 'waiting' | 'active' | 'finished',
                 }}
                 isPlayerTurn={isMyTurn}
                 isThinking={false}

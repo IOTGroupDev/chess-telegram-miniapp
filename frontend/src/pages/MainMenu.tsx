@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
 import { telegramService } from '../services/telegramService';
-import supabase from '../lib/supabase';
+import supabase from '../lib/supabaseClient';
 
 export const MainMenu: React.FC = () => {
   const navigate = useNavigate();
@@ -35,7 +34,7 @@ export const MainMenu: React.FC = () => {
 
       if (waitingGames && waitingGames.length > 0) {
         // Join existing game
-        const gameId = waitingGames[0].id;
+        const gameId = (waitingGames[0] as any).id;
 
         const { error: updateError } = await supabase
           .from('games')
@@ -43,7 +42,7 @@ export const MainMenu: React.FC = () => {
             black_player_id: user.id,
             status: 'active',
             started_at: new Date().toISOString(),
-          })
+          } as any)
           .eq('id', gameId);
 
         if (updateError) throw updateError;
@@ -60,14 +59,14 @@ export const MainMenu: React.FC = () => {
             time_limit: 300, // 5 minutes
             time_increment: 3, // 3 seconds per move
             status: 'waiting',
-          })
+          } as any)
           .select()
           .single();
 
         if (createError) throw createError;
 
-        setCurrentGame(newGame.id, 'online');
-        navigate(`/online-game/${newGame.id}`);
+        setCurrentGame((newGame as any).id, 'online');
+        navigate(`/online-game/${(newGame as any).id}`);
       }
     } catch (error) {
       console.error('Failed to create online game:', error);

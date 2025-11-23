@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigation } from '../components/Navigation';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
-import supabase from '../lib/supabase';
+import supabase from '../lib/supabaseClient';
 import type { GameWithPlayers } from '../types/supabase';
 
 export const HistoryPage: React.FC = () => {
@@ -132,7 +132,7 @@ export const HistoryPage: React.FC = () => {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="text-sm text-telegram-hint">
-                      {formatDate(game.createdAt.toString())}
+                      {formatDate(game.created_at.toString())}
                     </p>
                     <p className="text-telegram-text font-medium">
                       Игра #{game.id.slice(-6)}
@@ -142,16 +142,16 @@ export const HistoryPage: React.FC = () => {
                     {getGameResult(game)}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center text-sm text-telegram-hint">
-                  <span>Ходов: {game.moves?.length || 0}</span>
+                  <span>Ходов: {game.move_number || 0}</span>
                   <span>Статус: {game.status}</span>
                 </div>
-                
-                {game.whitePlayer && game.blackPlayer && (
+
+                {game.white_player && game.black_player && (
                   <div className="mt-2 text-sm text-telegram-hint">
                     <span className="text-telegram-text">Игроки: </span>
-                    <span>{game.whitePlayer.username || 'Белые'} vs {game.blackPlayer.username || 'Черные'}</span>
+                    <span>{game.white_player.username || 'Белые'} vs {game.black_player.username || 'Черные'}</span>
                   </div>
                 )}
               </div>

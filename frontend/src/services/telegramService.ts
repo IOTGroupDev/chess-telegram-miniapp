@@ -19,7 +19,6 @@ import type { TelegramUser } from '../store/useAppStore';
 class TelegramService {
   private webApp: any = null;
   private store = useAppStore.getState();
-  private isReady = false;
 
   constructor() {
     this.initialize();
@@ -48,7 +47,7 @@ class TelegramService {
       // Signal that Mini App is ready
       this.webApp.ready();
 
-      this.isReady = true;
+      
 
       // Get user data from initDataUnsafe
       const userData = this.webApp.initDataUnsafe?.user;
@@ -131,7 +130,7 @@ class TelegramService {
 
     this.store.setUser(mockUser);
     this.store.setAuthorized(true);
-    this.isReady = true;
+    
   }
 
   // Getters
@@ -160,8 +159,20 @@ class TelegramService {
     this.webApp?.showAlert(message);
   }
 
-  public showConfirm(message: string, callback?: (confirmed: boolean) => void): void {
-    this.webApp?.showConfirm(message, callback);
+  public showConfirm(message: string, callback?: (confirmed: boolean) => void): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.webApp?.showConfirm) {
+        this.webApp.showConfirm(message, (confirmed: boolean) => {
+          if (callback) callback(confirmed);
+          resolve(confirmed);
+        });
+      } else {
+        // Mock mode - return true
+        const confirmed = window.confirm(message);
+        if (callback) callback(confirmed);
+        resolve(confirmed);
+      }
+    });
   }
 
   public showPopup(params: {

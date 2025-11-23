@@ -5,7 +5,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import supabase from '../lib/supabase';
+import supabase from '../lib/supabaseClient';
 import type { Game } from '../types/supabase';
 
 interface ClockState {

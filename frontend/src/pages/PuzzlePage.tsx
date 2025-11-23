@@ -108,7 +108,7 @@ const PuzzlePage: React.FC = () => {
       });
     } catch (error) {
       setStatus('incorrect');
-      telegramService.hapticFeedback('error');
+      telegramService.notificationOccurred('error');
 
       setTimeout(() => {
         setStatus('playing');
@@ -127,7 +127,7 @@ const PuzzlePage: React.FC = () => {
     if (moveUci !== expectedMove) {
       // Incorrect move
       setStatus('incorrect');
-      telegramService.hapticFeedback('error');
+      telegramService.notificationOccurred('error');
 
       // Undo the move
       game.undo();
@@ -142,7 +142,7 @@ const PuzzlePage: React.FC = () => {
 
     // Correct move!
     setStatus('correct');
-    telegramService.hapticFeedback('success');
+    telegramService.notificationOccurred('success');
     setGame(new Chess(game.fen()));
 
     // Check if puzzle is complete
@@ -179,7 +179,7 @@ const PuzzlePage: React.FC = () => {
     setResult(puzzleResult);
 
     if (solved) {
-      telegramService.hapticFeedback('success');
+      telegramService.notificationOccurred('success');
     }
   };
 
@@ -188,7 +188,7 @@ const PuzzlePage: React.FC = () => {
    */
   const handleShowHint = () => {
     setShowHint(true);
-    telegramService.hapticFeedback('impact');
+    telegramService.impactOccurred();
   };
 
   /**

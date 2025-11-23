@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useStore } from '../store/useStore';
+import { useAppStore } from '../store/useAppStore';
 
 export interface Tournament {
   id: string;
@@ -51,7 +51,7 @@ export interface TournamentParticipant {
 }
 
 export const useTournament = (tournamentId?: string) => {
-  const { user } = useStore();
+  const { user } = useAppStore();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [standings, setStandings] = useState<TournamentStanding[]>([]);
   const [participants, setParticipants] = useState<TournamentParticipant[]>([]);
@@ -115,7 +115,7 @@ export const useTournament = (tournamentId?: string) => {
 
       if (fetchError) throw fetchError;
 
-      const standingsWithRank: TournamentStanding[] = (data || []).map((p, index) => ({
+      const standingsWithRank: TournamentStanding[] = (data || []).map((p: any, index) => ({
         user_id: p.user_id,
         username: p.users?.username || 'Unknown',
         rating: p.users?.blitz_rating || 1500,
@@ -153,7 +153,7 @@ export const useTournament = (tournamentId?: string) => {
 
       // Check if current user is participant
       if (user) {
-        const isUserParticipant = (data || []).some((p) => p.user_id === user.id);
+        const isUserParticipant = (data || []).some((p: any) => p.user_id === user.id);
         setIsParticipant(isUserParticipant);
       }
     } catch (err: any) {
@@ -179,7 +179,7 @@ export const useTournament = (tournamentId?: string) => {
         .insert({
           tournament_id: tournamentId,
           user_id: user.id,
-        });
+        } as any);
 
       if (joinError) throw joinError;
 

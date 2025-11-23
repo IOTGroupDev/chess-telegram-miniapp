@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useStore } from '../store/useAppStore';
+import { useAppStore } from '../store/useAppStore';
 
 export interface Puzzle {
   id: string;
@@ -36,7 +36,7 @@ export interface PuzzleResult {
 }
 
 export const usePuzzle = () => {
-  const { user } = useStore();
+  const { user } = useAppStore();
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +63,8 @@ export const usePuzzle = () => {
           .eq('id', user.id)
           .single();
 
-        const userRating = userData?.puzzle_rating || 1500;
-        const userRd = userData?.puzzle_rd || 350;
+        const userRating = (userData as any)?.puzzle_rating || 1500;
+        const userRd = (userData as any)?.puzzle_rd || 350;
 
         // Calculate adaptive rating range
         const ratingWindow = Math.max(100, Math.min(400, userRd));
@@ -79,7 +79,7 @@ export const usePuzzle = () => {
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
           .limit(100);
 
-        const excludedIds = (recentAttempts || []).map((a) => a.puzzle_id);
+        const excludedIds = (recentAttempts || []).map((a: any) => a.puzzle_id);
 
         // Build query
         let query = supabase
@@ -142,8 +142,7 @@ export const usePuzzle = () => {
     puzzleId: string,
     solved: boolean,
     timeSpent: number,
-    attempts: number,
-    movesPlayed?: string[]
+    attempts: number
   ): Promise<PuzzleResult | null> => {
     if (!user) {
       setError('User not authenticated');
@@ -151,7 +150,7 @@ export const usePuzzle = () => {
     }
 
     try {
-      const { data, error: submitError } = await supabase
+      const { error: submitError } = await supabase
         .from('user_puzzle_attempts')
         .insert({
           user_id: user.id,
@@ -159,7 +158,7 @@ export const usePuzzle = () => {
           solved,
           time_spent: timeSpent,
           attempts,
-        })
+        } as any)
         .select()
         .single();
 
@@ -172,7 +171,7 @@ export const usePuzzle = () => {
           .update({
             attempts: currentPuzzle.attempts + 1,
             solved: currentPuzzle.solved + (solved ? 1 : 0),
-          })
+          } as any)
           .eq('id', puzzleId);
       }
 
@@ -183,20 +182,22 @@ export const usePuzzle = () => {
         .eq('id', user.id)
         .single();
 
+      const userDataTyped = userData as any;
+
       await supabase
         .from('users')
         .update({
           puzzles_solved: solved
-            ? (userData?.puzzles_solved || 0) + 1
-            : userData?.puzzles_solved || 0,
+            ? (userDataTyped?.puzzles_solved || 0) + 1
+            : userDataTyped?.puzzles_solved || 0,
           puzzles_failed: !solved
-            ? (userData?.puzzles_failed || 0) + 1
-            : userData?.puzzles_failed || 0,
-        })
+            ? (userDataTyped?.puzzles_failed || 0) + 1
+            : userDataTyped?.puzzles_failed || 0,
+        } as any)
         .eq('id', user.id);
 
       // Calculate rating change (simplified)
-      const oldRating = userData?.puzzle_rating || 1500;
+      const oldRating = userDataTyped?.puzzle_rating || 1500;
       const puzzleRating = currentPuzzle?.rating || 1500;
       const expected = 1 / (1 + Math.pow(10, (puzzleRating - oldRating) / 400));
       const kFactor = 32;
@@ -208,7 +209,7 @@ export const usePuzzle = () => {
         .from('users')
         .update({
           puzzle_rating: newRating,
-        })
+        } as any)
         .eq('id', user.id);
 
       return {
@@ -239,14 +240,15 @@ export const usePuzzle = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      const totalAttempts = attempts?.length || 0;
-      const totalSolved = attempts?.filter((a) => a.solved).length || 0;
+      const attemptsTyped = attempts as any[];
+      const totalAttempts = attemptsTyped?.length || 0;
+      const totalSolved = attemptsTyped?.filter((a) => a.solved).length || 0;
       const totalFailed = totalAttempts - totalSolved;
       const accuracy = totalAttempts > 0 ? (totalSolved / totalAttempts) * 100 : 0;
 
       // Calculate streaks
       let currentStreak = 0;
-      for (const attempt of attempts || []) {
+      for (const attempt of attemptsTyped || []) {
         if (attempt.solved) {
           currentStreak++;
         } else {
@@ -256,7 +258,7 @@ export const usePuzzle = () => {
 
       let bestStreak = 0;
       let tempStreak = 0;
-      for (const attempt of attempts || []) {
+      for (const attempt of attemptsTyped || []) {
         if (attempt.solved) {
           tempStreak++;
           bestStreak = Math.max(bestStreak, tempStreak);
@@ -271,6 +273,8 @@ export const usePuzzle = () => {
         .eq('id', user.id)
         .single();
 
+      const userDataTyped = userData as any;
+
       setStatistics({
         total_solved: totalSolved,
         total_failed: totalFailed,
@@ -278,7 +282,7 @@ export const usePuzzle = () => {
         accuracy: Math.round(accuracy * 10) / 10,
         current_streak: currentStreak,
         best_streak: bestStreak,
-        average_rating: userData?.puzzle_rating || 1500,
+        average_rating: userDataTyped?.puzzle_rating || 1500,
         themes_mastered: {},
       });
     } catch (err: any) {
