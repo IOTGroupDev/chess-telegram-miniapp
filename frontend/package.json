@@ -15,7 +15,9 @@
     "cypress:run": "cypress run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.84.0",
     "@tailwindcss/postcss": "^4.1.13",
+    "@tanstack/react-query": "^5.90.10",
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@tma.js/sdk": "^2.7.0",
