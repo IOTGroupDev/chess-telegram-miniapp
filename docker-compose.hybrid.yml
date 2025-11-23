@@ -1,0 +1,239 @@
+# =====================================
+# Hybrid Architecture: Docker + Supabase Free
+# Cost: $5-6/month
+# =====================================
+#
+# Services in Docker:
+#  - NestJS Backend (chess engines, analysis)
+#  - Redis (caching)
+#  - Nginx (reverse proxy, SSL)
+#  - Frontend (static files)
+#
+# Services on Supabase Free:
+#  - PostgreSQL (500MB limit)
+#  - Real-time WebSocket
+#  - Auth
+#
+# VPS Requirements:
+#  - 2GB RAM, 2 vCPU, 20GB SSD
+#  - Hetzner CPX11: €4.51/month
+#
+# =====================================
+
+version: '3.8'
+
+services:
+  # ===================================
+  # Redis - Caching for chess positions
+  # ===================================
+  redis:
+    image: redis:7-alpine
+    container_name: chess-redis
+    restart: unless-stopped
+
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - chess-network
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ===================================
+  # NestJS Backend - Chess Engines
+  # ===================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+
+    container_name: chess-backend
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      # Node
+      NODE_ENV: production
+      PORT: 3000
+
+      # Supabase Integration (for reading game data)
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # Stockfish
+      STOCKFISH_PATH: /usr/games/stockfish
+      STOCKFISH_THREADS: 2
+      STOCKFISH_HASH_SIZE: 256
+
+      # CORS
+      CORS_ORIGIN: ${FRONTEND_URL}
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    networks:
+      - chess-network
+
+    volumes:
+      - stockfish_cache:/app/cache
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===================================
+  # Frontend - React Production Build
+  # ===================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+        VITE_ENGINE_API_URL: ${BACKEND_API_URL}
+
+    container_name: chess-frontend
+    restart: unless-stopped
+
+    networks:
+      - chess-network
+
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ===================================
+  # Nginx - Reverse Proxy + SSL
+  # ===================================
+  nginx:
+    image: nginx:alpine
+    container_name: chess-nginx
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - nginx_logs:/var/log/nginx
+
+    depends_on:
+      - backend
+      - frontend
+
+    networks:
+      - chess-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===================================
+  # Certbot - SSL Certificates
+  # ===================================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: chess-certbot
+
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+    networks:
+      - chess-network
+
+# ===================================
+# Networks
+# ===================================
+networks:
+  chess-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# ===================================
+# Volumes
+# ===================================
+volumes:
+  redis_data:
+    driver: local
+
+  stockfish_cache:
+    driver: local
+
+  nginx_logs:
+    driver: local
+
+# ===================================
+# Usage:
+# ===================================
+#
+# 1. Copy .env.production.example to .env
+# 2. Fill in Supabase credentials
+# 3. docker-compose -f docker-compose.hybrid.yml up -d
+# 4. Setup SSL: ./scripts/init-letsencrypt.sh
+# 5. Monitor: docker-compose logs -f
+#
+# ===================================

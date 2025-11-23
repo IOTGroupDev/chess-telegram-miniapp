@@ -1,0 +1,365 @@
+# =====================================
+# Full Docker Architecture - Полностью автономный
+# Cost: $10/month
+# =====================================
+#
+# Все сервисы в Docker:
+#  - PostgreSQL (вместо Supabase)
+#  - Supabase Realtime (self-hosted)
+#  - NestJS Backend
+#  - Redis
+#  - Nginx
+#  - Frontend
+#
+# VPS Requirements:
+#  - 4GB RAM, 4 vCPU, 40GB SSD
+#  - Hetzner CPX21: €8.90/month
+#  - Contabo: €6.99/month (4 vCPU, 8GB RAM)
+#
+# =====================================
+
+version: '3.8'
+
+services:
+  # ===================================
+  # PostgreSQL 15 - Main Database
+  # ===================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: chess-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: chess
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+
+    networks:
+      - chess-network
+
+    ports:
+      - "5432:5432"
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d chess"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          memory: 512M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===================================
+  # Supabase Realtime (Self-Hosted)
+  # ===================================
+  realtime:
+    image: supabase/realtime:latest
+    container_name: chess-realtime
+    restart: unless-stopped
+
+    environment:
+      PORT: 4000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: chess
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SSL: "false"
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_CLAIM_VALIDATORS: "{}}"
+
+      # Realtime
+      SECURE_CHANNELS: "false"
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 300
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - chess-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  # ===================================
+  # Redis - Caching
+  # ===================================
+  redis:
+    image: redis:7-alpine
+    container_name: chess-redis
+    restart: unless-stopped
+
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - chess-network
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 768M
+
+  # ===================================
+  # NestJS Backend
+  # ===================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+
+    container_name: chess-backend
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      # Database (direct connection)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/chess
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # Stockfish
+      STOCKFISH_PATH: /usr/games/stockfish
+      STOCKFISH_THREADS: 4
+      STOCKFISH_HASH_SIZE: 512
+
+      # JWT (same as realtime)
+      JWT_SECRET: ${JWT_SECRET}
+
+      # CORS
+      CORS_ORIGIN: ${FRONTEND_URL}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - chess-network
+
+    volumes:
+      - stockfish_cache:/app/cache
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1.5G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===================================
+  # Frontend
+  # ===================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Point to self-hosted realtime
+        VITE_SUPABASE_URL: ${FRONTEND_URL}
+        VITE_SUPABASE_ANON_KEY: ${JWT_SECRET}
+        VITE_ENGINE_API_URL: ${BACKEND_API_URL}
+
+    container_name: chess-frontend
+    restart: unless-stopped
+
+    networks:
+      - chess-network
+
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ===================================
+  # Nginx - Reverse Proxy
+  # ===================================
+  nginx:
+    image: nginx:alpine
+    container_name: chess-nginx
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./nginx/nginx.full.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - nginx_logs:/var/log/nginx
+
+    depends_on:
+      - backend
+      - frontend
+      - realtime
+
+    networks:
+      - chess-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===================================
+  # Certbot
+  # ===================================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: chess-certbot
+
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+    networks:
+      - chess-network
+
+  # ===================================
+  # Backup Service
+  # ===================================
+  backup:
+    image: postgres:15-alpine
+    container_name: chess-backup
+
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: chess
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+
+    command: >
+      sh -c "while true; do
+        echo 'Running backup...'
+        pg_dump -Fc > /backups/chess_$(date +%Y%m%d_%H%M%S).dump
+        find /backups -name '*.dump' -mtime +7 -delete
+        sleep 86400
+      done"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - chess-network
+
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+# ===================================
+# Networks
+# ===================================
+networks:
+  chess-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.26.0.0/16
+
+# ===================================
+# Volumes
+# ===================================
+volumes:
+  postgres_data:
+    driver: local
+
+  redis_data:
+    driver: local
+
+  stockfish_cache:
+    driver: local
+
+  nginx_logs:
+    driver: local
+
+# ===================================
+# Usage:
+# ===================================
+#
+# 1. Copy .env.production.example to .env
+# 2. Set POSTGRES_PASSWORD and JWT_SECRET
+# 3. docker-compose -f docker-compose.full.yml up -d
+# 4. Apply migrations: docker-compose exec postgres psql -U postgres -d chess -f /docker-entrypoint-initdb.d/20250123000001_initial_schema.sql
+# 5. Setup SSL: ./scripts/init-letsencrypt.sh
+# 6. Backup: Check ./backups/ directory (daily)
+#
+# ===================================
