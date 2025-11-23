@@ -7,14 +7,14 @@
 import { useAppStore } from '../store/useAppStore';
 import type { TelegramUser } from '../store/useAppStore';
 
-// Extend Window interface for Telegram WebApp
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: any;
-    };
-  }
-}
+// // Extend Window interface for Telegram WebApp
+// declare global {
+//   interface Window {
+//     Telegram?: {
+//       WebApp: any;
+//     };
+//   }
+// }
 
 class TelegramService {
   private webApp: any = null;

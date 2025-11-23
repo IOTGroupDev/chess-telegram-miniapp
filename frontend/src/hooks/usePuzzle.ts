@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store/useAppStore';
 
 export interface Puzzle {
   id: string;
