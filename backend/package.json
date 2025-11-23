@@ -11,9 +11,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix"
   },
@@ -21,7 +18,8 @@
     "chess",
     "telegram",
     "miniapp",
-    "websocket"
+    "engine",
+    "rating"
   ],
   "author": "",
   "license": "ISC",
@@ -30,10 +28,6 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.6",
     "@nestjs/platform-express": "^11.1.6",
-    "@nestjs/platform-socket.io": "^11.1.6",
-    "@nestjs/typeorm": "^11.0.0",
-    "@nestjs/websockets": "^11.1.6",
-    "@prisma/client": "^6.16.1",
     "chess.js": "^1.4.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -42,13 +36,7 @@
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "ioredis": "^5.7.0",
-    "morgan": "^1.10.0",
-    "pg": "^8.16.3",
-    "prisma": "^6.16.1",
-    "redis": "^4.7.1",
-    "socket.io": "^4.8.1",
-    "stockfish": "^16.0.0",
-    "typeorm": "^0.3.26"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",

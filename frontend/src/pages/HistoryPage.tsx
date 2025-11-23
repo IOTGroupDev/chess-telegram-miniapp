@@ -1,27 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Navigation } from '../components/Navigation';
 import { Button } from '../components/Button';
-import { TelegramService } from '../services/telegram';
-import ApiService from '../services/api';
-import type { Game } from '../types';
+import { useAppStore } from '../store/useAppStore';
+import supabase from '../lib/supabase';
+import type { GameWithPlayers } from '../types/supabase';
 
 export const HistoryPage: React.FC = () => {
-  const telegram = TelegramService.getInstance();
-  const apiService = ApiService.getInstance();
-  const [games, setGames] = useState<Game[]>([]);
+  const { user } = useAppStore();
+  const [games, setGames] = useState<GameWithPlayers[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadGameHistory();
-  }, []);
+    if (user?.id) {
+      loadGameHistory();
+    }
+  }, [user?.id]);
 
   const loadGameHistory = async () => {
     try {
       setLoading(true);
-      const userId = telegram.getUserId()?.toString() || 'mock-user';
-      const gameHistory = await apiService.getUserHistory(userId);
-      setGames(gameHistory);
+
+      // Fetch games where user is either white or black player
+      const { data: gamesData, error: gamesError } = await supabase
+        .from('games')
+        .select(`
+          *,
+          white_player:users!white_player_id(*),
+          black_player:users!black_player_id(*)
+        `)
+        .or(`white_player_id.eq.${user?.id},black_player_id.eq.${user?.id}`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (gamesError) throw gamesError;
+
+      setGames((gamesData as GameWithPlayers[]) || []);
     } catch (err) {
       console.error('Failed to load game history:', err);
       setError('Не удалось загрузить историю игр');
@@ -41,7 +55,7 @@ export const HistoryPage: React.FC = () => {
     });
   };
 
-  const getGameResult = (game: Game) => {
+  const getGameResult = (game: GameWithPlayers) => {
     if (game.status === 'finished') {
       if (game.winner === 'draw') return 'Ничья';
       return `Победитель: ${game.winner === 'white' ? 'Белые' : 'Черные'}`;
@@ -49,7 +63,7 @@ export const HistoryPage: React.FC = () => {
     return 'В процессе';
   };
 
-  const getGameResultColor = (game: Game) => {
+  const getGameResultColor = (game: GameWithPlayers) => {
     if (game.status === 'finished') {
       if (game.winner === 'draw') return 'text-yellow-600';
       return 'text-green-600';
