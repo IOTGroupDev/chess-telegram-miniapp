@@ -14,6 +14,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { EngineManagerService } from './engine-manager.service';
+import { EngineFactory, EngineType } from './engine.factory';
 import { EngineOptions } from './stockfish.service';
 
 // DTOs
@@ -21,20 +22,30 @@ class AnalyzePositionDto {
   fen: string;
   depth?: number;
   multiPv?: number;
+  engine?: EngineType; // 'stockfish', 'leela', 'komodo'
 }
 
 class GetBestMoveDto {
   fen: string;
   depth?: number;
+  engine?: EngineType;
 }
 
 class QuickEvalDto {
   fen: string;
 }
 
+class MultiEngineAnalyzeDto {
+  fen: string;
+  depth?: number;
+}
+
 @Controller('api/engine')
 export class EngineController {
-  constructor(private readonly engineManager: EngineManagerService) {}
+  constructor(
+    private readonly engineManager: EngineManagerService,
+    private readonly engineFactory: EngineFactory,
+  ) {}
 
   /**
    * GET /api/engine/health
@@ -148,6 +159,100 @@ export class EngineController {
     return {
       success: true,
       message: 'Cache cleared successfully',
+    };
+  }
+
+  /**
+   * POST /api/engine/multi-engine-analyze
+   * Analyze position with all available engines and compare
+   */
+  @Post('multi-engine-analyze')
+  @HttpCode(HttpStatus.OK)
+  async multiEngineAnalyze(@Body() dto: MultiEngineAnalyzeDto) {
+    const comparison = await this.engineFactory.analyzeWithAllEngines(
+      dto.fen,
+      { depth: dto.depth || 20 },
+    );
+
+    return {
+      success: true,
+      data: comparison,
+    };
+  }
+
+  /**
+   * GET /api/engine/available
+   * Get list of available engines
+   */
+  @Get('available')
+  @HttpCode(HttpStatus.OK)
+  getAvailableEngines() {
+    const engines = this.engineFactory.getAvailableEngines();
+    const engineInfos = engines.map((type) => ({
+      type,
+      info: this.engineFactory.getEngineInfo(type),
+    }));
+
+    return {
+      success: true,
+      data: {
+        engines: engineInfos,
+      },
+    };
+  }
+
+  /**
+   * GET /api/engine/health-check
+   * Health check for all engines
+   */
+  @Get('health-check')
+  @HttpCode(HttpStatus.OK)
+  async engineHealthCheck() {
+    const health = await this.engineFactory.healthCheck();
+
+    return {
+      success: true,
+      data: {
+        engines: health,
+      },
+    };
+  }
+
+  /**
+   * POST /api/engine/analyze-with-engine
+   * Analyze position with specific engine
+   */
+  @Post('analyze-with-engine')
+  @HttpCode(HttpStatus.OK)
+  async analyzeWithSpecificEngine(@Body() dto: AnalyzePositionDto) {
+    const engineType = dto.engine || 'stockfish';
+    const options: EngineOptions = {
+      depth: dto.depth || 20,
+      multiPv: dto.multiPv || 1,
+    };
+
+    const result = await this.engineFactory.analyzePosition(
+      dto.fen,
+      engineType,
+      options,
+    );
+
+    return {
+      success: true,
+      data: {
+        engine: engineType,
+        result: {
+          bestMove: result.bestMove,
+          ponder: result.ponder,
+          evaluation: result.evaluation,
+          depth: result.depth,
+          nodes: result.nodes,
+          nps: result.nps,
+          time: result.time,
+          pv: result.pv,
+          mate: result.mate,
+        },
+      },
     };
   }
 }
