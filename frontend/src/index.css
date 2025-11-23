@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 * {
   box-sizing: border-box;
@@ -142,7 +142,8 @@ code {
 
 /* Button styles */
 .btn-primary {
-  @apply bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  @apply text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  background: linear-gradient(to right, rgb(59 130 246), rgb(147 51 234));
 }
 
 .btn-secondary {
@@ -150,15 +151,18 @@ code {
 }
 
 .btn-danger {
-  @apply bg-gradient-to-r from-red-500 to-pink-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  @apply text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  background: linear-gradient(to right, rgb(239 68 68), rgb(219 39 119));
 }
 
 .btn-success {
-  @apply bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  @apply text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  background: linear-gradient(to right, rgb(34 197 94), rgb(5 150 105));
 }
 
 .btn-warning {
-  @apply bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  @apply text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border border-white/20;
+  background: linear-gradient(to right, rgb(234 179 8), rgb(249 115 22));
 }
 
 /* Card styles */
@@ -199,7 +203,8 @@ code {
 }
 
 .player-avatar {
-  @apply w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg;
+  @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg;
+  background: linear-gradient(to right, rgb(59 130 246), rgb(147 51 234));
 }
 
 /* Animation keyframes */
