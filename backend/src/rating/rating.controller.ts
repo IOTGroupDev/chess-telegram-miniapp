@@ -16,25 +16,25 @@ import { Glicko2Service, GlickoRating, GameResult } from './glicko2.service';
 
 // DTOs
 class CalculateRatingDto {
-  player: GlickoRating;
-  results: GameResult[];
+  player!: GlickoRating;
+  results!: GameResult[];
 }
 
 class CalculateSingleGameDto {
-  player: GlickoRating;
-  opponent: GlickoRating;
-  result: number; // 1 = win, 0.5 = draw, 0 = loss
+  player!: GlickoRating;
+  opponent!: GlickoRating;
+  result!: number; // 1 = win, 0.5 = draw, 0 = loss
 }
 
 class WinProbabilityDto {
-  playerRating: number;
-  opponentRating: number;
+  playerRating!: number;
+  opponentRating!: number;
   opponentRD?: number;
 }
 
 class RatingChangePreviewDto {
-  player: GlickoRating;
-  opponent: GlickoRating;
+  player!: GlickoRating;
+  opponent!: GlickoRating;
 }
 
 @Controller('api/rating')

@@ -16,7 +16,7 @@ import { AnalysisService } from './analysis.service';
 
 // DTOs
 class AnalyzeGameDto {
-  pgn: string;
+  pgn!: string;
 }
 
 @Controller('api/analysis')

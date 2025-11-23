@@ -6,11 +6,10 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { spawn, ChildProcess } from 'child_process';
-import { EventEmitter } from 'events';
 import { BaseChessEngine, EngineOptions, AnalysisResult, EngineInfo } from './base-engine.interface';
 
 @Injectable()
-export class KomodoService extends EventEmitter implements OnModuleDestroy {
+export class KomodoService extends BaseChessEngine implements OnModuleDestroy {
   private readonly logger = new Logger(KomodoService.name);
   private process: ChildProcess | null = null;
   private outputBuffer: string[] = [];
@@ -121,11 +120,6 @@ export class KomodoService extends EventEmitter implements OnModuleDestroy {
       this.sendCommand(`position fen ${fen}`);
       this.sendCommand(`setoption name MultiPV value ${multiPv}`);
       this.sendCommand(`go depth ${depth}`);
-
-      // Will resolve in handleBestMove
-      this.once('bestmove', () => {
-        clearTimeout(timeout);
-      });
     });
   }
 
@@ -201,8 +195,6 @@ export class KomodoService extends EventEmitter implements OnModuleDestroy {
       pv: analysisInfo.pv || [],
       mate: analysisInfo.mate,
     };
-
-    this.emit('bestmove', result);
 
     if (this.currentAnalysis) {
       this.currentAnalysis.resolve(result);

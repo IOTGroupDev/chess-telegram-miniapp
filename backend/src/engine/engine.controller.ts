@@ -19,24 +19,24 @@ import { EngineOptions } from './stockfish.service';
 
 // DTOs
 class AnalyzePositionDto {
-  fen: string;
+  fen!: string;
   depth?: number;
   multiPv?: number;
   engine?: EngineType; // 'stockfish', 'leela', 'komodo'
 }
 
 class GetBestMoveDto {
-  fen: string;
+  fen!: string;
   depth?: number;
   engine?: EngineType;
 }
 
 class QuickEvalDto {
-  fen: string;
+  fen!: string;
 }
 
 class MultiEngineAnalyzeDto {
-  fen: string;
+  fen!: string;
   depth?: number;
 }
 

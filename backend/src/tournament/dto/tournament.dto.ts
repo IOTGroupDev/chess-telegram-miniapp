@@ -21,7 +21,7 @@ import {
 export class CreateTournamentDto {
   @IsString()
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
@@ -29,23 +29,23 @@ export class CreateTournamentDto {
   description?: string;
 
   @IsEnum(TournamentType)
-  type: TournamentType;
+  type!: TournamentType;
 
   @IsEnum(TimeControlType)
-  time_control: TimeControlType;
+  time_control!: TimeControlType;
 
   @IsNumber()
   @Min(10)
   @Max(86400) // Max 24 hours
-  time_limit: number; // seconds
+  time_limit!: number; // seconds
 
   @IsNumber()
   @Min(0)
   @Max(60)
-  time_increment: number; // seconds
+  time_increment!: number; // seconds
 
   @IsDateString()
-  start_time: string;
+  start_time!: string;
 
   @IsOptional()
   @IsNumber()
@@ -151,7 +151,7 @@ export class UpdateTournamentDto {
  */
 export class JoinTournamentDto {
   @IsString()
-  tournament_id: string;
+  tournament_id!: string;
 }
 
 /**
@@ -159,7 +159,7 @@ export class JoinTournamentDto {
  */
 export class StartNextRoundDto {
   @IsString()
-  tournament_id: string;
+  tournament_id!: string;
 }
 
 /**

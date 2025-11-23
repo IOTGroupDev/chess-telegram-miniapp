@@ -35,18 +35,18 @@ export class GetPuzzleDto {
  */
 export class SubmitPuzzleAttemptDto {
   @IsString()
-  puzzle_id: string;
+  puzzle_id!: string;
 
   @IsBoolean()
-  solved: boolean;
+  solved!: boolean;
 
   @IsNumber()
   @Min(0)
-  time_spent: number; // milliseconds
+  time_spent!: number; // milliseconds
 
   @IsNumber()
   @Min(1)
-  attempts: number;
+  attempts!: number;
 
   @IsOptional()
   @IsArray()
@@ -87,15 +87,15 @@ export class PuzzleFilterDto {
  */
 export class CreatePuzzleDto {
   @IsString()
-  fen: string;
+  fen!: string;
 
   @IsString()
-  moves: string; // Space-separated UCI moves
+  moves!: string; // Space-separated UCI moves
 
   @IsNumber()
   @Min(800)
   @Max(3000)
-  rating: number;
+  rating!: number;
 
   @IsOptional()
   @IsArray()

@@ -58,7 +58,7 @@ export interface GameAnalysis {
 export class AnalysisService {
   private readonly logger = new Logger(AnalysisService.name);
   private readonly aiProvider: string;
-  private readonly aiApiKey: string;
+  private readonly aiApiKey: string | undefined;
 
   constructor(
     private readonly configService: ConfigService,

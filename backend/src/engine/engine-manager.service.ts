@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { InjectRedis } from '@liaoliaots/nestjs-redis';
+import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import { StockfishService, AnalysisResult, EngineOptions } from './stockfish.service';
 
@@ -19,6 +19,7 @@ export interface CachedAnalysis {
 export class EngineManagerService implements OnModuleInit {
   private readonly logger = new Logger(EngineManagerService.name);
   private stockfish: StockfishService;
+  private redis: Redis | null = null;
   private requestQueue: Array<{
     fen: string;
     options: EngineOptions;
@@ -27,10 +28,26 @@ export class EngineManagerService implements OnModuleInit {
   }> = [];
   private isProcessing = false;
 
-  constructor(
-    @InjectRedis() private readonly redis: Redis,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     this.stockfish = new StockfishService();
+
+    // Initialize Redis if configured
+    const redisHost = this.configService.get('REDIS_HOST');
+    const redisPort = this.configService.get<number>('REDIS_PORT');
+
+    if (redisHost && redisPort) {
+      try {
+        this.redis = new Redis({
+          host: redisHost,
+          port: redisPort,
+        });
+        this.logger.log('Redis connected for caching');
+      } catch (error) {
+        this.logger.warn('Redis connection failed, caching disabled');
+      }
+    } else {
+      this.logger.warn('Redis not configured, caching disabled');
+    }
   }
 
   async onModuleInit() {
@@ -51,6 +68,8 @@ export class EngineManagerService implements OnModuleInit {
     fen: string,
     depth: number,
   ): Promise<CachedAnalysis | null> {
+    if (!this.redis) return null;
+
     try {
       const key = this.getCacheKey(fen, depth);
       const cached = await this.redis.get(key);
@@ -62,7 +81,8 @@ export class EngineManagerService implements OnModuleInit {
 
       return null;
     } catch (error) {
-      this.logger.error(`Cache get error: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`Cache get error: ${err.message}`);
       return null;
     }
   }
@@ -75,6 +95,8 @@ export class EngineManagerService implements OnModuleInit {
     depth: number,
     result: AnalysisResult,
   ): Promise<void> {
+    if (!this.redis) return;
+
     try {
       const key = this.getCacheKey(fen, depth);
       const cached: CachedAnalysis = {
@@ -88,7 +110,8 @@ export class EngineManagerService implements OnModuleInit {
       await this.redis.setex(key, 86400, JSON.stringify(cached));
       this.logger.debug(`Cached analysis for ${fen.substring(0, 20)}...`);
     } catch (error) {
-      this.logger.error(`Cache save error: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`Cache save error: ${err.message}`);
     }
   }
 
@@ -120,7 +143,7 @@ export class EngineManagerService implements OnModuleInit {
           result,
         );
       } catch (error) {
-        request.reject(error);
+        request.reject(error as Error);
       }
     }
 
@@ -215,6 +238,10 @@ export class EngineManagerService implements OnModuleInit {
     keys: number;
     memory: string;
   }> {
+    if (!this.redis) {
+      return { keys: 0, memory: 'disabled' };
+    }
+
     try {
       const keys = await this.redis.keys('analysis:*');
       const info = await this.redis.info('memory');
@@ -226,7 +253,8 @@ export class EngineManagerService implements OnModuleInit {
         memory,
       };
     } catch (error) {
-      this.logger.error(`Cache stats error: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`Cache stats error: ${err.message}`);
       return { keys: 0, memory: 'unknown' };
     }
   }
@@ -235,6 +263,8 @@ export class EngineManagerService implements OnModuleInit {
    * Clear cache
    */
   async clearCache(): Promise<void> {
+    if (!this.redis) return;
+
     try {
       const keys = await this.redis.keys('analysis:*');
       if (keys.length > 0) {
@@ -242,7 +272,8 @@ export class EngineManagerService implements OnModuleInit {
         this.logger.log(`Cleared ${keys.length} cached analyses`);
       }
     } catch (error) {
-      this.logger.error(`Cache clear error: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`Cache clear error: ${err.message}`);
     }
   }
 }

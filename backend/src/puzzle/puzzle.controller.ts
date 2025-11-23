@@ -16,6 +16,16 @@ import {
   CreatePuzzleDto,
 } from './dto/puzzle.dto';
 
+interface UserRequest {
+  user?: { id: string };
+  headers: { [key: string]: string | string[] | undefined };
+}
+
+function getUserId(req: UserRequest): string {
+  const headerUserId = req.headers['x-user-id'];
+  return req.user?.id || (Array.isArray(headerUserId) ? headerUserId[0] : headerUserId) || '';
+}
+
 /**
  * Puzzle Controller
  * Handles tactical puzzle endpoints
@@ -29,9 +39,8 @@ export class PuzzleController {
    * GET /puzzles/next
    */
   @Get('next')
-  async getNextPuzzle(@Request() req, @Query() filters: GetPuzzleDto) {
-    const userId = req.user?.id || req.headers['x-user-id'];
-    return this.puzzleService.getNextPuzzle(userId, filters);
+  async getNextPuzzle(@Request() req: UserRequest, @Query() filters: GetPuzzleDto) {
+    return this.puzzleService.getNextPuzzle(getUserId(req), filters);
   }
 
   /**
@@ -49,9 +58,8 @@ export class PuzzleController {
    */
   @Post('attempt')
   @HttpCode(HttpStatus.OK)
-  async submitAttempt(@Request() req, @Body() dto: SubmitPuzzleAttemptDto) {
-    const userId = req.user?.id || req.headers['x-user-id'];
-    return this.puzzleService.submitAttempt(userId, dto);
+  async submitAttempt(@Request() req: UserRequest, @Body() dto: SubmitPuzzleAttemptDto) {
+    return this.puzzleService.submitAttempt(getUserId(req), dto);
   }
 
   /**
@@ -75,9 +83,8 @@ export class PuzzleController {
    * GET /puzzles/stats/me
    */
   @Get('stats/me')
-  async getMyStatistics(@Request() req) {
-    const userId = req.user?.id || req.headers['x-user-id'];
-    return this.puzzleService.getUserStatistics(userId);
+  async getMyStatistics(@Request() req: UserRequest) {
+    return this.puzzleService.getUserStatistics(getUserId(req));
   }
 
   /**
@@ -94,10 +101,9 @@ export class PuzzleController {
    * GET /puzzles/daily
    */
   @Get('daily/challenge')
-  async getDailyPuzzle(@Request() req) {
+  async getDailyPuzzle(@Request() req: UserRequest) {
     // Get a puzzle with rating around 1800 (good for most users)
-    const userId = req.user?.id || req.headers['x-user-id'];
-    return this.puzzleService.getNextPuzzle(userId, {
+    return this.puzzleService.getNextPuzzle(getUserId(req), {
       min_rating: 1700,
       max_rating: 1900,
     });
