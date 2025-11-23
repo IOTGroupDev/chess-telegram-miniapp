@@ -1,0 +1,311 @@
+# =====================================
+# VPS MVP Setup: NestJS + Redis Only
+# Database: Supabase Free
+# Cost: $0/month (VPS already paid)
+# =====================================
+#
+# This setup uses your existing VPS for:
+#  - NestJS Backend (chess engines, analysis)
+#  - Redis (caching)
+#  - Nginx (reverse proxy, SSL)
+#  - Frontend (static files)
+#
+# And Supabase Free for:
+#  - PostgreSQL (500MB limit)
+#  - Real-time WebSocket
+#  - Auth (optional)
+#  - Storage (50MB limit)
+#
+# VPS Requirements:
+#  - 1GB RAM minimum (2GB recommended)
+#  - 1 vCPU (2 vCPU recommended)
+#  - 10GB disk minimum
+#  - Docker & Docker Compose installed
+#
+# =====================================
+
+version: '3.8'
+
+services:
+  # ===================================
+  # Redis - Position Caching
+  # ===================================
+  redis:
+    image: redis:7-alpine
+    container_name: chess-redis
+    restart: unless-stopped
+
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - chess-network
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ===================================
+  # NestJS Backend - Chess Engines
+  # ===================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+
+    container_name: chess-backend
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"  # Expose для Nginx
+
+    environment:
+      # Node
+      NODE_ENV: production
+      PORT: 3000
+
+      # Supabase (for reading game data)
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # Stockfish Configuration
+      STOCKFISH_PATH: /usr/games/stockfish
+      STOCKFISH_THREADS: ${STOCKFISH_THREADS:-2}
+      STOCKFISH_HASH_SIZE: ${STOCKFISH_HASH_SIZE:-512}
+
+      # AI API (for analysis)
+      AI_PROVIDER: ${AI_PROVIDER:-deepseek}
+      AI_API_KEY: ${AI_API_KEY}
+
+      # CORS
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    networks:
+      - chess-network
+
+    volumes:
+      # Persistent cache for Stockfish positions
+      - stockfish_cache:/app/cache
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ===================================
+  # Frontend - Production Build
+  # ===================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Supabase for database/realtime
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+        # Backend for engine API
+        VITE_ENGINE_API_URL: ${BACKEND_URL}
+
+    container_name: chess-frontend
+    restart: unless-stopped
+
+    networks:
+      - chess-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ===================================
+  # Nginx - Reverse Proxy + SSL
+  # ===================================
+  nginx:
+    image: nginx:alpine
+    container_name: chess-nginx
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      # Nginx configuration
+      - ./nginx/vps.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+
+      # SSL certificates (Let's Encrypt)
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+
+      # Logs
+      - nginx_logs:/var/log/nginx
+
+    depends_on:
+      - backend
+      - frontend
+
+    networks:
+      - chess-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===================================
+  # Certbot - SSL Certificates
+  # ===================================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: chess-certbot
+
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+    # Auto-renew every 12 hours
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done;'"
+
+    networks:
+      - chess-network
+
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+# ===================================
+# Networks
+# ===================================
+networks:
+  chess-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+
+# ===================================
+# Volumes
+# ===================================
+volumes:
+  redis_data:
+    driver: local
+
+  stockfish_cache:
+    driver: local
+
+  nginx_logs:
+    driver: local
+
+# ===================================
+# Usage:
+# ===================================
+#
+# 1. Setup Supabase:
+#    - Create project at https://supabase.com (FREE)
+#    - Apply migrations: supabase db push
+#    - Get URL and keys
+#
+# 2. Create .env file:
+#    cp .env.vps.example .env
+#    # Fill in Supabase credentials
+#
+# 3. Deploy:
+#    docker-compose -f docker-compose.vps.yml up -d
+#
+# 4. Setup SSL:
+#    ./scripts/init-letsencrypt.sh your-domain.com
+#
+# 5. Check logs:
+#    docker-compose -f docker-compose.vps.yml logs -f
+#
+# 6. Monitor:
+#    docker stats
+#
+# ===================================
+# Resource Usage (typical):
+# ===================================
+#
+# Backend:   ~300-500MB RAM
+# Redis:     ~200-300MB RAM
+# Frontend:  ~50MB RAM
+# Nginx:     ~10-20MB RAM
+# ────────────────────────────
+# Total:     ~600-900MB RAM
+#
+# Suitable for: 1GB+ VPS
+# Recommended: 2GB VPS for comfort
+#
+# ===================================

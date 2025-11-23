@@ -1,177 +1,153 @@
-import { useState, useCallback, useRef } from 'react';
-import { Chess } from 'chess.js';
+/**
+ * Stockfish Hook - Backend API Version
+ * Calls NestJS backend API instead of running Stockfish in browser
+ * Much more efficient for mobile devices
+ */
 
-interface StockfishMove {
-  from: string;
-  to: string;
-  promotion?: string;
-  san: string;
+import { useState, useCallback } from 'react';
+
+const BACKEND_URL = import.meta.env.VITE_ENGINE_API_URL || 'http://localhost:3000';
+
+interface EngineResponse {
+  success: boolean;
+  data: {
+    bestMove: string;
+    ponder?: string;
+    evaluation?: number;
+    depth?: number;
+    mate?: number;
+  };
 }
 
 export function useStockfish() {
   const [isThinking, setIsThinking] = useState(false);
-  const [bestMove, setBestMove] = useState<StockfishMove | null>(null);
   const [evaluation, setEvaluation] = useState<number | null>(null);
-  const stockfishRef = useRef<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const initializeStockfish = useCallback(async () => {
+  /**
+   * Get best move from backend Stockfish
+   */
+  const getBestMove = useCallback(async (fen: string, depth: number = 15): Promise<string | null> => {
     try {
-      // Dynamic import to avoid SSR issues
-      const { default: Stockfish } = await import('stockfish.js');
-      
-      if (!stockfishRef.current) {
-        stockfishRef.current = new Stockfish();
-        
-        stockfishRef.current.onmessage = (event: MessageEvent) => {
-          const message = event.data;
-          
-          if (message.startsWith('bestmove')) {
-            const parts = message.split(' ');
-            if (parts.length >= 2) {
-              const move = parts[1];
-              if (move && move !== 'none') {
-                // Convert UCI move to chess.js format
-                const from = move.substring(0, 2);
-                const to = move.substring(2, 4);
-                const promotion = move.length > 4 ? move.substring(4) : undefined;
-                
-                // Create a temporary chess instance to get SAN notation
-                const tempChess = new Chess();
-                tempChess.load(stockfishRef.current.position || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-                
-                try {
-                  const moveObj = tempChess.move({ from, to, promotion: promotion as any });
-                  if (moveObj) {
-                    setBestMove({
-                      from,
-                      to,
-                      promotion,
-                      san: moveObj.san,
-                    });
-                  }
-                } catch (error) {
-                  console.error('Error converting move:', error);
-                }
-              }
-            }
-            setIsThinking(false);
-          } else if (message.startsWith('info') && message.includes('score cp')) {
-            // Extract evaluation score
-            const scoreMatch = message.match(/score cp (-?\d+)/);
-            if (scoreMatch) {
-              setEvaluation(parseInt(scoreMatch[1]) / 100); // Convert centipawns to pawns
-            }
-          }
-        };
+      setIsThinking(true);
+      setError(null);
+
+      const response = await fetch(`${BACKEND_URL}/api/engine/best-move`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fen, depth }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Engine API error: ${response.statusText}`);
       }
-    } catch (error) {
-      console.error('Failed to initialize Stockfish:', error);
-      throw error;
-    }
-  }, []);
 
-  const getBestMove = useCallback(async (fen: string, depth: number = 15) => {
-    if (!stockfishRef.current) {
-      await initializeStockfish();
-    }
+      const data: EngineResponse = await response.json();
 
-    return new Promise<StockfishMove>((resolve, reject) => {
-      try {
-        setIsThinking(true);
-        setBestMove(null);
-        setEvaluation(null);
+      if (data.success && data.data.bestMove) {
+        // Update evaluation if available
+        if (data.data.evaluation !== undefined) {
+          setEvaluation(data.data.evaluation / 100); // Convert centipawns to pawns
+        }
 
-        // Set position
-        stockfishRef.current.postMessage(`position fen ${fen}`);
-        
-        // Start analysis
-        stockfishRef.current.postMessage(`go depth ${depth}`);
-
-        // Set up timeout
-        const timeout = setTimeout(() => {
-          setIsThinking(false);
-          reject(new Error('Stockfish timeout'));
-        }, 10000); // 10 second timeout
-
-        // Override the message handler temporarily
-        const originalHandler = stockfishRef.current.onmessage;
-        stockfishRef.current.onmessage = (event: MessageEvent) => {
-          const message = event.data;
-          
-          if (message.startsWith('bestmove')) {
-            clearTimeout(timeout);
-            stockfishRef.current.onmessage = originalHandler;
-            
-            const parts = message.split(' ');
-            if (parts.length >= 2) {
-              const move = parts[1];
-              if (move && move !== 'none') {
-                const from = move.substring(0, 2);
-                const to = move.substring(2, 4);
-                const promotion = move.length > 4 ? move.substring(4) : undefined;
-                
-                // Create a temporary chess instance to get SAN notation
-                const tempChess = new Chess();
-                tempChess.load(fen);
-                
-                try {
-                  const moveObj = tempChess.move({ from, to, promotion: promotion as any });
-                  if (moveObj) {
-                    const stockfishMove: StockfishMove = {
-                      from,
-                      to,
-                      promotion,
-                      san: moveObj.san,
-                    };
-                    setBestMove(stockfishMove);
-                    resolve(stockfishMove);
-                  } else {
-                    reject(new Error('Invalid move from Stockfish'));
-                  }
-                } catch (error) {
-                  reject(error);
-                }
-              } else {
-                reject(new Error('No move available'));
-              }
-            } else {
-              reject(new Error('Invalid response from Stockfish'));
-            }
-          } else if (message.startsWith('info') && message.includes('score cp')) {
-            const scoreMatch = message.match(/score cp (-?\d+)/);
-            if (scoreMatch) {
-              setEvaluation(parseInt(scoreMatch[1]) / 100);
-            }
-          }
-        };
-      } catch (error) {
-        setIsThinking(false);
-        reject(error);
+        return data.data.bestMove;
       }
-    });
-  }, [initializeStockfish]);
 
-  const stopAnalysis = useCallback(() => {
-    if (stockfishRef.current) {
-      stockfishRef.current.postMessage('stop');
+      throw new Error('No best move returned from engine');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get best move';
+      setError(errorMessage);
+      console.error('Stockfish API error:', err);
+      return null;
+    } finally {
       setIsThinking(false);
     }
   }, []);
 
-  const destroy = useCallback(() => {
-    if (stockfishRef.current) {
-      stockfishRef.current.postMessage('quit');
-      stockfishRef.current = null;
+  /**
+   * Get quick evaluation (lower depth for faster response)
+   */
+  const quickEval = useCallback(async (fen: string): Promise<number | null> => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/engine/quick-eval`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fen }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Engine API error: ${response.statusText}`);
+      }
+
+      const data: EngineResponse = await response.json();
+
+      if (data.success && data.data.evaluation !== undefined) {
+        const evalScore = data.data.evaluation / 100;
+        setEvaluation(evalScore);
+        return evalScore;
+      }
+
+      return null;
+    } catch (err) {
+      console.error('Quick eval error:', err);
+      return null;
+    }
+  }, []);
+
+  /**
+   * Get full position analysis
+   */
+  const analyzePosition = useCallback(async (
+    fen: string,
+    depth: number = 20,
+    multiPv: number = 1
+  ): Promise<any | null> => {
+    try {
+      setIsThinking(true);
+      setError(null);
+
+      const response = await fetch(`${BACKEND_URL}/api/engine/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fen, depth, multiPv }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Engine API error: ${response.statusText}`);
+      }
+
+      const data: EngineResponse = await response.json();
+
+      if (data.success) {
+        if (data.data.evaluation !== undefined) {
+          setEvaluation(data.data.evaluation / 100);
+        }
+        return data.data;
+      }
+
+      return null;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Analysis failed';
+      setError(errorMessage);
+      console.error('Analysis error:', err);
+      return null;
+    } finally {
+      setIsThinking(false);
     }
   }, []);
 
   return {
     isThinking,
-    bestMove,
     evaluation,
+    error,
     getBestMove,
-    stopAnalysis,
-    destroy,
-    initializeStockfish,
+    quickEval,
+    analyzePosition,
   };
 }

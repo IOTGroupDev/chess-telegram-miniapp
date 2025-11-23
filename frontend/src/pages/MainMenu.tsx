@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
 import { telegramService } from '../services/telegramService';
-import ApiService from '../services/api';
+import supabase from '../lib/supabase';
 
 export const MainMenu: React.FC = () => {
   const navigate = useNavigate();
   const { user, setCurrentGame } = useAppStore();
-  const apiService = ApiService.getInstance();
   const [isCreatingGame, setIsCreatingGame] = useState(false);
 
   const handlePlayAI = () => {
@@ -17,37 +16,56 @@ export const MainMenu: React.FC = () => {
   };
 
   const handlePlayOnline = async () => {
+    if (!user?.id) {
+      telegramService.showAlert('Необходима авторизация через Telegram');
+      return;
+    }
+
     try {
       setIsCreatingGame(true);
-      
-      // Get user ID from Telegram or generate mock
-      const userId = user?.id || Math.floor(Math.random() * 1000000);
-      
-      // Try to join existing game first
-      try {
-        const game = await apiService.createOnlineGame({
-          telegramId: userId,
-          mode: 'join'
-        });
-        
-        if (game.status === 'active') {
-          setCurrentGame(game.id, 'online');
-          navigate(`/online-game/${game.id}`);
-        } else {
-          // No waiting games, create new one
-          const newGame = await apiService.createOnlineGame({
-            telegramId: userId,
-            mode: 'waiting'
-          });
-          setCurrentGame(newGame.id, 'online');
-          navigate(`/online-game/${newGame.id}`);
-        }
-      } catch (error) {
-        // If join fails, create new game
-        const newGame = await apiService.createOnlineGame({
-          telegramId: userId,
-          mode: 'waiting'
-        });
+
+      // Try to join an existing waiting game
+      const { data: waitingGames } = await supabase
+        .from('games')
+        .select('id')
+        .eq('status', 'waiting')
+        .neq('white_player_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1);
+
+      if (waitingGames && waitingGames.length > 0) {
+        // Join existing game
+        const gameId = waitingGames[0].id;
+
+        const { error: updateError } = await supabase
+          .from('games')
+          .update({
+            black_player_id: user.id,
+            status: 'active',
+            started_at: new Date().toISOString(),
+          })
+          .eq('id', gameId);
+
+        if (updateError) throw updateError;
+
+        setCurrentGame(gameId, 'online');
+        navigate(`/online-game/${gameId}`);
+      } else {
+        // Create new waiting game
+        const { data: newGame, error: createError } = await supabase
+          .from('games')
+          .insert({
+            white_player_id: user.id,
+            time_control: 'blitz',
+            time_limit: 300, // 5 minutes
+            time_increment: 3, // 3 seconds per move
+            status: 'waiting',
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
         setCurrentGame(newGame.id, 'online');
         navigate(`/online-game/${newGame.id}`);
       }
@@ -73,6 +91,14 @@ export const MainMenu: React.FC = () => {
 
   const handleViewProfile = () => {
     navigate('/profile');
+  };
+
+  const handleViewTournaments = () => {
+    navigate('/tournaments');
+  };
+
+  const handlePlayPuzzles = () => {
+    navigate('/puzzles');
   };
 
   return (
@@ -126,12 +152,34 @@ export const MainMenu: React.FC = () => {
             </div>
           </div>
 
+          <div className="menu-card" onClick={handlePlayPuzzles}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🧩</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Tactical Puzzles</h3>
+                <p className="text-white/70">Solve chess puzzles & improve</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
           <div className="menu-card" onClick={handleCreateInviteLink}>
             <div className="flex items-center space-x-4">
               <div className="text-4xl">🔗</div>
               <div className="flex-1">
                 <h3 className="text-white font-bold text-xl mb-1">Create Invite</h3>
                 <p className="text-white/70">Share game with friends</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
+          <div className="menu-card" onClick={handleViewTournaments}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🏆</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Tournaments</h3>
+                <p className="text-white/70">Compete in organized events</p>
               </div>
               <div className="text-2xl text-white/50">→</div>
             </div>

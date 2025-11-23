@@ -15,7 +15,9 @@
     "cypress:run": "cypress run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.84.0",
     "@tailwindcss/postcss": "^4.1.13",
+    "@tanstack/react-query": "^5.90.10",
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@tma.js/sdk": "^2.7.0",
@@ -27,8 +29,6 @@
     "react-chessboard": "^5.6.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.1",
-    "socket.io-client": "^4.8.1",
-    "stockfish.js": "^10.0.2",
     "tailwindcss": "^4.1.13",
     "zustand": "^5.0.8"
   },
