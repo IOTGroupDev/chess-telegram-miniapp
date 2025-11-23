@@ -4,6 +4,9 @@ import { GameModule } from './game/game.module';
 import { UserModule } from './user/user.module';
 import { WebSocketModule } from './websocket/websocket.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { EngineModule } from './engine/engine.module';
+import { RatingModule } from './rating/rating.module';
+import { AnalysisModule } from './analysis/analysis.module';
 
 @Module({
   imports: [
@@ -14,6 +17,10 @@ import { PrismaModule } from './prisma/prisma.module';
     GameModule,
     UserModule,
     WebSocketModule,
+    // New modules for chess engine, rating, and AI analysis
+    EngineModule,
+    RatingModule,
+    AnalysisModule,
   ],
 })
 export class AppModule {}
