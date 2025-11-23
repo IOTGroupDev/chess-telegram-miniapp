@@ -28,6 +28,10 @@ export class TournamentService {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_KEY');
 
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be configured');
+    }
+
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
