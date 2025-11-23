@@ -4,37 +4,43 @@ import { Navigation } from '../components/Navigation';
 import { Button } from '../components/Button';
 import { ChessBoard } from '../components/ChessBoard';
 import { GameInfo } from '../components/GameInfo';
-import { useOnlineGame } from '../hooks/useOnlineGame';
+import { useSupabaseGame } from '../hooks/useSupabaseGame';
+import { useAppStore } from '../store/useAppStore';
 
 export const OnlineGamePage: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
+  const { user } = useAppStore();
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [showDrawOffer, setShowDrawOffer] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
 
+  // Use Supabase real-time hook
   const {
+    game,
     chess,
-    isConnected,
-    isWaiting,
-    isMyTurn,
-    gameStatus,
-    winner,
-    error,
     moves,
-    chatMessages,
-    makeMove,
-    resign,
-    offerDraw,
-    sendChatMessage,
-  } = useOnlineGame();
+    isLoading,
+    error,
+    makeMove: makeSupabaseMove,
+    resign: resignGame,
+    offerDraw: offerDrawGame,
+  } = useSupabaseGame(gameId || '', user?.id || '');
 
-  const handleSquareClick = (square: string) => {
+  // Derived state
+  const isWaiting = game?.status === 'waiting';
+  const gameStatus = game?.status || 'waiting';
+  const winner = game?.winner;
+  const isMyTurn =
+    game?.status === 'active' &&
+    ((game.move_number % 2 === 0 && game.white_player_id === user?.id) ||
+     (game.move_number % 2 === 1 && game.black_player_id === user?.id));
+
+  const handleSquareClick = async (square: string) => {
     if (!chess || !isMyTurn || gameStatus === 'finished') return;
 
     if (selectedSquare) {
       // Try to make a move
       if (selectedSquare !== square) {
-        const success = makeMove(selectedSquare, square);
+        const success = await makeSupabaseMove(selectedSquare, square);
         if (success) {
           setSelectedSquare(null);
         }
@@ -50,23 +56,15 @@ export const OnlineGamePage: React.FC = () => {
     }
   };
 
-  const handleResign = () => {
+  const handleResign = async () => {
     if (window.confirm('Вы уверены, что хотите сдаться?')) {
-      resign();
+      await resignGame();
     }
   };
 
-  const handleOfferDraw = () => {
-    offerDraw();
+  const handleOfferDraw = async () => {
+    await offerDrawGame();
     setShowDrawOffer(false);
-  };
-
-  const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (chatMessage.trim()) {
-      sendChatMessage(chatMessage);
-      setChatMessage('');
-    }
   };
 
   // const getSquareColor = (square: string) => {
@@ -86,7 +84,7 @@ export const OnlineGamePage: React.FC = () => {
 
   const getStatusMessage = () => {
     if (error) return error;
-    if (!isConnected) return 'Подключение к серверу...';
+    if (isLoading) return 'Загрузка игры...';
     if (isWaiting) return 'Ожидание соперника...';
     if (gameStatus === 'finished') {
       if (winner === 'draw') return 'Ничья!';
@@ -98,11 +96,22 @@ export const OnlineGamePage: React.FC = () => {
 
   const getStatusColor = () => {
     if (error) return 'bg-red-50 border-red-200 text-red-800';
-    if (!isConnected || isWaiting) return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+    if (isLoading || isWaiting) return 'bg-yellow-50 border-yellow-200 text-yellow-800';
     if (gameStatus === 'finished') return 'bg-green-50 border-green-200 text-green-800';
     if (!isMyTurn) return 'bg-blue-50 border-blue-200 text-blue-800';
     return 'bg-green-50 border-green-200 text-green-800';
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-telegram-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-telegram-button mx-auto mb-4"></div>
+          <p className="text-telegram-text">Загрузка игры...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-telegram-bg">
@@ -210,46 +219,29 @@ export const OnlineGamePage: React.FC = () => {
               )}
             </div>
 
-            {/* Chat */}
+            {/* Move History */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-telegram-text">Чат</h3>
-              
+              <h3 className="text-lg font-semibold text-telegram-text">История ходов</h3>
+
               <div className="bg-telegram-bg rounded-lg p-4 h-64 overflow-y-auto">
-                {chatMessages.length === 0 ? (
-                  <p className="text-telegram-hint text-center">Нет сообщений</p>
+                {moves.length === 0 ? (
+                  <p className="text-telegram-hint text-center">Ходы еще не сделаны</p>
                 ) : (
                   <div className="space-y-2">
-                    {chatMessages.map((msg, index) => (
-                      <div key={index} className="text-sm">
-                        <span className="font-medium text-telegram-link">
-                          {msg.from}:
+                    {moves.map((move, index) => (
+                      <div key={move.id} className="text-sm flex items-center gap-2">
+                        <span className="font-medium text-telegram-hint min-w-[2rem]">
+                          {Math.floor(index / 2) + 1}.
                         </span>
-                        <span className="ml-2 text-telegram-text">{msg.message}</span>
-                        <div className="text-xs text-telegram-hint">
-                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        <span className="font-mono text-telegram-text">{move.san}</span>
+                        <div className="text-xs text-telegram-hint ml-auto">
+                          {new Date(move.created_at).toLocaleTimeString()}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              
-              <form onSubmit={handleChatSubmit} className="flex space-x-2">
-                <input
-                  type="text"
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="Введите сообщение..."
-                  className="flex-1 px-3 py-2 border border-telegram-hint rounded-md focus:outline-none focus:ring-2 focus:ring-telegram-button text-telegram-text bg-telegram-bg"
-                  disabled={gameStatus === 'finished'}
-                />
-                <Button
-                  variant="primary"
-                  disabled={!chatMessage.trim() || gameStatus === 'finished'}
-                >
-                  Отправить
-                </Button>
-              </form>
             </div>
           </div>
         </div>
