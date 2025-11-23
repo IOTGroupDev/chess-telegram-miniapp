@@ -37,12 +37,12 @@ export const MainMenu: React.FC = () => {
         const gameId = (waitingGames[0] as any).id;
 
         const { error: updateError } = await supabase
-          .from('games')
-          .update({
+          // @ts-ignore
+          .from('games')          .update({
             black_player_id: user.id,
             status: 'active',
             started_at: new Date().toISOString(),
-          } as any)
+          })
           .eq('id', gameId);
 
         if (updateError) throw updateError;
@@ -51,15 +51,18 @@ export const MainMenu: React.FC = () => {
         navigate(`/online-game/${gameId}`);
       } else {
         // Create new waiting game
+        // @ts-ignore - Supabase type limitation
+        // @ts-ignore - Supabase type limitation
         const { data: newGame, error: createError } = await supabase
           .from('games')
+          // @ts-ignore
           .insert({
             white_player_id: user.id,
             time_control: 'blitz',
             time_limit: 300, // 5 minutes
             time_increment: 3, // 3 seconds per move
             status: 'waiting',
-          } as any)
+          })
           .select()
           .single();
 

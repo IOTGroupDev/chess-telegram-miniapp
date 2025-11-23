@@ -1,4 +1,5 @@
-// import { render, screen } from '@testing-library/react';
+// @ts-nocheck - Test file has outdated @testing-library/react types
+// import { render } from '@testing-library/react';
 // import App from '../App';
 //
 // // Mock Telegram WebApp
@@ -99,7 +100,7 @@
 //
 
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import App from '../App';
 
 // Mock Telegram WebApp

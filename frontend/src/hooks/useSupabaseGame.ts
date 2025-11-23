@@ -178,6 +178,7 @@ export function useSupabaseGame(
         }
 
         // Insert move into database
+        // @ts-ignore - Supabase type limitation
         const { error: moveError } = await supabase
           .from('moves')
           .insert({
@@ -191,7 +192,7 @@ export function useSupabaseGame(
             clock_time: game.white_player_id === userId
               ? game.white_time_remaining
               : game.black_time_remaining,
-          } as any)
+          })
           .select()
           .single();
 
@@ -223,8 +224,7 @@ export function useSupabaseGame(
 
         // Update game state
         const { error: updateError } = await supabase
-          .from('games')
-          .update({
+          .from('games')          .update({
             fen: chess.fen(),
             pgn: chess.pgn(),
             move_number: game.move_number + 1,
@@ -233,7 +233,7 @@ export function useSupabaseGame(
             winner: winner as any,
             end_reason: endReason as any,
             finished_at: isGameOver ? new Date().toISOString() : null,
-          } as any)
+          })
           .eq('id', gameId);
 
         if (updateError) throw updateError;
@@ -255,14 +255,13 @@ export function useSupabaseGame(
     try {
       const winner = game.white_player_id === userId ? 'black' : 'white';
 
-      await supabase
-        .from('games')
+      await supabase        .from('games')
         .update({
           status: 'finished',
           winner: winner as any,
           end_reason: 'resignation',
           finished_at: new Date().toISOString(),
-        } as any)
+        })
         .eq('id', gameId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resign');
@@ -275,14 +274,14 @@ export function useSupabaseGame(
     if (!game) return;
 
     try {
-      const isWhite = game.white_player_id === userId;
-
+      const isWhite = game.white_player_id === userId;      // @ts-ignore - Supabase type limitation
+      // @ts-ignore
       await supabase
         .from('games')
         .update({
           white_offered_draw: isWhite ? true : game.white_offered_draw,
           black_offered_draw: !isWhite ? true : game.black_offered_draw,
-        } as any)
+        })
         .eq('id', gameId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to offer draw');
@@ -292,9 +291,9 @@ export function useSupabaseGame(
 
   // Accept draw
   const acceptDraw = useCallback(async () => {
-    if (!game) return;
-
-    try {
+    if (!game) return;    try {
+      // @ts-ignore - Supabase type limitation
+      // @ts-ignore
       await supabase
         .from('games')
         .update({
@@ -302,7 +301,7 @@ export function useSupabaseGame(
           winner: 'draw',
           end_reason: 'draw_agreement',
           finished_at: new Date().toISOString(),
-        } as any)
+        })
         .eq('id', gameId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to accept draw');
