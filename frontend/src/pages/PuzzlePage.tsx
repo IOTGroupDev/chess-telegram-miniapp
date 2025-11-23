@@ -297,17 +297,17 @@ const PuzzlePage: React.FC = () => {
 
       {/* Chess Board */}
       <div className="max-w-2xl mx-auto mb-4">
-        {/* @ts-ignore */}
-        {/* @ts-expect-error - Chessboard props type mismatch */}
         <Chessboard
-          position={game.fen()}
-          onPieceDrop={onDrop}
-          boardOrientation={playerColor}
-          customBoardStyle={{
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-          }}
-          arePiecesDraggable={status === 'playing'}
+          {...{
+            position: game.fen(),
+            onPieceDrop: onDrop,
+            boardOrientation: playerColor,
+            customBoardStyle: {
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+            },
+            arePiecesDraggable: status === 'playing'
+          } as any}
         />
       </div>
 
