@@ -24,6 +24,11 @@ interface UserRequest {
   headers: { [key: string]: string | string[] | undefined };
 }
 
+function getUserId(req: UserRequest): string {
+  const headerUserId = req.headers['x-user-id'];
+  return req.user?.id || (Array.isArray(headerUserId) ? headerUserId[0] : headerUserId) || '';
+}
+
 /**
  * Tournament Controller
  * Handles all tournament-related endpoints
@@ -38,8 +43,7 @@ export class TournamentController {
    */
   @Post()
   async createTournament(@Request() req: UserRequest, @Body() dto: CreateTournamentDto) {
-    const userId = req.user?.id || req.headers['x-user-id']; // Support both auth methods
-    return this.tournamentService.createTournament(userId, dto);
+    return this.tournamentService.createTournament(getUserId(req), dto);
   }
 
   /**
@@ -70,8 +74,7 @@ export class TournamentController {
     @Request() req: UserRequest,
     @Body() dto: UpdateTournamentDto,
   ) {
-    const userId = req.user?.id || req.headers['x-user-id'];
-    return this.tournamentService.updateTournament(tournamentId, userId, dto);
+    return this.tournamentService.updateTournament(tournamentId, getUserId(req), dto);
   }
 
   /**
@@ -81,7 +84,6 @@ export class TournamentController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteTournament(@Param('id') tournamentId: string, @Request() req: UserRequest) {
-    const userId = req.user?.id || req.headers['x-user-id'];
     // Implement delete logic in service if needed
     return { message: 'Delete not implemented yet' };
   }
@@ -92,8 +94,7 @@ export class TournamentController {
    */
   @Post(':id/join')
   async joinTournament(@Param('id') tournamentId: string, @Request() req: UserRequest) {
-    const userId = req.user?.id || req.headers['x-user-id'];
-    return this.tournamentService.joinTournament(tournamentId, userId);
+    return this.tournamentService.joinTournament(tournamentId, getUserId(req));
   }
 
   /**
@@ -103,8 +104,7 @@ export class TournamentController {
   @Post(':id/leave')
   @HttpCode(HttpStatus.NO_CONTENT)
   async leaveTournament(@Param('id') tournamentId: string, @Request() req: UserRequest) {
-    const userId = req.user?.id || req.headers['x-user-id'];
-    await this.tournamentService.leaveTournament(tournamentId, userId);
+    await this.tournamentService.leaveTournament(tournamentId, getUserId(req));
   }
 
   /**

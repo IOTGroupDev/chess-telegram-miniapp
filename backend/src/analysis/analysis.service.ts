@@ -338,7 +338,7 @@ Keep it concise and helpful for a chess player reviewing their game.`;
       throw new Error(`Deepseek API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.choices[0].message.content;
   }
 
@@ -346,6 +346,10 @@ Keep it concise and helpful for a chess player reviewing their game.`;
    * Call Claude API
    */
   private async callClaude(prompt: string): Promise<string> {
+    if (!this.aiApiKey) {
+      throw new Error('AI_API_KEY not configured');
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -364,7 +368,7 @@ Keep it concise and helpful for a chess player reviewing their game.`;
       throw new Error(`Claude API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.content[0].text;
   }
 
@@ -403,7 +407,7 @@ Keep it concise and helpful for a chess player reviewing their game.`;
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.choices[0].message.content;
   }
 

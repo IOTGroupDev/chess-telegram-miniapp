@@ -271,8 +271,8 @@ export class TournamentService {
     // Format standings with rank
     const standings: TournamentStanding[] = (data || []).map((participant, index) => ({
       user_id: participant.user_id,
-      username: participant.users?.username || 'Unknown',
-      rating: participant.users?.blitz_rating || 1500,
+      username: (participant.users as any)?.username || 'Unknown',
+      rating: (participant.users as any)?.blitz_rating || 1500,
       score: participant.score,
       games_played: participant.games_played,
       wins: participant.wins,
@@ -450,7 +450,8 @@ export class TournamentService {
         try {
           await this.startTournament(tournament.id);
         } catch (error) {
-          this.logger.error(`Failed to start tournament ${tournament.id}: ${error.message}`);
+          const err = error as Error;
+          this.logger.error(`Failed to start tournament ${tournament.id}: ${err.message}`);
         }
       }
     }

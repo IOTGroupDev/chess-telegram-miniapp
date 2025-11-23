@@ -139,7 +139,7 @@ export class PuzzleService {
     // Get user ratings
     const { data: userData } = await this.supabase
       .from('users')
-      .select('puzzle_rating, puzzle_rd')
+      .select('puzzle_rating, puzzle_rd, puzzles_solved, puzzles_failed')
       .eq('id', userId)
       .single();
 
@@ -262,7 +262,7 @@ export class PuzzleService {
     // Get total attempts
     const { data: attempts } = await this.supabase
       .from('user_puzzle_attempts')
-      .select('solved, puzzle_id')
+      .select('solved, puzzle_id, created_at')
       .eq('user_id', userId);
 
     const totalAttempts = attempts?.length || 0;
@@ -311,7 +311,7 @@ export class PuzzleService {
 
     const themesMastered: { [theme: string]: number } = {};
     for (const solved of solvedPuzzles || []) {
-      const themes = solved.puzzles?.themes || [];
+      const themes = (solved.puzzles as any)?.themes || [];
       for (const theme of themes) {
         themesMastered[theme] = (themesMastered[theme] || 0) + 1;
       }

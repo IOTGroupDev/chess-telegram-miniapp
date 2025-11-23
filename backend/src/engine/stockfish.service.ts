@@ -118,7 +118,8 @@ export class StockfishService extends EventEmitter implements OnModuleDestroy {
 
       this.logger.log('Stockfish initialized successfully');
     } catch (error) {
-      this.logger.error(`Failed to initialize Stockfish: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`Failed to initialize Stockfish: ${err.message}`);
       throw error;
     }
   }
@@ -328,8 +329,6 @@ export class StockfishService extends EventEmitter implements OnModuleDestroy {
 
     // Wait for bestmove
     return new Promise((resolve, reject) => {
-      this.currentAnalysis = { resolve, reject };
-
       // Timeout after 60 seconds
       const timeout = setTimeout(() => {
         if (this.currentAnalysis) {
@@ -338,11 +337,15 @@ export class StockfishService extends EventEmitter implements OnModuleDestroy {
         }
       }, 60000);
 
-      // Clear timeout when done
-      const originalResolve = resolve;
-      resolve = (result: AnalysisResult) => {
-        clearTimeout(timeout);
-        originalResolve(result);
+      this.currentAnalysis = {
+        resolve: (result: AnalysisResult) => {
+          clearTimeout(timeout);
+          resolve(result);
+        },
+        reject: (error: Error) => {
+          clearTimeout(timeout);
+          reject(error);
+        },
       };
     });
   }
