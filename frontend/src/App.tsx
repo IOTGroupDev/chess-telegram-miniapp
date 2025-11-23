@@ -6,6 +6,8 @@ import { AIGamePage } from './pages/AIGamePage';
 import { OnlineGamePage } from './pages/OnlineGamePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
+import TournamentsPage from './pages/TournamentsPage';
+import TournamentDetailsPage from './pages/TournamentDetailsPage';
 import { telegramService } from './services/telegramService';
 
 function App() {
@@ -55,6 +57,8 @@ function App() {
           <Route path="/join/:inviteCode" element={<OnlineGamePage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/tournaments" element={<TournamentsPage />} />
+          <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
         </Routes>
       </div>
     </Router>

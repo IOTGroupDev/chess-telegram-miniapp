@@ -15,6 +15,7 @@ import { ConfigModule } from '@nestjs/config';
 import { EngineModule } from './engine/engine.module';
 import { RatingModule } from './rating/rating.module';
 import { AnalysisModule } from './analysis/analysis.module';
+import { TournamentModule } from './tournament/tournament.module';
 
 @Module({
   imports: [
@@ -32,6 +33,9 @@ import { AnalysisModule } from './analysis/analysis.module';
 
     // AI-powered game analysis
     AnalysisModule,
+
+    // Tournament management system
+    TournamentModule,
   ],
 })
 export class AppModule {}

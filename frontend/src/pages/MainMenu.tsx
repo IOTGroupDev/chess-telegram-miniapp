@@ -93,6 +93,10 @@ export const MainMenu: React.FC = () => {
     navigate('/profile');
   };
 
+  const handleViewTournaments = () => {
+    navigate('/tournaments');
+  };
+
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-md mx-auto">
@@ -150,6 +154,17 @@ export const MainMenu: React.FC = () => {
               <div className="flex-1">
                 <h3 className="text-white font-bold text-xl mb-1">Create Invite</h3>
                 <p className="text-white/70">Share game with friends</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
+          <div className="menu-card" onClick={handleViewTournaments}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🏆</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">Tournaments</h3>
+                <p className="text-white/70">Compete in organized events</p>
               </div>
               <div className="text-2xl text-white/50">→</div>
             </div>
