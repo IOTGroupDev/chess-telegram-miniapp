@@ -100,7 +100,7 @@ export const AITrainingPage: React.FC = () => {
     }
   }, [evaluation, stockfish]);
 
-  const handlePieceDrop = useCallback(async (sourceSquare: Square, targetSquare: Square) => {
+  const handlePieceDrop = useCallback((sourceSquare: Square, targetSquare: Square) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
       return false;
     }
@@ -109,8 +109,8 @@ export const AITrainingPage: React.FC = () => {
     const success = chess.makeMove(sourceSquare, targetSquare);
 
     if (success) {
-      // Analyze the move
-      await analyzeMove(playerMove, chess.getFen());
+      // Analyze the move asynchronously (fire and forget)
+      analyzeMove(playerMove, chess.getFen());
 
       // Get AI move after player move
       if (!chess.gameState.isGameOver) {
