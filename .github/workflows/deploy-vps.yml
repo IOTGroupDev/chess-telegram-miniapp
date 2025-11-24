@@ -1,0 +1,87 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Позволяет запускать вручную из GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy to Production VPS
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🚀 Deploy to VPS via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT }}
+        script: |
+          echo "📦 Starting deployment..."
+
+          # Переходим в директорию проекта
+          cd ~/chess-telegram-miniapp || exit 1
+
+          # Получаем последние изменения
+          echo "🔄 Pulling latest changes..."
+          git pull origin main
+
+          # Обновляем .env файл с секретами из GitHub
+          echo "⚙️  Updating environment variables..."
+          cat > .env << EOF
+          # Supabase Configuration
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}
+
+          # Backend Configuration
+          BACKEND_URL=${{ secrets.BACKEND_URL }}
+
+          # Stockfish Configuration
+          STOCKFISH_THREADS=2
+          STOCKFISH_HASH_SIZE=512
+
+          # AI API Configuration
+          AI_PROVIDER=deepseek
+          AI_API_KEY=${{ secrets.AI_API_KEY }}
+
+          # CORS Configuration
+          CORS_ORIGIN=${{ secrets.BACKEND_URL }}
+
+          # Domain Configuration
+          DOMAIN=${{ secrets.DOMAIN }}
+          EMAIL=${{ secrets.EMAIL }}
+          EOF
+
+          # Пересборка и перезапуск контейнеров
+          echo "🐋 Rebuilding and restarting containers..."
+          docker compose -f docker-compose.vps.yml up -d --build
+
+          # Ждем пока контейнеры запустятся
+          echo "⏳ Waiting for services to start..."
+          sleep 10
+
+          # Проверяем статус контейнеров
+          echo "✅ Checking container status..."
+          docker compose -f docker-compose.vps.yml ps
+
+          # Проверяем здоровье backend
+          echo "🏥 Checking backend health..."
+          docker exec chess-backend curl -f http://localhost:3000/health || echo "⚠️  Health check failed"
+
+          # Очистка старых Docker образов (экономим место)
+          echo "🧹 Cleaning up old images..."
+          docker image prune -af
+
+          echo "✨ Deployment completed!"
+
+    - name: 📊 Deployment Status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Deployment successful!"
+        else
+          echo "❌ Deployment failed!"
+        fi
