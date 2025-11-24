@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Navigation } from '../components/Navigation';
-import { Button } from '../components/Button';
-import { ChessBoard } from '../components/ChessBoard';
-import { GameInfo } from '../components/GameInfo';
+import { useParams, useNavigate } from 'react-router-dom';
+import type { Square } from 'chess.js';
+import { Chessboard } from 'react-chessboard';
 import { useSupabaseGame } from '../hooks/useSupabaseGame';
 import { useAppStore } from '../store/useAppStore';
+import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
+import { telegramService } from '../services/telegramService';
 
 export const OnlineGamePage: React.FC = () => {
+  const navigate = useNavigate();
   const { gameId } = useParams<{ gameId: string }>();
   const { user } = useAppStore();
-  const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [showDrawOffer, setShowDrawOffer] = useState(false);
+
+  // Use Telegram native BackButton
+  useTelegramBackButton(() => navigate('/main'));
 
   // Use Supabase real-time hook
   const {
@@ -34,217 +37,248 @@ export const OnlineGamePage: React.FC = () => {
     ((game.move_number % 2 === 0 && game.white_player_id === String(user?.id)) ||
      (game.move_number % 2 === 1 && game.black_player_id === String(user?.id)));
 
-  const handleSquareClick = async (square: string) => {
-    if (!chess || !isMyTurn || gameStatus === 'finished') return;
-
-    if (selectedSquare) {
-      // Try to make a move
-      if (selectedSquare !== square) {
-        const success = await makeSupabaseMove(selectedSquare, square);
-        if (success) {
-          setSelectedSquare(null);
-        }
-      } else {
-        setSelectedSquare(null);
-      }
-    } else {
-      // Select a piece
-      const piece = chess.get(square as any);
-      if (piece && piece.color === chess.turn()) {
-        setSelectedSquare(square);
-      }
+  const handlePieceDrop = async (sourceSquare: string, targetSquare: string) => {
+    if (!chess || !isMyTurn || gameStatus === 'finished') {
+      telegramService.notificationOccurred('error');
+      return false;
     }
+
+    const success = await makeSupabaseMove(sourceSquare, targetSquare);
+    if (success) {
+      telegramService.notificationOccurred('success');
+    } else {
+      telegramService.notificationOccurred('error');
+    }
+    return success;
   };
 
   const handleResign = async () => {
-    if (window.confirm('Вы уверены, что хотите сдаться?')) {
+    const confirmed = await telegramService.showConfirm('Вы уверены, что хотите сдаться?');
+    if (confirmed) {
       await resignGame();
+      telegramService.notificationOccurred('success');
     }
   };
 
   const handleOfferDraw = async () => {
     await offerDrawGame();
     setShowDrawOffer(false);
-  };
-
-  // const getSquareColor = (square: string) => {
-  //   if (selectedSquare === square) {
-  //     return 'bg-blue-400';
-  //   }
-  //   
-  //   const availableMoves = getAvailableMoves(selectedSquare || '');
-  //   const isAvailable = availableMoves.some((move: any) => move.to === square);
-  //   
-  //   if (isAvailable) {
-  //     return 'bg-green-200';
-  //   }
-  //   
-  //   return '';
-  // };
-
-  const getStatusMessage = () => {
-    if (error) return error;
-    if (isLoading) return 'Загрузка игры...';
-    if (isWaiting) return 'Ожидание соперника...';
-    if (gameStatus === 'finished') {
-      if (winner === 'draw') return 'Ничья!';
-      return `Игра окончена! Победитель: ${winner}`;
-    }
-    if (!isMyTurn) return 'Ход соперника';
-    return 'Ваш ход';
-  };
-
-  const getStatusColor = () => {
-    if (error) return 'bg-red-50 border-red-200 text-red-800';
-    if (isLoading || isWaiting) return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-    if (gameStatus === 'finished') return 'bg-green-50 border-green-200 text-green-800';
-    if (!isMyTurn) return 'bg-blue-50 border-blue-200 text-blue-800';
-    return 'bg-green-50 border-green-200 text-green-800';
+    telegramService.notificationOccurred('success');
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-telegram-bg flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-telegram-button mx-auto mb-4"></div>
-          <p className="text-telegram-text">Загрузка игры...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white">Загрузка игры...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-telegram-bg" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
-      <Navigation
-        showBackButton
-        title={`Онлайн игра #${gameId}`}
-      />
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center p-6">
+          <h1 className="text-2xl font-bold text-white mb-4">Ошибка</h1>
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={() => navigate('/main')}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all active:scale-95"
+          >
+            Назад
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-      <div className="max-w-6xl mx-auto p-4 pt-6">
-        <div className="bg-telegram-secondary-bg rounded-lg shadow-lg p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Chess Board */}
-            <div className="lg:col-span-2">
-              <ChessBoard
-                position={chess?.fen() || 'start'}
-                onSquareClick={(square) => handleSquareClick(square)}
-                onPieceDrop={() => false}
-                gameState={{
-                  game: null,
-                  isPlayerTurn: isMyTurn,
-                  selectedSquare: selectedSquare,
-                  possibleMoves: [],
-                  isGameOver: gameStatus === 'finished',
-                  winner: (winner || null) as 'white' | 'black' | 'draw' | null,
-                  fen: chess?.fen() || 'start',
-                  moves: moves as any,
-                  status: (gameStatus === 'aborted' ? 'finished' : gameStatus) as 'waiting' | 'active' | 'finished',
-                }}
-                boardWidth={400}
+  // Determine player colors and names
+  const amIWhite = game?.white_player_id === String(user?.id);
+  const myColor = amIWhite ? 'white' : 'black';
+  const opponentColor = amIWhite ? 'black' : 'white';
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+      <div className="max-w-2xl mx-auto p-3 sm:p-4">
+        {/* Header with Players */}
+        <div className="mb-4">
+          {/* Opponent */}
+          <div className="flex items-center justify-between mb-3 bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${opponentColor === 'white' ? 'from-slate-300 to-slate-500' : 'from-slate-700 to-slate-900'} flex items-center justify-center font-bold shadow-lg border-2 ${opponentColor === 'white' ? 'border-white' : 'border-slate-600'}`}>
+                {opponentColor === 'white' ? '♔' : '♚'}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white leading-tight">Opponent</h3>
+                <p className="text-xs text-slate-400">Online Player</p>
+              </div>
+            </div>
+            {!isMyTurn && gameStatus === 'active' && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-blue-500/30">
+                <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                <span className="text-xs text-blue-300 font-medium">Thinking...</span>
+              </div>
+            )}
+            {isWaiting && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/20 rounded-full border border-yellow-500/30">
+                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                <span className="text-xs text-yellow-300 font-medium">Waiting...</span>
+              </div>
+            )}
+          </div>
+
+          {/* You */}
+          <div className="flex items-center justify-between bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${myColor === 'white' ? 'from-slate-300 to-slate-500' : 'from-slate-700 to-slate-900'} flex items-center justify-center font-bold shadow-lg border-2 ${myColor === 'white' ? 'border-white' : 'border-slate-600'}`}>
+                {myColor === 'white' ? '♔' : '♚'}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white leading-tight">You</h3>
+                <p className="text-xs text-slate-400">{user?.username || 'Player'}</p>
+              </div>
+            </div>
+            {isMyTurn && gameStatus === 'active' && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 rounded-full border border-green-500/30">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                <span className="text-xs text-green-300 font-medium">Your turn</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Chess Board Container */}
+        <div className="relative mb-4">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
+            {/* Glow effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20"></div>
+
+            {/* Actual board */}
+            <div className="relative">
+              <Chessboard
+                {...{
+                  position: chess?.fen() || 'start',
+                  onPieceDrop: handlePieceDrop,
+                  boardOrientation: myColor,
+                  customBoardStyle: {
+                    borderRadius: '0',
+                  },
+                  customDarkSquareStyle: {
+                    backgroundColor: '#779952',
+                  },
+                  customLightSquareStyle: {
+                    backgroundColor: '#edeed1',
+                  },
+                  customDropSquareStyle: {
+                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
+                  },
+                  arePiecesDraggable: isMyTurn && gameStatus === 'active',
+                  animationDuration: 200,
+                } as any}
               />
             </div>
-            
-            {/* Game Info */}
-            <div className="space-y-4">
-              <GameInfo
-                gameState={{
-                  game: null,
-                  isPlayerTurn: isMyTurn,
-                  selectedSquare: selectedSquare,
-                  possibleMoves: [],
-                  isGameOver: gameStatus === 'finished',
-                  winner: (winner || null) as 'white' | 'black' | 'draw' | null,
-                  fen: chess?.fen() || 'start',
-                  moves: moves as any,
-                  status: (gameStatus === 'aborted' ? 'finished' : gameStatus) as 'waiting' | 'active' | 'finished',
-                }}
-                isPlayerTurn={isMyTurn}
-                isThinking={false}
-              />
-              
-              {/* Status */}
-              <div className={`border rounded-lg p-4 ${getStatusColor()}`}>
-                <p className="text-center font-medium">
-                  {getStatusMessage()}
+          </div>
+
+          {/* Game Over Overlay */}
+          {gameStatus === 'finished' && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+              <div className="text-center px-6">
+                <div className="text-6xl mb-3">
+                  {winner === 'draw' ? '🤝' : winner === myColor ? '🎉' : '😔'}
+                </div>
+                <h3 className="text-3xl font-black mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  {winner === 'draw' ? 'Draw!' : winner === myColor ? 'You Won!' : 'You Lost!'}
+                </h3>
+                <p className="text-slate-300 mb-6">
+                  {winner === 'draw'
+                    ? 'Well played by both sides!'
+                    : winner === myColor
+                    ? 'Excellent game! You defeated your opponent!'
+                    : 'Good game! Better luck next time!'}
                 </p>
               </div>
-
-              {/* Game Controls */}
-              {gameStatus === 'active' && (
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleResign}
-                    variant="danger"
-                    className="w-full"
-                  >
-                    Сдаться
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setShowDrawOffer(true)}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    Предложить ничью
-                  </Button>
-                </div>
-              )}
-
-              {/* Draw Offer Modal */}
-              {showDrawOffer && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-                    <h3 className="text-lg font-semibold mb-4">Предложить ничью</h3>
-                    <p className="text-gray-600 mb-4">
-                      Вы хотите предложить ничью сопернику?
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={handleOfferDraw}
-                        variant="primary"
-                        className="flex-1"
-                      >
-                        Да
-                      </Button>
-                      <Button
-                        onClick={() => setShowDrawOffer(false)}
-                        variant="secondary"
-                        className="flex-1"
-                      >
-                        Отмена
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
+          )}
+        </div>
 
-            {/* Move History */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-telegram-text">История ходов</h3>
+        {/* Game Controls */}
+        {gameStatus === 'active' && (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <button
+              onClick={() => setShowDrawOffer(true)}
+              className="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span>Offer Draw</span>
+            </button>
+            <button
+              onClick={handleResign}
+              className="bg-red-600/50 hover:bg-red-600 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-red-500/20 hover:border-red-500/40 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+              </svg>
+              <span>Resign</span>
+            </button>
+          </div>
+        )}
 
-              <div className="bg-telegram-bg rounded-lg p-4 h-64 overflow-y-auto">
-                {moves.length === 0 ? (
-                  <p className="text-telegram-hint text-center">Ходы еще не сделаны</p>
-                ) : (
-                  <div className="space-y-2">
-                    {moves.map((move, index) => (
-                      <div key={move.id} className="text-sm flex items-center gap-2">
-                        <span className="font-medium text-telegram-hint min-w-[2rem]">
-                          {Math.floor(index / 2) + 1}.
-                        </span>
-                        <span className="font-mono text-telegram-text">{move.san}</span>
-                        <div className="text-xs text-telegram-hint ml-auto">
-                          {new Date(move.created_at).toLocaleTimeString()}
-                        </div>
-                      </div>
-                    ))}
+        {/* Move History */}
+        <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <span className="text-xl">📜</span>
+            <span>Move History</span>
+          </h3>
+          <div className="max-h-48 overflow-y-auto">
+            {moves.length === 0 ? (
+              <p className="text-slate-400 text-center text-sm py-4">No moves yet</p>
+            ) : (
+              <div className="space-y-1">
+                {moves.map((move, index) => (
+                  <div key={move.id} className="flex items-center gap-3 text-sm py-1.5 px-2 rounded hover:bg-slate-700/30">
+                    <span className="font-bold text-slate-400 min-w-[2.5rem]">
+                      {Math.floor(index / 2) + 1}.
+                    </span>
+                    <span className="font-mono text-white font-medium flex-1">{move.san}</span>
+                    <span className="text-xs text-slate-500">
+                      {new Date(move.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                )}
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Draw Offer Modal */}
+        {showDrawOffer && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-800 rounded-2xl p-6 max-w-sm w-full border border-white/10 shadow-2xl">
+              <h3 className="text-xl font-bold text-white mb-3">Offer Draw</h3>
+              <p className="text-slate-300 mb-6">
+                Do you want to offer a draw to your opponent?
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleOfferDraw}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all active:scale-95"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setShowDrawOffer(false)}
+                  className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

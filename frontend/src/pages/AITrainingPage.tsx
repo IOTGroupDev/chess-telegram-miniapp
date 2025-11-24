@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Square } from 'chess.js';
-import { ChessBoard } from '../components/ChessBoard';
-import { GameInfo } from '../components/GameInfo';
-import { Button } from '../components/Button';
+import { Chessboard } from 'react-chessboard';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
@@ -52,15 +50,6 @@ export const AITrainingPage: React.FC = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleSquareClick = useCallback((square: Square) => {
-    if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
-      return;
-    }
-
-    chess.selectSquare(square);
-    telegramService.hapticFeedback('selection');
-  }, [chess, stockfish.isThinking]);
 
   const analyzeMove = useCallback(async (playerMove: string, fen: string) => {
     try {
@@ -174,10 +163,10 @@ export const AITrainingPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-telegram-bg flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-telegram-button mx-auto mb-4"></div>
-          <p className="text-telegram-text">Загрузка тренировки...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white">Загрузка тренировки...</p>
         </div>
       </div>
     );
@@ -185,26 +174,20 @@ export const AITrainingPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-telegram-bg">
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <h1 className="text-2xl font-bold text-telegram-text mb-4">Ошибка</h1>
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={initializeGame}>Повторить</Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center p-6">
+          <h1 className="text-2xl font-bold text-white mb-4">Ошибка</h1>
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={initializeGame}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all active:scale-95"
+          >
+            Повторить
+          </button>
         </div>
       </div>
     );
   }
-
-  const getMoveQualityColor = () => {
-    switch (moveQuality) {
-      case 'best': return 'text-green-500';
-      case 'good': return 'text-blue-500';
-      case 'inaccuracy': return 'text-yellow-500';
-      case 'mistake': return 'text-orange-500';
-      case 'blunder': return 'text-red-500';
-      default: return 'text-gray-400';
-    }
-  };
 
   const getMoveQualityText = () => {
     switch (moveQuality) {
@@ -218,136 +201,210 @@ export const AITrainingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-telegram-bg" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
-      {/* Title */}
-      <div className="px-4 pt-2 pb-2">
-        <h1 className="text-2xl font-bold text-telegram-text text-center">🎓 Обучение с ИИ</h1>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+      <div className="max-w-2xl mx-auto p-3 sm:p-4">
+        {/* Move Quality Floating Notification */}
+        {moveQuality && (
+          <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-slide-down ${
+            moveQuality === 'best' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+            moveQuality === 'good' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+            moveQuality === 'inaccuracy' ? 'bg-gradient-to-r from-yellow-500 to-orange-400' :
+            moveQuality === 'mistake' ? 'bg-gradient-to-r from-orange-500 to-red-500' :
+            'bg-gradient-to-r from-red-600 to-pink-600'
+          }`}>
+            <span className="text-2xl">
+              {moveQuality === 'best' ? '🎯' :
+               moveQuality === 'good' ? '✅' :
+               moveQuality === 'inaccuracy' ? '⚠️' :
+               moveQuality === 'mistake' ? '❌' : '💥'}
+            </span>
+            <span className="font-bold text-white">{getMoveQualityText()?.replace(/^[^\s]+\s/, '')}</span>
+          </div>
+        )}
 
-      {/* Training Info */}
-      <div className="px-4 py-2">
-        <div className="glass rounded-xl p-4 space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-telegram-text font-semibold">Оценка позиции:</span>
-            <span className={`font-bold ${evaluation > 0 ? 'text-green-500' : evaluation < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+        {/* Hint Floating Notification */}
+        {showHint && bestMove && (
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-slide-down">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+            </svg>
+            <span className="font-bold">Лучший ход: {bestMove.substring(0, 2).toUpperCase()} → {bestMove.substring(2, 4).toUpperCase()}</span>
+          </div>
+        )}
+
+        {/* Header with Training Stats */}
+        <div className="mb-4">
+          {/* AI Trainer */}
+          <div className="flex items-center justify-between mb-3 bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold shadow-lg">
+                🎓
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white leading-tight">AI Trainer</h3>
+                <p className="text-xs text-slate-400">Depth: 18</p>
+              </div>
+            </div>
+            {stockfish.isThinking && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-purple-500/20 rounded-full border border-purple-500/30">
+                <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                <span className="text-xs text-purple-300 font-medium">Analyzing...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Human Player */}
+          <div className="flex items-center justify-between bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center font-bold shadow-lg">
+                👤
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white leading-tight">You</h3>
+                <p className="text-xs text-slate-400">Training Mode</p>
+              </div>
+            </div>
+            {chess.gameState.isPlayerTurn && !chess.gameState.isGameOver && !stockfish.isThinking && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 rounded-full border border-green-500/30">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                <span className="text-xs text-green-300 font-medium">Your turn</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Evaluation Bar */}
+        <div className="mb-4 bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-slate-300">Position Eval:</span>
+            <span className={`font-bold text-lg ${evaluation > 0 ? 'text-green-400' : evaluation < 0 ? 'text-red-400' : 'text-slate-400'}`}>
               {evaluation > 0 ? '+' : ''}{evaluation.toFixed(2)}
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-telegram-text font-semibold">Подсказок использовано:</span>
-            <span className="text-telegram-hint">{hintsUsed}</span>
+          <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-500 ${evaluation >= 0 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-red-500 to-pink-400'}`}
+              style={{ width: `${Math.min(Math.abs(evaluation) * 10 + 50, 100)}%`, marginLeft: evaluation < 0 ? '0' : 'auto' }}
+            ></div>
           </div>
-          {moveQuality && (
-            <div className="mt-2 p-2 rounded-lg bg-telegram-secondary-bg">
-              <p className={`text-center font-semibold ${getMoveQualityColor()}`}>
-                {getMoveQualityText()}
-              </p>
+          <div className="flex justify-between items-center mt-2 text-xs">
+            <span className="text-slate-400">💡 Hints: {hintsUsed}</span>
+            <span className="text-slate-400">Moves: {Math.floor(chess.history().length / 2)}</span>
+          </div>
+        </div>
+
+        {/* Chess Board Container */}
+        <div className="relative mb-4">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
+            {/* Glow effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl blur opacity-20"></div>
+
+            {/* Actual board */}
+            <div className="relative">
+              <Chessboard
+                {...{
+                  position: chess.getFen(),
+                  onPieceDrop: (sourceSquare: string, targetSquare: string) =>
+                    handlePieceDrop(sourceSquare as Square, targetSquare as Square),
+                  boardOrientation: 'white',
+                  customBoardStyle: {
+                    borderRadius: '0',
+                  },
+                  customDarkSquareStyle: {
+                    backgroundColor: '#779952',
+                  },
+                  customLightSquareStyle: {
+                    backgroundColor: '#edeed1',
+                  },
+                  customDropSquareStyle: {
+                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
+                  },
+                  arePiecesDraggable: chess.gameState.isPlayerTurn && !chess.gameState.isGameOver && !stockfish.isThinking,
+                  animationDuration: 200,
+                } as any}
+              />
+            </div>
+          </div>
+
+          {/* Game Over Overlay */}
+          {chess.gameState.isGameOver && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+              <div className="text-center px-6">
+                <div className="text-6xl mb-3">
+                  {chess.gameState.winner === 'draw'
+                    ? '🤝'
+                    : chess.gameState.winner === 'white'
+                    ? '🎉'
+                    : '😔'}
+                </div>
+                <h3 className="text-3xl font-black mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  {chess.gameState.winner === 'draw'
+                    ? 'Draw!'
+                    : chess.gameState.winner === 'white'
+                    ? 'You Won!'
+                    : 'AI Won!'}
+                </h3>
+                <p className="text-slate-300 mb-2">
+                  {chess.gameState.winner === 'draw'
+                    ? 'Good defensive play!'
+                    : chess.gameState.winner === 'white'
+                    ? 'Excellent training session!'
+                    : 'Keep practicing and learning!'}
+                </p>
+                <p className="text-sm text-slate-400 mb-6">
+                  💡 Hints used: {hintsUsed}
+                </p>
+              </div>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Game Info */}
-      <div className="px-4 py-2">
-        <GameInfo
-          gameState={chess.gameState}
-          isPlayerTurn={chess.gameState.isPlayerTurn}
-          isThinking={stockfish.isThinking}
-        />
-      </div>
-
-      {/* Chess Board */}
-      <div className="px-4 py-4">
-        <ChessBoard
-          position={chess.getFen()}
-          onSquareClick={handleSquareClick}
-          onPieceDrop={handlePieceDrop}
-          gameState={chess.gameState}
-          boardWidth={Math.min(window.innerWidth - 32, 400)}
-        />
-      </div>
-
-      {/* Hint Display */}
-      {showHint && bestMove && (
-        <div className="px-4 py-2">
-          <div className="bg-blue-600 rounded-lg p-4">
-            <p className="text-white font-semibold mb-2">💡 Подсказка:</p>
-            <p className="text-white">
-              Лучший ход: {bestMove.substring(0, 2)} → {bestMove.substring(2, 4)}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Game Controls */}
-      <div className="px-4 py-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <Button
+        {/* Game Controls */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <button
             onClick={handleShowHint}
-            variant="secondary"
-            className="w-full"
             disabled={showHint || stockfish.isThinking || chess.gameState.isGameOver}
+            className="bg-purple-600/50 hover:bg-purple-600 disabled:bg-slate-700/50 disabled:text-slate-500 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-purple-500/20 hover:border-purple-500/40 disabled:border-slate-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            💡 Подсказка
-          </Button>
-
-          <Button
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+            </svg>
+            <span>Hint</span>
+          </button>
+          <button
             onClick={handleNewGame}
-            variant="primary"
-            className="w-full"
+            className="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            🔄 Новая игра
-          </Button>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>New Game</span>
+          </button>
         </div>
-      </div>
 
-      {/* Game Status */}
-      {chess.gameState.isGameOver && (
-        <div className="px-4 py-4">
-          <div className="bg-telegram-secondary-bg rounded-lg p-4 text-center">
-            <p className="text-lg font-semibold text-telegram-text mb-2">
-              {chess.gameState.winner === 'draw'
-                ? '🤝 Ничья!'
-                : chess.gameState.winner === 'white'
-                ? '🎉 Вы победили!'
-                : '😔 ИИ победил!'
-              }
-            </p>
-            <p className="text-telegram-hint mb-4">
-              Подсказок использовано: {hintsUsed}
-            </p>
-            <Button
-              onClick={handleNewGame}
-              size="lg"
-              className="w-full"
-            >
-              Играть снова
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* AI Status */}
-      {stockfish.isThinking && (
-        <div className="px-4 py-2">
-          <div className="bg-telegram-secondary-bg rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-telegram-button"></div>
-              <p className="text-sm text-telegram-text">ИИ анализирует...</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Training Tips */}
-      <div className="px-4 py-4">
-        <div className="glass rounded-xl p-4">
-          <h3 className="text-telegram-text font-semibold mb-2">📚 Советы:</h3>
-          <ul className="text-telegram-hint text-sm space-y-1">
-            <li>• Думайте перед каждым ходом</li>
-            <li>• Оценка показывает преимущество (+ белые, - черные)</li>
-            <li>• Используйте подсказки для обучения</li>
-            <li>• Анализируйте свои ошибки</li>
+        {/* Training Tips */}
+        <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <span className="text-xl">📚</span>
+            <span>Training Tips</span>
+          </h3>
+          <ul className="text-slate-300 text-sm space-y-2">
+            <li className="flex items-start gap-2">
+              <span className="text-blue-400 mt-0.5">•</span>
+              <span>Think before each move - analyze the position carefully</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-green-400 mt-0.5">•</span>
+              <span>Positive eval = White advantage, Negative = Black advantage</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-purple-400 mt-0.5">•</span>
+              <span>Use hints to learn optimal moves in complex positions</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-orange-400 mt-0.5">•</span>
+              <span>Review your mistakes and understand why they happened</span>
+            </li>
           </ul>
         </div>
       </div>
