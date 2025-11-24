@@ -136,9 +136,9 @@ export const AIGamePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-telegram-bg pt-4">
+    <div className="min-h-screen bg-telegram-bg" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
       {/* Title */}
-      <div className="px-4 pt-6 pb-2">
+      <div className="px-4 pt-2 pb-2">
         <h1 className="text-2xl font-bold text-telegram-text text-center">Игра против ИИ</h1>
       </div>
 

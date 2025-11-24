@@ -90,7 +90,7 @@ export const HistoryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-telegram-bg pt-4">
+    <div className="min-h-screen bg-telegram-bg" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
       <Navigation
         showBackButton
         title="История партий"
