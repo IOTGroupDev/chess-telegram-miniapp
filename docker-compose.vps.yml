@@ -187,8 +187,7 @@ services:
       - "443:443"
 
     volumes:
-      # Nginx configuration
-      - ./nginx/vps.conf:/etc/nginx/nginx.conf:ro
+      # Nginx configuration (using default nginx.conf + our conf.d)
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
 
       # SSL certificates (Let's Encrypt)
