@@ -234,120 +234,177 @@ const PuzzlePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      {/* Header */}
-      <div className="max-w-2xl mx-auto mb-4">
-        <div className="bg-gray-800 rounded-lg p-4 mb-4">
-          <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+      <div className="max-w-2xl mx-auto p-3 sm:p-4">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-lg shadow-lg">
+              {currentPuzzle.rating}
+            </div>
             <div>
-              <h2 className="text-xl font-bold">Tactical Puzzle</h2>
-              <p className="text-gray-400 text-sm">
-                Rating: {currentPuzzle.rating} • {currentPuzzle.themes.join(', ')}
+              <h2 className="text-base font-bold text-white leading-tight">Tactical Puzzle</h2>
+              <p className="text-xs text-slate-400">
+                {currentPuzzle.themes[0]?.replace('_', ' ')}
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-400">
-                {playerColor === 'white' ? '♔' : '♚'}
-              </div>
-              <div className="text-sm text-gray-400">
-                {playerColor === 'white' ? 'White to move' : 'Black to move'}
-              </div>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl leading-none mb-1">
+              {playerColor === 'white' ? '♔' : '♚'}
+            </div>
+            <div className="text-xs text-slate-400 font-medium uppercase tracking-wide">
+              {playerColor} to move
             </div>
           </div>
         </div>
 
-        {/* Status Message */}
+        {/* Status Messages - Floating */}
         {status === 'correct' && (
-          <div className="bg-green-600 text-white p-3 rounded-lg mb-4 animate-fade-in">
-            ✓ Correct move!
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-slide-down">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="font-bold">Brilliant!</span>
           </div>
         )}
 
         {status === 'incorrect' && (
-          <div className="bg-red-600 text-white p-3 rounded-lg mb-4 animate-fade-in">
-            ✗ Try again!
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-red-500 to-rose-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-shake">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span className="font-bold">Not quite!</span>
           </div>
         )}
 
-        {status === 'complete' && result && (
-          <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white p-4 rounded-lg mb-4">
-            <h3 className="text-xl font-bold mb-2">
-              {result.solved ? '🎉 Puzzle Solved!' : '❌ Puzzle Failed'}
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-gray-200">Rating Change</div>
-                <div className="text-2xl font-bold">
-                  {result.rating_change > 0 ? '+' : ''}
-                  {result.rating_change}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-200">New Rating</div>
-                <div className="text-2xl font-bold">{result.new_user_rating}</div>
-              </div>
+        {/* Chess Board Container with modern styling */}
+        <div className="relative mb-4">
+          {/* Board wrapper with glow effect */}
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
+            {/* Glow effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl blur opacity-20"></div>
+
+            {/* Actual board */}
+            <div className="relative">
+              <Chessboard
+                position={game.fen()}
+                onPieceDrop={onDrop}
+                boardOrientation={playerColor}
+                customBoardStyle={{
+                  borderRadius: '0',
+                }}
+                customDarkSquareStyle={{
+                  backgroundColor: '#779952',
+                }}
+                customLightSquareStyle={{
+                  backgroundColor: '#edeed1',
+                }}
+                customDropSquareStyle={{
+                  boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
+                }}
+                arePiecesDraggable={status === 'playing'}
+                animationDuration={200}
+              />
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Chess Board */}
-      <div className="max-w-2xl mx-auto mb-4">
-        <Chessboard
-          {...{
-            position: game.fen(),
-            onPieceDrop: onDrop,
-            boardOrientation: playerColor,
-            customBoardStyle: {
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-            },
-            arePiecesDraggable: status === 'playing'
-          } as any}
-        />
-      </div>
-
-      {/* Actions */}
-      <div className="max-w-2xl mx-auto space-y-3">
-        {status === 'complete' ? (
-          <button
-            onClick={handleNext}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg"
-          >
-            Next Puzzle →
-          </button>
-        ) : (
-          <>
-            {showHint && (
-              <div className="bg-gray-800 p-4 rounded-lg">
-                <div className="text-sm text-gray-400 mb-1">Hint:</div>
-                <div className="text-white">
-                  Move from {solutionMoves[currentMoveIndex]?.substring(0, 2)} to{' '}
-                  {solutionMoves[currentMoveIndex]?.substring(2, 4)}
+          {/* Overlay for complete state */}
+          {status === 'complete' && result && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+              <div className="text-center px-6">
+                <div className="text-6xl mb-3">
+                  {result.solved ? '🎉' : '😔'}
+                </div>
+                <h3 className="text-3xl font-black mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  {result.solved ? 'Puzzle Solved!' : 'Puzzle Failed'}
+                </h3>
+                <div className="flex gap-6 justify-center mb-6">
+                  <div>
+                    <div className="text-slate-400 text-sm mb-1">Rating Change</div>
+                    <div className={`text-3xl font-black ${result.rating_change > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {result.rating_change > 0 ? '+' : ''}
+                      {result.rating_change}
+                    </div>
+                  </div>
+                  <div className="w-px bg-white/20"></div>
+                  <div>
+                    <div className="text-slate-400 text-sm mb-1">New Rating</div>
+                    <div className="text-3xl font-black text-blue-400">{result.new_user_rating}</div>
+                  </div>
                 </div>
               </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleShowHint}
-                disabled={showHint}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold py-3 rounded-lg"
-              >
-                💡 Hint
-              </button>
-              <button
-                onClick={handleSkip}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg"
-              >
-                ⏭️ Skip
-              </button>
             </div>
-          </>
-        )}
+          )}
+        </div>
 
-        <div className="text-center text-gray-400 text-sm">
-          Attempts: {attempts} • Move: {Math.floor(currentMoveIndex / 2) + 1}
+        {/* Stats Bar */}
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+              <span className="text-sm text-slate-400">Move <span className="text-white font-bold">{Math.floor(currentMoveIndex / 2) + 1}</span></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="text-sm text-slate-400">Attempts <span className="text-white font-bold">{attempts}</span></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-3">
+          {status === 'complete' ? (
+            <button
+              onClick={handleNext}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>Next Puzzle</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <>
+              {showHint && (
+                <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 p-4 rounded-xl backdrop-blur-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                    </svg>
+                    <span className="text-yellow-400 font-bold text-sm">Hint</span>
+                  </div>
+                  <div className="text-white font-medium">
+                    Move from <span className="font-black text-yellow-300">{solutionMoves[currentMoveIndex]?.substring(0, 2).toUpperCase()}</span> to <span className="font-black text-yellow-300">{solutionMoves[currentMoveIndex]?.substring(2, 4).toUpperCase()}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleShowHint}
+                  disabled={showHint}
+                  className="bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-800/50 disabled:text-slate-600 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                  </svg>
+                  <span>Hint</span>
+                </button>
+                <button
+                  onClick={handleSkip}
+                  className="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
+                  <span>Skip</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
