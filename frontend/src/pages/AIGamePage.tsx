@@ -21,7 +21,7 @@ export const AIGamePage: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Initialize AI game
       chess.resetGame();
       telegramService.notificationOccurred('success');
@@ -31,7 +31,8 @@ export const AIGamePage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [chess]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSquareClick = useCallback((square: Square) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {

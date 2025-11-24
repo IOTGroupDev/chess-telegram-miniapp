@@ -50,7 +50,7 @@ function App() {
 
   return (
     <Router>
-      <div className="App">
+      <div className="App" style={{ paddingTop: '60px' }}>
         <Routes>
           <Route path="/" element={<StartPage />} />
           <Route path="/main" element={<MainMenu />} />
