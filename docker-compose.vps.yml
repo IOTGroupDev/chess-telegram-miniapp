@@ -97,10 +97,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
-      # Stockfish Configuration
+      # Stockfish Configuration (reduced for VPS)
       STOCKFISH_PATH: /usr/games/stockfish
-      STOCKFISH_THREADS: ${STOCKFISH_THREADS:-2}
-      STOCKFISH_HASH_SIZE: ${STOCKFISH_HASH_SIZE:-512}
+      STOCKFISH_THREADS: ${STOCKFISH_THREADS:-1}
+      STOCKFISH_HASH_SIZE: ${STOCKFISH_HASH_SIZE:-128}
 
       # AI API (for analysis)
       AI_PROVIDER: ${AI_PROVIDER:-deepseek}
