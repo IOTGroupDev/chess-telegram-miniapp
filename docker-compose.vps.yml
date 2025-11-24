@@ -192,7 +192,9 @@ services:
 
       # SSL certificates (Let's Encrypt)
       - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
+
+      # Certbot webroot (read-write для challenge файлов)
+      - ./certbot/www:/var/www/certbot
 
       # Logs
       - nginx_logs:/var/log/nginx
