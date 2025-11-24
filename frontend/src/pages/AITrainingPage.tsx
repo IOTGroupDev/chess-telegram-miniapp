@@ -18,6 +18,7 @@ export const AITrainingPage: React.FC = () => {
   const [evaluation, setEvaluation] = useState<number>(0);
   const [moveQuality, setMoveQuality] = useState<'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder' | null>(null);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [, forceUpdate] = useState({});
 
   const chess = useChess();
   const stockfish = useStockfish();
@@ -120,15 +121,18 @@ export const AITrainingPage: React.FC = () => {
             if (aiMove && aiMove.length >= 4) {
               const from = aiMove.slice(0, 2) as Square;
               const to = aiMove.slice(2, 4) as Square;
-              chess.makeMove(from, to);
+              const aiMoveSuccess = chess.makeMove(from, to);
 
-              // Update evaluation after AI move
-              const newEval = await stockfish.quickEval(chess.getFen());
-              if (newEval !== null) {
-                setEvaluation(newEval);
+              if (aiMoveSuccess) {
+                // Update evaluation after AI move
+                const newEval = await stockfish.quickEval(chess.getFen());
+                if (newEval !== null) {
+                  setEvaluation(newEval);
+                }
+
+                forceUpdate({}); // Force re-render after AI move
+                telegramService.notificationOccurred('success');
               }
-
-              telegramService.notificationOccurred('success');
             }
           } catch (err) {
             console.error('AI move failed:', err);

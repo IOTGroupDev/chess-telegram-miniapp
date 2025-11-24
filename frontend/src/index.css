@@ -66,12 +66,12 @@ code {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: opacity 0.15s ease;
   cursor: pointer;
 }
 
 .chess-square:hover {
-  transform: scale(1.05);
+  opacity: 0.9;
   z-index: 10;
 }
 
@@ -86,7 +86,6 @@ code {
 .chess-square.selected {
   background: linear-gradient(45deg, #4ade80, #22c55e) !important;
   box-shadow: inset 0 0 0 3px #16a34a;
-  transform: scale(1.1);
   z-index: 20;
 }
 
@@ -124,13 +123,13 @@ code {
 .chess-piece {
   font-size: 2.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  transition: all 0.2s ease;
+  transition: opacity 0.15s ease;
   cursor: pointer;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .chess-piece:hover {
-  transform: scale(1.15);
+  opacity: 0.9;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 

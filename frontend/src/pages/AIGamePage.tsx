@@ -13,6 +13,7 @@ export const AIGamePage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [, forceUpdate] = useState({});
 
   const chess = useChess();
   const stockfish = useStockfish();
@@ -61,8 +62,11 @@ export const AIGamePage: React.FC = () => {
             if (aiMove && aiMove.length >= 4) {
               const from = aiMove.slice(0, 2) as Square;
               const to = aiMove.slice(2, 4) as Square;
-              chess.makeMove(from, to);
-              telegramService.notificationOccurred('success');
+              const aiMoveSuccess = chess.makeMove(from, to);
+              if (aiMoveSuccess) {
+                forceUpdate({}); // Force re-render after AI move
+                telegramService.notificationOccurred('success');
+              }
             }
           } catch (err) {
             console.error('AI move failed:', err);
