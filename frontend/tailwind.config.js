@@ -16,6 +16,9 @@ export default {
           'button-text': 'var(--tg-theme-button-text-color, #ffffff)',
           'secondary-bg': 'var(--tg-theme-secondary-bg-color, #f1f1f1)',
         }
+      },
+      boxShadow: {
+        '3xl': '0 35px 60px -15px rgba(0, 0, 0, 0.3)',
       }
     },
   },
