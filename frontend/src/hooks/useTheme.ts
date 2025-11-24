@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { BoardTheme, boardThemes, defaultTheme } from '../config/themes';
+import type { BoardTheme } from '../config/themes';
+import { boardThemes, defaultTheme } from '../config/themes';
 
 const THEME_STORAGE_KEY = 'chess_board_theme';
 
