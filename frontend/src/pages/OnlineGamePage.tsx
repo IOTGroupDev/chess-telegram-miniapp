@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { Square } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useSupabaseGame } from '../hooks/useSupabaseGame';
 import { useAppStore } from '../store/useAppStore';
