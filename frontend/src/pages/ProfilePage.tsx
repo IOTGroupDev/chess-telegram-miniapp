@@ -8,13 +8,13 @@ export const ProfilePage: React.FC = () => {
   const user = telegram.getUser();
 
   return (
-    <div className="min-h-screen bg-telegram-bg">
-      <Navigation 
-        showBackButton 
-        title="Профиль" 
+    <div className="min-h-screen bg-telegram-bg pt-4">
+      <Navigation
+        showBackButton
+        title="Профиль"
       />
-      
-      <div className="px-4 py-6">
+
+      <div className="px-4 py-6 pt-8">
         {/* User Info */}
         <div className="bg-telegram-secondary-bg rounded-lg p-6 text-center mb-6">
           <div className="w-20 h-20 bg-telegram-button rounded-full flex items-center justify-center mx-auto mb-4">

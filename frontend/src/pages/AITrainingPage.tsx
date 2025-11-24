@@ -218,9 +218,9 @@ export const AITrainingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-telegram-bg">
+    <div className="min-h-screen bg-telegram-bg pt-4">
       {/* Title */}
-      <div className="px-4 pt-4 pb-2">
+      <div className="px-4 pt-6 pb-2">
         <h1 className="text-2xl font-bold text-telegram-text text-center">🎓 Обучение с ИИ</h1>
       </div>
 

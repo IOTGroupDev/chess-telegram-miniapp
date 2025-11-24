@@ -114,13 +114,13 @@ export const OnlineGamePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-telegram-bg">
-      <Navigation 
-        showBackButton 
-        title={`Онлайн игра #${gameId}`} 
+    <div className="min-h-screen bg-telegram-bg pt-4">
+      <Navigation
+        showBackButton
+        title={`Онлайн игра #${gameId}`}
       />
-      
-      <div className="max-w-6xl mx-auto p-4">
+
+      <div className="max-w-6xl mx-auto p-4 pt-6">
         <div className="bg-telegram-secondary-bg rounded-lg shadow-lg p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Chess Board */}

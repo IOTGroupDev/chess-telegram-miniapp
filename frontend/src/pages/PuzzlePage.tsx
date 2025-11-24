@@ -234,8 +234,8 @@ const PuzzlePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <div className="max-w-2xl mx-auto p-3 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pt-4">
+      <div className="max-w-2xl mx-auto p-3 sm:p-4 pt-4">
         {/* Compact Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -288,23 +288,25 @@ const PuzzlePage: React.FC = () => {
             {/* Actual board */}
             <div className="relative">
               <Chessboard
-                position={game.fen()}
-                onPieceDrop={onDrop}
-                boardOrientation={playerColor}
-                customBoardStyle={{
-                  borderRadius: '0',
-                }}
-                customDarkSquareStyle={{
-                  backgroundColor: '#779952',
-                }}
-                customLightSquareStyle={{
-                  backgroundColor: '#edeed1',
-                }}
-                customDropSquareStyle={{
-                  boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
-                }}
-                arePiecesDraggable={status === 'playing'}
-                animationDuration={200}
+                {...{
+                  position: game.fen(),
+                  onPieceDrop: onDrop,
+                  boardOrientation: playerColor,
+                  customBoardStyle: {
+                    borderRadius: '0',
+                  },
+                  customDarkSquareStyle: {
+                    backgroundColor: '#779952',
+                  },
+                  customLightSquareStyle: {
+                    backgroundColor: '#edeed1',
+                  },
+                  customDropSquareStyle: {
+                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
+                  },
+                  arePiecesDraggable: status === 'playing',
+                  animationDuration: 200,
+                } as any}
               />
             </div>
           </div>
