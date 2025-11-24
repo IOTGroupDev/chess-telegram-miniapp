@@ -61,7 +61,7 @@ EOF
 
 # Start nginx temporarily for certificate
 echo "🔧 Starting nginx for certificate challenge..."
-docker-compose -f docker-compose.vps.yml up -d nginx
+docker compose -f docker-compose.vps.yml up -d nginx
 
 # Wait for nginx to start
 echo "⏳ Waiting for nginx to start..."
@@ -69,7 +69,7 @@ sleep 5
 
 # Obtain certificate
 echo "🔐 Obtaining SSL certificate..."
-docker-compose -f docker-compose.vps.yml run --rm certbot certonly \
+docker compose -f docker-compose.vps.yml run --rm certbot certonly \
   --webroot \
   --webroot-path=/var/www/certbot \
   --email $EMAIL \
@@ -180,11 +180,11 @@ EOF
 
 # Reload nginx
 echo "🔄 Reloading nginx with SSL..."
-docker-compose -f docker-compose.vps.yml restart nginx
+docker compose -f docker-compose.vps.yml restart nginx
 
 # Test certificate renewal
 echo "🧪 Testing certificate renewal..."
-docker-compose -f docker-compose.vps.yml run --rm certbot renew --dry-run
+docker compose -f docker-compose.vps.yml run --rm certbot renew --dry-run
 
 if [ $? -eq 0 ]; then
   echo ""
@@ -200,7 +200,7 @@ if [ $? -eq 0 ]; then
   echo "      DOMAIN=$DOMAIN"
   echo ""
   echo "   2. Rebuild containers:"
-  echo "      docker-compose -f docker-compose.vps.yml up -d --build"
+  echo "      docker compose -f docker-compose.vps.yml up -d --build"
   echo ""
   echo "   3. Update Telegram Bot:"
   echo "      @BotFather -> /setmenubutton -> https://$DOMAIN"
