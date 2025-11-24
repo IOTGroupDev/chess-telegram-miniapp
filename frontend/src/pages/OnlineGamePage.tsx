@@ -4,6 +4,7 @@ import { Chessboard } from 'react-chessboard';
 import { useSupabaseGame } from '../hooks/useSupabaseGame';
 import { useAppStore } from '../store/useAppStore';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
+import { useTheme } from '../hooks/useTheme';
 import { telegramService } from '../services/telegramService';
 
 export const OnlineGamePage: React.FC = () => {
@@ -11,6 +12,7 @@ export const OnlineGamePage: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const { user } = useAppStore();
   const [showDrawOffer, setShowDrawOffer] = useState(false);
+  const { currentTheme } = useTheme();
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -152,7 +154,7 @@ export const OnlineGamePage: React.FC = () => {
         <div className="relative mb-4">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
             {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20"></div>
+            <div className={`absolute -inset-1 bg-gradient-to-r ${currentTheme.glowColor} rounded-2xl blur opacity-20`}></div>
 
             {/* Actual board */}
             <div className="relative">
@@ -165,10 +167,10 @@ export const OnlineGamePage: React.FC = () => {
                     borderRadius: '0',
                   },
                   customDarkSquareStyle: {
-                    backgroundColor: '#779952',
+                    backgroundColor: currentTheme.darkSquare,
                   },
                   customLightSquareStyle: {
-                    backgroundColor: '#edeed1',
+                    backgroundColor: currentTheme.lightSquare,
                   },
                   customDropSquareStyle: {
                     boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',

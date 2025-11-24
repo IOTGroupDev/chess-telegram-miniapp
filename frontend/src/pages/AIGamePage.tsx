@@ -5,6 +5,7 @@ import { Chessboard } from 'react-chessboard';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
+import { useTheme } from '../hooks/useTheme';
 import { telegramService } from '../services/telegramService';
 
 export const AIGamePage: React.FC = () => {
@@ -15,6 +16,7 @@ export const AIGamePage: React.FC = () => {
 
   const chess = useChess();
   const stockfish = useStockfish();
+  const { currentTheme } = useTheme();
 
   const initializeGame = useCallback(async () => {
     try {
@@ -177,7 +179,7 @@ export const AIGamePage: React.FC = () => {
         <div className="relative mb-4">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
             {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 rounded-2xl blur opacity-20"></div>
+            <div className={`absolute -inset-1 bg-gradient-to-r ${currentTheme.glowColor} rounded-2xl blur opacity-20`}></div>
 
             {/* Actual board */}
             <div className="relative">
@@ -190,10 +192,10 @@ export const AIGamePage: React.FC = () => {
                     borderRadius: '0',
                   },
                   customDarkSquareStyle: {
-                    backgroundColor: '#779952',
+                    backgroundColor: currentTheme.darkSquare,
                   },
                   customLightSquareStyle: {
-                    backgroundColor: '#edeed1',
+                    backgroundColor: currentTheme.lightSquare,
                   },
                   customDropSquareStyle: {
                     boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
