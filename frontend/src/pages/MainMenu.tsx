@@ -50,31 +50,28 @@ export const MainMenu: React.FC = () => {
         setCurrentGame(gameId, 'online');
         navigate(`/online-game/${gameId}`);
       } else {
-        // Create new waiting game
-        // @ts-ignore - Supabase type limitation
-        // @ts-ignore - Supabase type limitation
-        const { data: newGame, error: createError } = await supabase
-          .from('games')
-          // @ts-ignore
-          .insert({
-            white_player_id: user.id,
-            time_control: 'blitz',
-            time_limit: 300, // 5 minutes
-            time_increment: 3, // 3 seconds per move
-            status: 'waiting',
-          })
-          .select()
-          .single();
+        // No players found - offer to play with AI
+        setIsCreatingGame(false);
 
-        if (createError) throw createError;
-
-        setCurrentGame((newGame as any).id, 'online');
-        navigate(`/online-game/${(newGame as any).id}`);
+        const webApp = telegramService.getWebApp();
+        webApp.showPopup({
+          title: 'Нет игроков онлайн',
+          message: 'Не удалось найти противника. Хотите сыграть с AI?',
+          buttons: [
+            { id: 'ai', type: 'default', text: 'Играть с AI' },
+            { id: 'cancel', type: 'cancel', text: 'Отмена' }
+          ]
+        }, (buttonId: string) => {
+          if (buttonId === 'ai') {
+            // Redirect to AI game
+            setCurrentGame(null, 'ai');
+            navigate('/ai-game');
+          }
+        });
       }
     } catch (error) {
       console.error('Failed to create online game:', error);
       telegramService.showAlert('Не удалось создать онлайн-игру. Попробуйте позже.');
-    } finally {
       setIsCreatingGame(false);
     }
   };
