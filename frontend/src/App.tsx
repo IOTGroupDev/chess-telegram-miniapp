@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { StartPage } from './pages/StartPage';
 import { MainMenu } from './pages/MainMenu';
 import { AIGamePage } from './pages/AIGamePage';
+import { AITrainingPage } from './pages/AITrainingPage';
 import { OnlineGamePage } from './pages/OnlineGamePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -55,6 +56,7 @@ function App() {
           <Route path="/" element={<StartPage />} />
           <Route path="/main" element={<MainMenu />} />
           <Route path="/ai-game" element={<AIGamePage />} />
+          <Route path="/ai-training" element={<AITrainingPage />} />
           <Route path="/online-game/:gameId" element={<OnlineGamePage />} />
           <Route path="/join/:inviteCode" element={<OnlineGamePage />} />
           <Route path="/history" element={<HistoryPage />} />
