@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Устанавливаем ВСЕ зависимости (включая dev для build)
-RUN npm ci
+RUN npm install
 
 # Копируем исходники
 COPY . .
@@ -34,7 +34,7 @@ RUN apt-get update \
 COPY package*.json ./
 
 # Устанавливаем ТОЛЬКО production зависимости
-RUN npm ci --only=production
+RUN npm install --production
 
 # Копируем собранное приложение из builder stage
 COPY --from=builder /app/dist ./dist
