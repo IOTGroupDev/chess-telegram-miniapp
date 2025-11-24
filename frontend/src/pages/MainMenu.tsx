@@ -103,6 +103,10 @@ export const MainMenu: React.FC = () => {
     navigate('/puzzles');
   };
 
+  const handleAITraining = () => {
+    navigate('/ai-training');
+  };
+
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-md mx-auto">
@@ -149,6 +153,17 @@ export const MainMenu: React.FC = () => {
               <div className="flex-1">
                 <h3 className="text-white font-bold text-xl mb-1">Play vs AI</h3>
                 <p className="text-white/70">Test your skills against Stockfish</p>
+              </div>
+              <div className="text-2xl text-white/50">→</div>
+            </div>
+          </div>
+
+          <div className="menu-card" onClick={handleAITraining}>
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🎓</div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl mb-1">AI Training</h3>
+                <p className="text-white/70">Learn with hints & analysis</p>
               </div>
               <div className="text-2xl text-white/50">→</div>
             </div>
