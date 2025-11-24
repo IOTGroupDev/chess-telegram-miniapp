@@ -13,10 +13,20 @@ interface ChessBoardProps {
 export const ChessBoard: React.FC<ChessBoardProps> = ({
   position,
   onSquareClick,
-  onPieceDrop: _onPieceDrop,
+  onPieceDrop,
   gameState,
   boardWidth = 400,
 }) => {
+  // Handle square click - either select piece or make move
+  const handleSquareClick = (square: Square) => {
+    // If a piece is selected and this square is a possible move, make the move
+    if (gameState.selectedSquare && gameState.possibleMoves.includes(square)) {
+      onPieceDrop(gameState.selectedSquare as Square, square);
+    } else {
+      // Otherwise, select/deselect piece
+      onSquareClick(square);
+    }
+  };
   // Parse FEN position to get piece positions
   const parseFEN = (fen: string) => {
     const [board] = fen.split(' ');
@@ -89,11 +99,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         <div
           key={square}
           style={squareStyle}
-          onClick={() => onSquareClick(square)}
+          onClick={() => handleSquareClick(square)}
         >
           {piece && (
-            <span 
-              style={{ 
+            <span
+              style={{
                 fontSize: `${boardWidth / 12}px`,
                 userSelect: 'none',
                 pointerEvents: 'none'
