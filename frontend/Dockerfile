@@ -1,18 +1,22 @@
-FROM node:18-alpine
-
+# Сборка фронта
+FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
-
-# Copy source code
 COPY . .
+RUN npm run build
 
-# Expose port
-EXPOSE 5173
+# Продовый nginx, отдающий статический билд
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-# Start the development server
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Копируем сборку
+COPY --from=build /app/dist ./
+
+# Конфиг по умолчанию nginx для статики ок,
+# если нужен кастом — добавим позже.
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
