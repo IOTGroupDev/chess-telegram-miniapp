@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { TelegramService } from '../services/telegram';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { ThemeSelector } from '../components/ThemeSelector';
+import { SoundSettings } from '../components/SoundSettings';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -88,6 +89,11 @@ export const ProfilePage: React.FC = () => {
           <ThemeSelector />
         </div>
 
+        {/* Sound Settings */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-6">
+          <SoundSettings />
+        </div>
+
         {/* Coming Soon Section */}
         <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10">
           <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
@@ -95,10 +101,6 @@ export const ProfilePage: React.FC = () => {
             <span>Coming Soon</span>
           </h3>
           <ul className="text-slate-300 text-sm space-y-2">
-            <li className="flex items-center gap-2">
-              <span className="text-blue-400">•</span>
-              <span>Sound effects settings</span>
-            </li>
             <li className="flex items-center gap-2">
               <span className="text-purple-400">•</span>
               <span>Achievement system</span>
@@ -110,6 +112,10 @@ export const ProfilePage: React.FC = () => {
             <li className="flex items-center gap-2">
               <span className="text-orange-400">•</span>
               <span>Leaderboards</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-yellow-400">•</span>
+              <span>Daily challenges</span>
             </li>
           </ul>
         </div>
