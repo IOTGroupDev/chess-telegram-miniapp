@@ -6,6 +6,7 @@ import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { useTheme } from '../hooks/useTheme';
+import { useSound } from '../hooks/useSound';
 import { telegramService } from '../services/telegramService';
 
 export const AIGamePage: React.FC = () => {
@@ -17,6 +18,7 @@ export const AIGamePage: React.FC = () => {
   const chess = useChess();
   const stockfish = useStockfish();
   const { currentTheme } = useTheme();
+  const { playSound } = useSound();
 
   const initializeGame = useCallback(async () => {
     try {
@@ -40,10 +42,21 @@ export const AIGamePage: React.FC = () => {
       return false;
     }
 
+    // Check if it's a capture before making the move
+    const targetPiece = chess.gameState.game?.get(targetSquare as Square);
+    const isCapture = targetPiece !== null && targetPiece !== undefined;
+
     const success = chess.makeMove(sourceSquare as Square, targetSquare as Square);
 
     if (success) {
+      // Play appropriate sound
+      playSound(isCapture ? 'capture' : 'move');
       telegramService.notificationOccurred('success');
+
+      // Check for game over (checkmate)
+      if (chess.gameState.isGameOver) {
+        setTimeout(() => playSound('gameEnd'), 300);
+      }
 
       // Get AI move after player move
       if (!chess.gameState.isGameOver) {
@@ -53,8 +66,21 @@ export const AIGamePage: React.FC = () => {
             if (aiMove && aiMove.length >= 4) {
               const from = aiMove.slice(0, 2) as Square;
               const to = aiMove.slice(2, 4) as Square;
+
+              // Check if AI move is a capture
+              const aiTargetPiece = chess.gameState.game?.get(to);
+              const isAICapture = aiTargetPiece !== null && aiTargetPiece !== undefined;
+
               const aiMoveSuccess = chess.makeMove(from, to);
               if (aiMoveSuccess) {
+                // Play sound for AI move
+                playSound(isAICapture ? 'capture' : 'move');
+
+                // Check for game over after AI move
+                if (chess.gameState.isGameOver) {
+                  setTimeout(() => playSound('gameEnd'), 300);
+                }
+
                 forceUpdate({}); // Force re-render after AI move
                 telegramService.notificationOccurred('success');
               }
@@ -70,7 +96,7 @@ export const AIGamePage: React.FC = () => {
     }
 
     return success;
-  }, [chess, stockfish, forceUpdate]);
+  }, [chess, stockfish, forceUpdate, playSound]);
 
   const handleNewGame = useCallback(() => {
     chess.resetGame();
