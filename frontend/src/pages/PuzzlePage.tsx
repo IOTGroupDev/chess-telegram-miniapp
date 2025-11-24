@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { usePuzzle } from '../hooks/usePuzzle';
+import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { telegramService } from '../services/telegramService';
 
 const PuzzlePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentPuzzle, loading, error, fetchNextPuzzle, submitAttempt } = usePuzzle();
+
+  // Use Telegram native BackButton
+  useTelegramBackButton(() => navigate('/main'));
 
   const [game, setGame] = useState<Chess | null>(null);
   const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white');
@@ -125,13 +129,9 @@ const PuzzlePage: React.FC = () => {
     // Check if move is correct
     const expectedMove = solutionMoves[currentMoveIndex];
     if (moveUci !== expectedMove) {
-      // Incorrect move
+      // Incorrect move - don't undo manually, return false and let react-chessboard handle it
       setStatus('incorrect');
       telegramService.notificationOccurred('error');
-
-      // Undo the move
-      game.undo();
-      setGame(new Chess(game.fen()));
 
       setTimeout(() => {
         setStatus('playing');
@@ -237,10 +237,6 @@ const PuzzlePage: React.FC = () => {
     <div className="min-h-screen bg-gray-900 text-white p-4">
       {/* Header */}
       <div className="max-w-2xl mx-auto mb-4">
-        <button onClick={() => navigate('/main')} className="text-blue-400 mb-2">
-          ← Back
-        </button>
-
         <div className="bg-gray-800 rounded-lg p-4 mb-4">
           <div className="flex justify-between items-center">
             <div>
