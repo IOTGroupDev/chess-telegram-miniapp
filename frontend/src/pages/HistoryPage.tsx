@@ -90,13 +90,13 @@ export const HistoryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-telegram-bg">
-      <Navigation 
-        showBackButton 
-        title="История партий" 
+    <div className="min-h-screen bg-telegram-bg pt-4">
+      <Navigation
+        showBackButton
+        title="История партий"
       />
-      
-      <div className="p-4">
+
+      <div className="p-4 pt-6">
         {error ? (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">❌</div>

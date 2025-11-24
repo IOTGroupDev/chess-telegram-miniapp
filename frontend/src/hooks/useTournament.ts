@@ -297,48 +297,47 @@ export const useTournamentList = (filters?: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTournaments = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      let query = supabase.from('tournaments').select('*');
-
-      if (filters?.type) {
-        query = query.eq('type', filters.type);
-      }
-
-      if (filters?.status) {
-        query = query.eq('status', filters.status);
-      }
-
-      if (filters?.time_control) {
-        query = query.eq('time_control', filters.time_control);
-      }
-
-      query = query.order('start_time', { ascending: true }).limit(50);
-
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) throw fetchError;
-
-      setTournaments(data || []);
-    } catch (err: any) {
-      setError(err.message);
-      console.error('Failed to fetch tournaments:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
   useEffect(() => {
+    const fetchTournaments = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        let query = supabase.from('tournaments').select('*');
+
+        if (filters?.type) {
+          query = query.eq('type', filters.type);
+        }
+
+        if (filters?.status) {
+          query = query.eq('status', filters.status);
+        }
+
+        if (filters?.time_control) {
+          query = query.eq('time_control', filters.time_control);
+        }
+
+        query = query.order('start_time', { ascending: true }).limit(50);
+
+        const { data, error: fetchError } = await query;
+
+        if (fetchError) throw fetchError;
+
+        setTournaments(data || []);
+      } catch (err: any) {
+        setError(err.message);
+        console.error('Failed to fetch tournaments:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchTournaments();
-  }, [fetchTournaments]);
+  }, [filters?.type, filters?.status, filters?.time_control]);
 
   return {
     tournaments,
     loading,
     error,
-    refetch: fetchTournaments,
   };
 };

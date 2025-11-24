@@ -105,8 +105,8 @@ export const MainMenu: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      <div className="max-w-md mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pt-4">
+      <div className="max-w-md mx-auto px-4 py-6 pt-4">
         {/* Compact Header */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-3 mb-3">
