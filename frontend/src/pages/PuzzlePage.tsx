@@ -288,23 +288,25 @@ const PuzzlePage: React.FC = () => {
             {/* Actual board */}
             <div className="relative">
               <Chessboard
-                position={game.fen()}
-                onPieceDrop={onDrop}
-                boardOrientation={playerColor}
-                customBoardStyle={{
-                  borderRadius: '0',
-                }}
-                customDarkSquareStyle={{
-                  backgroundColor: '#779952',
-                }}
-                customLightSquareStyle={{
-                  backgroundColor: '#edeed1',
-                }}
-                customDropSquareStyle={{
-                  boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
-                }}
-                arePiecesDraggable={status === 'playing'}
-                animationDuration={200}
+                {...{
+                  position: game.fen(),
+                  onPieceDrop: onDrop,
+                  boardOrientation: playerColor,
+                  customBoardStyle: {
+                    borderRadius: '0',
+                  },
+                  customDarkSquareStyle: {
+                    backgroundColor: '#779952',
+                  },
+                  customLightSquareStyle: {
+                    backgroundColor: '#edeed1',
+                  },
+                  customDropSquareStyle: {
+                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
+                  },
+                  arePiecesDraggable: status === 'playing',
+                  animationDuration: 200,
+                } as any}
               />
             </div>
           </div>
