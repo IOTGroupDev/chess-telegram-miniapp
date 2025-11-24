@@ -8,7 +8,7 @@ export const ProfilePage: React.FC = () => {
   const user = telegram.getUser();
 
   return (
-    <div className="min-h-screen bg-telegram-bg pt-4">
+    <div className="min-h-screen bg-telegram-bg" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
       <Navigation
         showBackButton
         title="Профиль"
