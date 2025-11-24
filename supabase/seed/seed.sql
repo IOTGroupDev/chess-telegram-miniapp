@@ -3,6 +3,9 @@
 -- Chess Telegram Mini App
 -- =====================================================
 
+-- Temporarily disable move sequence check for seeding
+ALTER TABLE moves DISABLE TRIGGER enforce_move_sequence;
+
 -- =====================================================
 -- SEED USERS
 -- =====================================================
@@ -236,3 +239,6 @@ COMMENT ON TABLE users IS 'Seed data includes test users with various skill leve
 COMMENT ON TABLE games IS 'Seed data includes finished, active, and waiting games';
 COMMENT ON TABLE puzzles IS 'Seed data includes puzzles of varying difficulty';
 COMMENT ON TABLE openings IS 'Seed data includes popular chess openings with statistics';
+
+-- Re-enable move sequence check after seeding
+ALTER TABLE moves ENABLE TRIGGER enforce_move_sequence;
