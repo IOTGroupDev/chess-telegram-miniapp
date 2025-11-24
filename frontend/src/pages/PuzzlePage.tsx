@@ -4,11 +4,13 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { usePuzzle } from '../hooks/usePuzzle';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
+import { useTheme } from '../hooks/useTheme';
 import { telegramService } from '../services/telegramService';
 
 const PuzzlePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentPuzzle, loading, error, fetchNextPuzzle, submitAttempt } = usePuzzle();
+  const { currentTheme } = useTheme();
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -283,7 +285,7 @@ const PuzzlePage: React.FC = () => {
           {/* Board wrapper with glow effect */}
           <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
             {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl blur opacity-20"></div>
+            <div className={`absolute -inset-1 bg-gradient-to-r ${currentTheme.glowColor} rounded-2xl blur opacity-20`}></div>
 
             {/* Actual board */}
             <div className="relative">
@@ -296,10 +298,10 @@ const PuzzlePage: React.FC = () => {
                     borderRadius: '0',
                   },
                   customDarkSquareStyle: {
-                    backgroundColor: '#779952',
+                    backgroundColor: currentTheme.darkSquare,
                   },
                   customLightSquareStyle: {
-                    backgroundColor: '#edeed1',
+                    backgroundColor: currentTheme.lightSquare,
                   },
                   customDropSquareStyle: {
                     boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
