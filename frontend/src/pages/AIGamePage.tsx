@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Chess, Square } from 'chess.js';
+import type { Square } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
@@ -32,15 +32,6 @@ export const AIGamePage: React.FC = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleSquareClick = useCallback((square: Square) => {
-    if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
-      return;
-    }
-
-    chess.selectSquare(square);
-    telegramService.hapticFeedback('selection');
-  }, [chess, stockfish.isThinking]);
 
   const handlePieceDrop = useCallback((sourceSquare: string, targetSquare: string) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
@@ -112,10 +103,10 @@ export const AIGamePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-telegram-bg flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-telegram-button mx-auto mb-4"></div>
-          <p className="text-telegram-text">Загрузка игры...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white">Загрузка игры...</p>
         </div>
       </div>
     );
@@ -123,11 +114,16 @@ export const AIGamePage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-telegram-bg">
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <h1 className="text-2xl font-bold text-telegram-text mb-4">Ошибка</h1>
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={initializeGame}>Повторить</Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center p-6">
+          <h1 className="text-2xl font-bold text-white mb-4">Ошибка</h1>
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={initializeGame}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all active:scale-95"
+          >
+            Повторить
+          </button>
         </div>
       </div>
     );
