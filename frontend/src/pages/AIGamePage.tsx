@@ -4,16 +4,16 @@ import type { Square } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoard';
 import { GameInfo } from '../components/GameInfo';
 import { Button } from '../components/Button';
-import { Navigation } from '../components/Navigation';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
+import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { telegramService } from '../services/telegramService';
 
 export const AIGamePage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const chess = useChess();
   const stockfish = useStockfish();
 
@@ -94,12 +94,15 @@ export const AIGamePage: React.FC = () => {
     if (chess.gameState.selectedSquare || chess.history().length > 0) {
       const confirmed = await telegramService.showConfirm('Вы уверены, что хотите покинуть игру?');
       if (confirmed) {
-        navigate('/');
+        navigate('/main');
       }
     } else {
-      navigate('/');
+      navigate('/main');
     }
   }, [chess, navigate]);
+
+  // Use Telegram native BackButton
+  useTelegramBackButton(handleBack);
 
   useEffect(() => {
     initializeGame();
@@ -119,12 +122,10 @@ export const AIGamePage: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-telegram-bg">
-        <Navigation showBackButton title="Ошибка" />
-        <div className="flex items-center justify-center min-h-[60vh] p-4">
-          <div className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={initializeGame}>Повторить</Button>
-          </div>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <h1 className="text-2xl font-bold text-telegram-text mb-4">Ошибка</h1>
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={initializeGame}>Повторить</Button>
         </div>
       </div>
     );
@@ -132,11 +133,10 @@ export const AIGamePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-telegram-bg">
-      <Navigation 
-        showBackButton 
-        title="Игра против ИИ" 
-        onBack={handleBack}
-      />
+      {/* Title */}
+      <div className="px-4 pt-4 pb-2">
+        <h1 className="text-2xl font-bold text-telegram-text text-center">Игра против ИИ</h1>
+      </div>
 
       {/* Game Info */}
       <div className="px-4 py-2">
