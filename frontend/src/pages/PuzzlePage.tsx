@@ -5,12 +5,15 @@ import { Chessboard } from 'react-chessboard';
 import { usePuzzle } from '../hooks/usePuzzle';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { useTheme } from '../hooks/useTheme';
+import { useAchievements } from '../hooks/useAchievements';
+import { AchievementNotification } from '../components/AchievementNotification';
 import { telegramService } from '../services/telegramService';
 
 const PuzzlePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentPuzzle, loading, error, fetchNextPuzzle, submitAttempt } = usePuzzle();
   const { currentTheme } = useTheme();
+  const { recordPuzzleSolved, recordPuzzleFailed, recentlyUnlocked } = useAchievements();
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -181,7 +184,10 @@ const PuzzlePage: React.FC = () => {
     setResult(puzzleResult);
 
     if (solved) {
+      recordPuzzleSolved();
       telegramService.notificationOccurred('success');
+    } else {
+      recordPuzzleFailed();
     }
   };
 
@@ -411,6 +417,12 @@ const PuzzlePage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Achievement Notification */}
+      <AchievementNotification
+        achievement={recentlyUnlocked}
+        onClose={() => {}}
+      />
     </div>
   );
 };

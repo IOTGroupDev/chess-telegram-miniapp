@@ -4,11 +4,15 @@ import { TelegramService } from '../services/telegram';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { ThemeSelector } from '../components/ThemeSelector';
 import { SoundSettings } from '../components/SoundSettings';
+import { AchievementsDisplay } from '../components/AchievementsDisplay';
+import { AchievementNotification } from '../components/AchievementNotification';
+import { useAchievements } from '../hooks/useAchievements';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const telegram = TelegramService.getInstance();
   const user = telegram.getUser();
+  const { stats, recentlyUnlocked } = useAchievements();
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -45,7 +49,7 @@ export const ProfilePage: React.FC = () => {
 
             <div className="text-center">
               <div className="text-3xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                1200
+                {stats.currentRating}
               </div>
               <p className="text-xs text-slate-400 font-medium">
                 Rating
@@ -58,7 +62,7 @@ export const ProfilePage: React.FC = () => {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
             <div className="text-2xl font-bold text-green-400 mb-1">
-              0
+              {stats.wins}
             </div>
             <p className="text-xs text-slate-400 font-medium">
               Wins
@@ -67,7 +71,7 @@ export const ProfilePage: React.FC = () => {
 
           <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
             <div className="text-2xl font-bold text-red-400 mb-1">
-              0
+              {stats.losses}
             </div>
             <p className="text-xs text-slate-400 font-medium">
               Losses
@@ -76,7 +80,7 @@ export const ProfilePage: React.FC = () => {
 
           <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
             <div className="text-2xl font-bold text-blue-400 mb-1">
-              0
+              {stats.draws}
             </div>
             <p className="text-xs text-slate-400 font-medium">
               Draws
@@ -94,17 +98,16 @@ export const ProfilePage: React.FC = () => {
           <SoundSettings />
         </div>
 
+        {/* Achievements Display */}
+        <AchievementsDisplay />
+
         {/* Coming Soon Section */}
-        <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+        <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 mt-6">
           <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
             <span className="text-xl">🚀</span>
             <span>Coming Soon</span>
           </h3>
           <ul className="text-slate-300 text-sm space-y-2">
-            <li className="flex items-center gap-2">
-              <span className="text-purple-400">•</span>
-              <span>Achievement system</span>
-            </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">•</span>
               <span>Detailed statistics & rating history</span>
@@ -120,6 +123,12 @@ export const ProfilePage: React.FC = () => {
           </ul>
         </div>
       </div>
+
+      {/* Achievement Notification (global) */}
+      <AchievementNotification
+        achievement={recentlyUnlocked}
+        onClose={() => {}}
+      />
     </div>
   );
 };

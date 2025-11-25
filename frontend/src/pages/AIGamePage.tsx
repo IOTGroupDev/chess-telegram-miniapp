@@ -7,6 +7,8 @@ import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { useTheme } from '../hooks/useTheme';
 import { useSound } from '../hooks/useSound';
+import { useAchievements } from '../hooks/useAchievements';
+import { AchievementNotification } from '../components/AchievementNotification';
 import { telegramService } from '../services/telegramService';
 
 export const AIGamePage: React.FC = () => {
@@ -14,16 +16,19 @@ export const AIGamePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [, forceUpdate] = useState({});
+  const [gameProcessed, setGameProcessed] = useState(false);
 
   const chess = useChess();
   const stockfish = useStockfish();
   const { currentTheme } = useTheme();
   const { playSound } = useSound();
+  const { recordWin, recordLoss, recordDraw, recentlyUnlocked } = useAchievements();
 
   const initializeGame = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+      setGameProcessed(false);
 
       // Initialize AI game
       chess.resetGame();
@@ -36,6 +41,26 @@ export const AIGamePage: React.FC = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Process game end for achievements
+  useEffect(() => {
+    if (chess.gameState.isGameOver && !gameProcessed) {
+      setGameProcessed(true);
+
+      const moveCount = Math.ceil(chess.history().length / 2); // Full moves (pairs)
+
+      if (chess.gameState.winner === 'white') {
+        // Player won
+        recordWin(true, moveCount); // isAI = true
+      } else if (chess.gameState.winner === 'black') {
+        // AI won
+        recordLoss();
+      } else if (chess.gameState.winner === 'draw') {
+        // Draw
+        recordDraw();
+      }
+    }
+  }, [chess.gameState.isGameOver, chess.gameState.winner, gameProcessed, recordWin, recordLoss, recordDraw, chess]);
 
   const handlePieceDrop = useCallback((sourceSquare: string, targetSquare: string) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
@@ -100,6 +125,7 @@ export const AIGamePage: React.FC = () => {
 
   const handleNewGame = useCallback(() => {
     chess.resetGame();
+    setGameProcessed(false);
     telegramService.notificationOccurred('success');
   }, [chess]);
 
@@ -285,6 +311,12 @@ export const AIGamePage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Achievement Notification */}
+      <AchievementNotification
+        achievement={recentlyUnlocked}
+        onClose={() => {}}
+      />
     </div>
   );
 };
