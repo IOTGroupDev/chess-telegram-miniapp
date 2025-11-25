@@ -24,8 +24,6 @@
 #
 # =====================================
 
-version: '3.8'
-
 services:
   # ===================================
   # Redis - Position Caching
@@ -189,6 +187,7 @@ services:
     volumes:
       # Nginx configuration (using default nginx.conf + our conf.d)
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /var/log/nginx:/var/log/nginx
 
       # SSL certificates (Let's Encrypt)
       - ./certbot/conf:/etc/letsencrypt:ro
