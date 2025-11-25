@@ -7,6 +7,7 @@ import { AITrainingPage } from './pages/AITrainingPage';
 import { OnlineGamePage } from './pages/OnlineGamePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ChallengesPage } from './pages/ChallengesPage';
 import TournamentsPage from './pages/TournamentsPage';
 import TournamentDetailsPage from './pages/TournamentDetailsPage';
 import PuzzlePage from './pages/PuzzlePage';
@@ -61,6 +62,7 @@ function App() {
           <Route path="/join/:inviteCode" element={<OnlineGamePage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/challenges" element={<ChallengesPage />} />
           <Route path="/tournaments" element={<TournamentsPage />} />
           <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
           <Route path="/puzzles" element={<PuzzlePage />} />

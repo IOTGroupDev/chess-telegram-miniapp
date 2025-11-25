@@ -6,6 +6,7 @@ import { usePuzzle } from '../hooks/usePuzzle';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { useTheme } from '../hooks/useTheme';
 import { useAchievements } from '../hooks/useAchievements';
+import { useChallenges } from '../hooks/useChallenges';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { telegramService } from '../services/telegramService';
 
@@ -14,6 +15,7 @@ const PuzzlePage: React.FC = () => {
   const { currentPuzzle, loading, error, fetchNextPuzzle, submitAttempt } = usePuzzle();
   const { currentTheme } = useTheme();
   const { recordPuzzleSolved, recordPuzzleFailed, recentlyUnlocked } = useAchievements();
+  const { trackPuzzleSolved } = useChallenges();
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -185,6 +187,7 @@ const PuzzlePage: React.FC = () => {
 
     if (solved) {
       recordPuzzleSolved();
+      trackPuzzleSolved();
       telegramService.notificationOccurred('success');
     } else {
       recordPuzzleFailed();
