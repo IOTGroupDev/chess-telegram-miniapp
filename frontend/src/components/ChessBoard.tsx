@@ -96,14 +96,27 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         justifyContent: 'center',
         cursor: 'pointer',
         position: 'relative',
+        pointerEvents: 'auto',
+        touchAction: 'manipulation',
         ...getSquareStyles(square),
+      };
+
+      // Handle both click and touch events
+      const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('[ChessBoard] Native click/touch event on square:', square);
+        handleSquareClick(square);
       };
 
       squares.push(
         <div
           key={square}
+          data-square={square}
+          className="chess-square"
           style={squareStyle}
-          onClick={() => handleSquareClick(square)}
+          onClick={handleClick}
+          onTouchEnd={handleClick}
         >
           {piece && (
             <span

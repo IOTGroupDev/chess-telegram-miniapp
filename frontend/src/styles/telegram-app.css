@@ -40,9 +40,18 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th {
   -webkit-user-select: text;
 }
 
-/* Оптимизация для touch-устройств */
-button, a {
+/* CRITICAL: Allow pointer events on interactive elements */
+button, a, [role="button"], [onclick] {
+  pointer-events: auto !important;
   touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* CRITICAL: Chess board squares need to be clickable */
+.chess-square, [data-square] {
+  pointer-events: auto !important;
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
 /* Скрытие скроллбара но с сохранением функциональности */
