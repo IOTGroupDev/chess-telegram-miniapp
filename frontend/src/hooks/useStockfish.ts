@@ -41,7 +41,9 @@ export function useStockfish() {
       });
 
       if (!response.ok) {
-        throw new Error(`Engine API error: ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        console.error('[Stockfish] API Error Response:', errorText);
+        throw new Error(`Engine API error (${response.status}): ${errorText || response.statusText}`);
       }
 
       const data: EngineResponse = await response.json();
@@ -80,7 +82,9 @@ export function useStockfish() {
       });
 
       if (!response.ok) {
-        throw new Error(`Engine API error: ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        console.error('[Stockfish] API Error Response:', errorText);
+        throw new Error(`Engine API error (${response.status}): ${errorText || response.statusText}`);
       }
 
       const data: EngineResponse = await response.json();
@@ -119,7 +123,9 @@ export function useStockfish() {
       });
 
       if (!response.ok) {
-        throw new Error(`Engine API error: ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        console.error('[Stockfish] API Error Response:', errorText);
+        throw new Error(`Engine API error (${response.status}): ${errorText || response.statusText}`);
       }
 
       const data: EngineResponse = await response.json();
