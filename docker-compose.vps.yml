@@ -95,8 +95,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
-      # Stockfish Configuration (Stockfish 17.1 - stronger by ~100-150 Elo)
-      STOCKFISH_PATH: /usr/local/bin/stockfish
+      # Stockfish Configuration (version 15.1 from Debian apt)
+      # Stable and compatible with all x86-64 CPUs (no AVX2/VNNI requirements)
+      STOCKFISH_PATH: /usr/games/stockfish
       STOCKFISH_THREADS: ${STOCKFISH_THREADS:-1}
       STOCKFISH_HASH_SIZE: ${STOCKFISH_HASH_SIZE:-128}
 

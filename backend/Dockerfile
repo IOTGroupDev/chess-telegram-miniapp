@@ -24,17 +24,14 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Устанавливаем curl, wget и stockfish для healthcheck
+# Устанавливаем curl и stockfish для healthcheck
+# Debian 12: stockfish версия ~15.1 - стабильная и совместимая со всеми CPU
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl wget stockfish \
+  && apt-get install -y --no-install-recommends curl stockfish \
   && rm -rf /var/lib/apt/lists/*
 
-# Попытка установить Stockfish 17.1 (если не получится - будет версия из apt)
-# Скачиваем бинарник напрямую без tar
-RUN wget -q -O /tmp/stockfish17 https://github.com/official-stockfish/Stockfish/releases/download/sf_17.1/stockfish-ubuntu-x86-64-avx2 \
-  && chmod +x /tmp/stockfish17 \
-  && mv /tmp/stockfish17 /usr/local/bin/stockfish \
-  || echo "Failed to download Stockfish 17.1, using system version"
+# Stockfish из apt (~15.1) работает на любом x86-64 процессоре
+# Для VPS это оптимальный выбор: стабильно, без зависимостей от CPU инструкций
 
 # Копируем package.json
 COPY package*.json ./
@@ -48,8 +45,8 @@ COPY --from=builder /app/dist ./dist
 # Переменные окружения для runtime
 ENV NODE_ENV=production
 ENV PORT=3000
-# Приоритет: /usr/local/bin/stockfish (17.1) или /usr/games/stockfish (15.1 fallback)
-ENV STOCKFISH_PATH=/usr/local/bin/stockfish
+# Stockfish from apt is located in /usr/games/stockfish
+ENV STOCKFISH_PATH=/usr/games/stockfish
 
 EXPOSE 3000
 
