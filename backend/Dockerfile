@@ -28,6 +28,7 @@ WORKDIR /app
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     curl \
+    ca-certificates \
     git \
     make \
     g++ \
@@ -44,6 +45,7 @@ RUN git clone --depth 1 --branch sf_17 https://github.com/official-stockfish/Sto
   && rm -rf /tmp/stockfish
 
 # Очищаем build зависимости для уменьшения размера образа
+# Сохраняем curl и ca-certificates (нужны для healthcheck)
 RUN apt-get purge -y git make g++ \
   && apt-get autoremove -y \
   && apt-get clean
