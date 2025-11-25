@@ -104,6 +104,10 @@ export const MainMenu: React.FC = () => {
     navigate('/ai-training');
   };
 
+  const handleViewChallenges = () => {
+    navigate('/challenges');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
       <div className="max-w-md mx-auto px-4 py-6">
@@ -221,6 +225,19 @@ export const MainMenu: React.FC = () => {
 
         {/* Secondary Actions - Compact List */}
         <div className="space-y-2 mb-6">
+          {/* Daily Challenges */}
+          <div
+            onClick={handleViewChallenges}
+            className="glass rounded-xl p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer flex items-center gap-3"
+          >
+            <div className="text-2xl">🎯</div>
+            <span className="text-white font-medium text-sm flex-1">Daily Challenges</span>
+            <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
+            <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+
           {/* History */}
           <div
             onClick={handleViewHistory}

@@ -8,6 +8,7 @@ import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { useTheme } from '../hooks/useTheme';
 import { useSound } from '../hooks/useSound';
 import { useAchievements } from '../hooks/useAchievements';
+import { useChallenges } from '../hooks/useChallenges';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { telegramService } from '../services/telegramService';
 
@@ -23,6 +24,7 @@ export const AIGamePage: React.FC = () => {
   const { currentTheme } = useTheme();
   const { playSound } = useSound();
   const { recordWin, recordLoss, recordDraw, recentlyUnlocked } = useAchievements();
+  const { trackWin, trackLoss, trackDraw } = useChallenges();
 
   const initializeGame = useCallback(async () => {
     try {
@@ -42,7 +44,7 @@ export const AIGamePage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Process game end for achievements
+  // Process game end for achievements and challenges
   useEffect(() => {
     if (chess.gameState.isGameOver && !gameProcessed) {
       setGameProcessed(true);
@@ -51,16 +53,19 @@ export const AIGamePage: React.FC = () => {
 
       if (chess.gameState.winner === 'white') {
         // Player won
-        recordWin(true, moveCount); // isAI = true
+        recordWin(true, moveCount); // isAI = true (for achievements)
+        trackWin(true, moveCount);  // isAI = true (for challenges)
       } else if (chess.gameState.winner === 'black') {
         // AI won
         recordLoss();
+        trackLoss();
       } else if (chess.gameState.winner === 'draw') {
         // Draw
         recordDraw();
+        trackDraw();
       }
     }
-  }, [chess.gameState.isGameOver, chess.gameState.winner, gameProcessed, recordWin, recordLoss, recordDraw, chess]);
+  }, [chess.gameState.isGameOver, chess.gameState.winner, gameProcessed, recordWin, recordLoss, recordDraw, trackWin, trackLoss, trackDraw, chess]);
 
   const handlePieceDrop = useCallback((sourceSquare: string, targetSquare: string) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
