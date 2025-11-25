@@ -37,7 +37,7 @@ class RatingChangePreviewDto {
   opponent!: GlickoRating;
 }
 
-@Controller('api/rating')
+@Controller('rating')
 export class RatingController {
   constructor(private readonly glicko2: Glicko2Service) {}
 

@@ -19,7 +19,7 @@ class AnalyzeGameDto {
   pgn!: string;
 }
 
-@Controller('api/analysis')
+@Controller('analysis')
 export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 

@@ -40,7 +40,7 @@ class MultiEngineAnalyzeDto {
   depth?: number;
 }
 
-@Controller('api/engine')
+@Controller('engine')
 export class EngineController {
   constructor(
     private readonly engineManager: EngineManagerService,
