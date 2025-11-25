@@ -6,6 +6,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
+import { existsSync } from 'fs';
 
 export interface EngineOptions {
   threads?: number;
@@ -71,6 +72,17 @@ export class StockfishService extends EventEmitter implements OnModuleDestroy {
   private async initialize(): Promise<void> {
     try {
       this.logger.log(`Initializing Stockfish at: ${this.stockfishPath}`);
+
+      // Check if Stockfish binary exists
+      if (!existsSync(this.stockfishPath)) {
+        throw new Error(
+          `Stockfish binary not found at: ${this.stockfishPath}\n` +
+          `Please install Stockfish or set STOCKFISH_PATH environment variable.\n` +
+          `On Ubuntu/Debian: apt-get install stockfish\n` +
+          `On macOS: brew install stockfish\n` +
+          `On Windows: download from https://stockfishchess.org/download/`
+        );
+      }
 
       // Spawn Stockfish process
       this.process = spawn(this.stockfishPath, [], {

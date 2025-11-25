@@ -241,7 +241,7 @@ export const AIGamePage: React.FC = () => {
             {/* Actual board */}
             <div className="relative">
               <Chessboard
-                {...{
+                {...({
                   position: chess.getFen(),
                   onPieceDrop: handlePieceDrop,
                   boardOrientation: 'white',
@@ -259,7 +259,7 @@ export const AIGamePage: React.FC = () => {
                   },
                   arePiecesDraggable: chess.gameState.isPlayerTurn && !chess.gameState.isGameOver && !stockfish.isThinking,
                   animationDuration: 200,
-                } as any}
+                } as any)}
               />
             </div>
           </div>

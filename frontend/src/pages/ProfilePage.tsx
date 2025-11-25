@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TelegramService } from '../services/telegram';
+import { telegramService } from '../services/telegramService';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { ThemeSelector } from '../components/ThemeSelector';
 import { SoundSettings } from '../components/SoundSettings';
@@ -10,8 +10,7 @@ import { useAchievements } from '../hooks/useAchievements';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const telegram = TelegramService.getInstance();
-  const user = telegram.getUser();
+  const user = telegramService.getUser();
   const { stats, recentlyUnlocked } = useAchievements();
 
   // Use Telegram native BackButton
@@ -31,13 +30,13 @@ export const ProfilePage: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
               <span className="text-3xl">
-                {user?.firstName?.charAt(0).toUpperCase() || '👤'}
+                {user?.first_name?.charAt(0).toUpperCase() || '👤'}
               </span>
             </div>
 
             <div className="flex-1">
               <h2 className="text-xl font-bold text-white mb-1">
-                {user?.firstName || 'Player'} {user?.lastName || ''}
+                {user?.first_name || 'Player'} {user?.last_name || ''}
               </h2>
 
               {user?.username && (

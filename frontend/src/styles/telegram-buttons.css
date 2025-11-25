@@ -1,0 +1,174 @@
+/**
+ * Telegram Native Button Styles
+ * Styled to match Telegram's design system
+ * Uses CSS variables from Telegram theme
+ */
+
+/* Primary Button - matches Telegram MainButton */
+.tg-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  border: none;
+
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  /* Prevent text selection */
+  user-select: none;
+  -webkit-user-select: none;
+
+  /* Active state feedback */
+  transform: scale(1);
+}
+
+.tg-button:active {
+  transform: scale(0.96);
+}
+
+.tg-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary button - uses Telegram theme colors */
+.tg-button-primary {
+  background: var(--tg-theme-button-color, #3390ec);
+  color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+.tg-button-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Secondary button - subtle style */
+.tg-button-secondary {
+  background: var(--tg-theme-secondary-bg-color, rgba(0, 0, 0, 0.1));
+  color: var(--tg-theme-text-color, #000000);
+  border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+}
+
+.tg-button-secondary:hover:not(:disabled) {
+  background: var(--tg-theme-hint-color, rgba(0, 0, 0, 0.15));
+}
+
+/* Destructive button - for dangerous actions */
+.tg-button-destructive {
+  background: #e74c3c;
+  color: #ffffff;
+}
+
+.tg-button-destructive:hover:not(:disabled) {
+  background: #c0392b;
+}
+
+/* Success button - for positive actions */
+.tg-button-success {
+  background: #2ecc71;
+  color: #ffffff;
+}
+
+.tg-button-success:hover:not(:disabled) {
+  background: #27ae60;
+}
+
+/* Link button - minimal style */
+.tg-button-link {
+  background: transparent;
+  color: var(--tg-theme-link-color, #3390ec);
+  padding: 0.5rem 0.75rem;
+}
+
+.tg-button-link:hover:not(:disabled) {
+  background: var(--tg-theme-secondary-bg-color, rgba(0, 0, 0, 0.05));
+}
+
+/* Button sizes */
+.tg-button-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.tg-button-lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Full width button */
+.tg-button-block {
+  width: 100%;
+  display: flex;
+}
+
+/* Button with icon */
+.tg-button-icon {
+  padding: 0.75rem;
+  aspect-ratio: 1;
+}
+
+/* Haptic feedback on touch */
+@media (hover: none) {
+  .tg-button:active {
+    transform: scale(0.94);
+  }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .tg-button-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .tg-button-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Telegram-style button group */
+.tg-button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tg-button-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Loading state */
+.tg-button-loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.tg-button-loading::after {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  top: 50%;
+  left: 50%;
+  margin-left: -0.5rem;
+  margin-top: -0.5rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-right-color: transparent;
+  animation: tg-button-spin 0.6s linear infinite;
+}
+
+@keyframes tg-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
