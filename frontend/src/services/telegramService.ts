@@ -35,8 +35,7 @@ class TelegramService {
 
       this.webApp = window.Telegram.WebApp;
 
-      // IMPORTANT: Expand to full height
-      this.webApp.expand();
+      console.log('[TelegramService] WebApp SDK available, version:', this.webApp.version);
 
       // Set header color to match theme
       this.webApp.setHeaderColor('secondary_bg_color');
@@ -44,10 +43,7 @@ class TelegramService {
       // Enable closing confirmation
       this.webApp.enableClosingConfirmation();
 
-      // Signal that Mini App is ready
-      this.webApp.ready();
 
-      
 
       // Get user data from initDataUnsafe
       const userData = this.webApp.initDataUnsafe?.user;

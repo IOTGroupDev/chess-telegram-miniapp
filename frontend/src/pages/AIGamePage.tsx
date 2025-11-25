@@ -85,12 +85,20 @@ export const AIGamePage: React.FC = () => {
 
   // Handle square click (click-to-move instead of drag-and-drop)
   const handleSquareClick = useCallback((square: Square) => {
+    console.log('[AIGame] handleSquareClick called, square:', square);
+
     // Can't play if game is over, not player's turn, or AI is thinking
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
+      console.log('[AIGame] Click blocked:', {
+        isGameOver: chess.gameState.isGameOver,
+        isPlayerTurn: chess.gameState.isPlayerTurn,
+        isThinking: stockfish.isThinking
+      });
       return;
     }
 
     const piece = chess.game.get(square);
+    console.log('[AIGame] Piece at square:', piece);
 
     // If no piece selected yet
     if (!selectedSquare) {

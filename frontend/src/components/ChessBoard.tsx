@@ -19,11 +19,15 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 }) => {
   // Handle square click - either select piece or make move
   const handleSquareClick = (square: Square) => {
+    console.log('[ChessBoard] Square clicked:', square);
+
     // If a piece is selected and this square is a possible move, make the move
     if (gameState.selectedSquare && gameState.possibleMoves.includes(square)) {
+      console.log('[ChessBoard] Making move:', gameState.selectedSquare, '->', square);
       onPieceDrop(gameState.selectedSquare as Square, square);
     } else {
       // Otherwise, select/deselect piece
+      console.log('[ChessBoard] Selecting/deselecting square:', square);
       onSquareClick(square);
     }
   };
