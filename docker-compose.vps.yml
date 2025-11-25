@@ -195,9 +195,6 @@ services:
       # Certbot webroot (read-write для challenge файлов)
       - ./certbot/www:/var/www/certbot
 
-      # Logs
-      - nginx_logs:/var/log/nginx
-
     depends_on:
       - backend
       - frontend
