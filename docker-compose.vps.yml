@@ -95,9 +95,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
-      # Stockfish Configuration (version 15.1 from Debian apt)
-      # Stable and compatible with all x86-64 CPUs (no AVX2/VNNI requirements)
-      STOCKFISH_PATH: /usr/games/stockfish
+      # Stockfish Configuration (version 17, built from source with CPU auto-detection)
+      # Automatically optimized for VPS CPU (x86-64-modern detects AVX2/BMI2 if available)
+      STOCKFISH_PATH: /usr/local/bin/stockfish
       STOCKFISH_THREADS: ${STOCKFISH_THREADS:-1}
       STOCKFISH_HASH_SIZE: ${STOCKFISH_HASH_SIZE:-128}
 

@@ -24,14 +24,29 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Устанавливаем curl и stockfish для healthcheck
-# Debian 12: stockfish версия ~15.1 - стабильная и совместимая со всеми CPU
+# Устанавливаем инструменты для сборки Stockfish
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl stockfish \
+  && apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    make \
+    g++ \
   && rm -rf /var/lib/apt/lists/*
 
-# Stockfish из apt (~15.1) работает на любом x86-64 процессоре
-# Для VPS это оптимальный выбор: стабильно, без зависимостей от CPU инструкций
+# Собираем Stockfish 17 из исходников с автоопределением архитектуры CPU
+# make build автоматически выберет оптимальные инструкции (x86-64, SSE41, AVX2, BMI2, etc)
+RUN git clone --depth 1 --branch sf_17 https://github.com/official-stockfish/Stockfish.git /tmp/stockfish \
+  && cd /tmp/stockfish/src \
+  && make -j$(nproc) build ARCH=x86-64-modern \
+  && cp stockfish /usr/local/bin/stockfish \
+  && chmod +x /usr/local/bin/stockfish \
+  && cd / \
+  && rm -rf /tmp/stockfish
+
+# Очищаем build зависимости для уменьшения размера образа
+RUN apt-get purge -y git make g++ \
+  && apt-get autoremove -y \
+  && apt-get clean
 
 # Копируем package.json
 COPY package*.json ./
@@ -45,8 +60,8 @@ COPY --from=builder /app/dist ./dist
 # Переменные окружения для runtime
 ENV NODE_ENV=production
 ENV PORT=3000
-# Stockfish from apt is located in /usr/games/stockfish
-ENV STOCKFISH_PATH=/usr/games/stockfish
+# Stockfish 17 built from source, optimized for this CPU
+ENV STOCKFISH_PATH=/usr/local/bin/stockfish
 
 EXPOSE 3000
 
