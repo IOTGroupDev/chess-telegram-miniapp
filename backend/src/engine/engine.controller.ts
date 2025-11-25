@@ -13,30 +13,53 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
+import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
 import { EngineManagerService } from './engine-manager.service';
 import { EngineFactory, EngineType } from './engine.factory';
 import { EngineOptions } from './stockfish.service';
 
 // DTOs
 class AnalyzePositionDto {
+  @IsString()
   fen!: string;
+
+  @IsOptional()
+  @IsNumber()
   depth?: number;
+
+  @IsOptional()
+  @IsNumber()
   multiPv?: number;
-  engine?: EngineType; // 'stockfish', 'leela', 'komodo'
+
+  @IsOptional()
+  @IsEnum(['stockfish', 'leela', 'komodo'])
+  engine?: EngineType;
 }
 
 class GetBestMoveDto {
+  @IsString()
   fen!: string;
+
+  @IsOptional()
+  @IsNumber()
   depth?: number;
+
+  @IsOptional()
+  @IsEnum(['stockfish', 'leela', 'komodo'])
   engine?: EngineType;
 }
 
 class QuickEvalDto {
+  @IsString()
   fen!: string;
 }
 
 class MultiEngineAnalyzeDto {
+  @IsString()
   fen!: string;
+
+  @IsOptional()
+  @IsNumber()
   depth?: number;
 }
 
