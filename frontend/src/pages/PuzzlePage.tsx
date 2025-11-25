@@ -136,7 +136,10 @@ const PuzzlePage: React.FC = () => {
     // Check if move is correct
     const expectedMove = solutionMoves[currentMoveIndex];
     if (moveUci !== expectedMove) {
-      // Incorrect move - don't undo manually, return false and let react-chessboard handle it
+      // Incorrect move - undo it from game object
+      game.undo();
+      setGame(new Chess(game.fen())); // Force re-render with correct position
+
       setStatus('incorrect');
       telegramService.notificationOccurred('error');
 
@@ -245,7 +248,7 @@ const PuzzlePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'max(env(safe-area-inset-top), 80px)' }}>
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Compact Header */}
         <div className="flex items-center justify-between mb-3">
@@ -272,7 +275,7 @@ const PuzzlePage: React.FC = () => {
 
         {/* Status Messages - Floating */}
         {status === 'correct' && (
-          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-slide-down">
+          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-slide-down">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
@@ -281,7 +284,7 @@ const PuzzlePage: React.FC = () => {
         )}
 
         {status === 'incorrect' && (
-          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-red-500 to-rose-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-shake">
+          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-red-500 to-rose-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-shake">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>

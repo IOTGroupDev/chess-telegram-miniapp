@@ -18,14 +18,15 @@ export const useChess = (initialFen?: string) => {
 
   const updateGameState = useCallback(() => {
     const isGameOver = game.isGameOver();
-    const winner = isGameOver 
-      ? game.isCheckmate() 
+    const winner = isGameOver
+      ? game.isCheckmate()
         ? (game.turn() === 'w' ? 'black' : 'white')
         : 'draw'
       : null;
 
     setGameState(prev => ({
       ...prev,
+      fen: game.fen(), // Update FEN to trigger re-render
       isGameOver,
       winner,
       isPlayerTurn: !isGameOver && game.turn() === 'w',
