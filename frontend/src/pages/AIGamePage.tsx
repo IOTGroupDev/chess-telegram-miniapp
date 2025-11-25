@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Square } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
+import { ChessBoard } from '../components/ChessBoard';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
@@ -11,6 +11,7 @@ import { useAchievements } from '../hooks/useAchievements';
 import { useChallenges } from '../hooks/useChallenges';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { telegramService } from '../services/telegramService';
+import type { GameState } from '../types';
 
 export const AIGamePage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +28,19 @@ export const AIGamePage: React.FC = () => {
   const { playSound } = useSound();
   const { recordWin, recordLoss, recordDraw, recentlyUnlocked } = useAchievements();
   const { trackWin, trackLoss, trackDraw } = useChallenges();
+
+  // Create gameState object for ChessBoard component
+  const gameStateForBoard = useMemo((): GameState => ({
+    game: null, // AI game doesn't use Game object
+    isPlayerTurn: chess.gameState.isPlayerTurn,
+    selectedSquare: selectedSquare,
+    possibleMoves: possibleMoves,
+    isGameOver: chess.gameState.isGameOver,
+    winner: chess.gameState.winner,
+    fen: chess.getFen(),
+    moves: [],
+    status: chess.gameState.isGameOver ? 'finished' : 'active',
+  }), [chess.gameState, selectedSquare, possibleMoves, chess]);
 
   const initializeGame = useCallback(async () => {
     try {
@@ -338,44 +352,12 @@ export const AIGamePage: React.FC = () => {
 
             {/* Actual board */}
             <div className="relative">
-              <Chessboard
-                {...({
-                  position: chess.getFen(),
-                  onSquareClick: handleSquareClick,
-                  onPieceDrop: handlePieceDrop,
-                  boardOrientation: 'white',
-                  customBoardStyle: {
-                    borderRadius: '0',
-                  },
-                  customDarkSquareStyle: {
-                    backgroundColor: currentTheme.darkSquare,
-                  },
-                  customLightSquareStyle: {
-                    backgroundColor: currentTheme.lightSquare,
-                  },
-                  customSquareStyles: {
-                    // Highlight selected square
-                    ...(selectedSquare ? {
-                      [selectedSquare]: {
-                        backgroundColor: 'rgba(255, 255, 0, 0.4)',
-                        boxShadow: 'inset 0 0 0 3px rgba(255, 255, 0, 0.8)',
-                      }
-                    } : {}),
-                    // Highlight possible moves
-                    ...possibleMoves.reduce((acc, square) => ({
-                      ...acc,
-                      [square]: {
-                        background: 'radial-gradient(circle, rgba(0, 255, 0, 0.5) 25%, transparent 25%)',
-                        borderRadius: '50%',
-                      }
-                    }), {})
-                  },
-                  customDropSquareStyle: {
-                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
-                  },
-                  arePiecesDraggable: chess.gameState.isPlayerTurn && !chess.gameState.isGameOver && !stockfish.isThinking,
-                  animationDuration: 200,
-                } as any)}
+              <ChessBoard
+                position={chess.getFen()}
+                onSquareClick={handleSquareClick}
+                onPieceDrop={handlePieceDrop}
+                gameState={gameStateForBoard}
+                boardWidth={Math.min(window.innerWidth - 32, 500)}
               />
             </div>
           </div>
