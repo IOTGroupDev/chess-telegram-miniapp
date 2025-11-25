@@ -18,6 +18,8 @@ export const AIGamePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [, forceUpdate] = useState({});
   const [gameProcessed, setGameProcessed] = useState(false);
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
 
   const chess = useChess();
   const stockfish = useStockfish();
@@ -67,6 +69,100 @@ export const AIGamePage: React.FC = () => {
     }
   }, [chess.gameState.isGameOver, chess.gameState.winner, gameProcessed, recordWin, recordLoss, recordDraw, trackWin, trackLoss, trackDraw, chess]);
 
+  // Handle square click (click-to-move instead of drag-and-drop)
+  const handleSquareClick = useCallback((square: Square) => {
+    // Can't play if game is over, not player's turn, or AI is thinking
+    if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
+      return;
+    }
+
+    const piece = chess.game.get(square);
+
+    // If no piece selected yet
+    if (!selectedSquare) {
+      // Select piece if it's player's piece (white)
+      if (piece && piece.color === 'w') {
+        setSelectedSquare(square);
+        const moves = chess.getPossibleMoves(square);
+        setPossibleMoves(moves as Square[]);
+        telegramService.impactOccurred('light');
+      }
+      return;
+    }
+
+    // If clicking on the same square, deselect
+    if (square === selectedSquare) {
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+      return;
+    }
+
+    // If clicking on another player's piece, switch selection
+    if (piece && piece.color === 'w') {
+      setSelectedSquare(square);
+      const moves = chess.getPossibleMoves(square);
+      setPossibleMoves(moves as Square[]);
+      telegramService.impactOccurred('light');
+      return;
+    }
+
+    // Try to make the move
+    const targetPiece = chess.game.get(square);
+    const isCapture = targetPiece !== null && targetPiece !== undefined;
+
+    const success = chess.makeMove(selectedSquare, square);
+
+    if (success) {
+      // Clear selection
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+
+      // Play appropriate sound
+      playSound(isCapture ? 'capture' : 'move');
+      telegramService.notificationOccurred('success');
+
+      // Check for game over
+      if (chess.gameState.isGameOver) {
+        setTimeout(() => playSound('gameEnd'), 300);
+      }
+
+      // Get AI move after player move
+      if (!chess.gameState.isGameOver) {
+        setTimeout(async () => {
+          try {
+            const aiMove = await stockfish.getBestMove(chess.getFen());
+            if (aiMove && aiMove.length >= 4) {
+              const from = aiMove.slice(0, 2) as Square;
+              const to = aiMove.slice(2, 4) as Square;
+
+              const aiTargetPiece = chess.game.get(to);
+              const isAICapture = aiTargetPiece !== null && aiTargetPiece !== undefined;
+
+              const aiMoveSuccess = chess.makeMove(from, to);
+              if (aiMoveSuccess) {
+                playSound(isAICapture ? 'capture' : 'move');
+
+                if (chess.gameState.isGameOver) {
+                  setTimeout(() => playSound('gameEnd'), 300);
+                }
+
+                forceUpdate({});
+                telegramService.notificationOccurred('success');
+              }
+            }
+          } catch (err) {
+            console.error('AI move failed:', err);
+            telegramService.notificationOccurred('error');
+          }
+        }, 500);
+      }
+    } else {
+      // Invalid move, play error sound
+      telegramService.notificationOccurred('error');
+    }
+  }, [chess, stockfish, forceUpdate, playSound, selectedSquare]);
+
+  // Keep drag-and-drop as fallback for desktop
   const handlePieceDrop = useCallback((sourceSquare: string, targetSquare: string) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
       return false;
@@ -131,6 +227,8 @@ export const AIGamePage: React.FC = () => {
   const handleNewGame = useCallback(() => {
     chess.resetGame();
     setGameProcessed(false);
+    setSelectedSquare(null);
+    setPossibleMoves([]);
     telegramService.notificationOccurred('success');
   }, [chess]);
 
@@ -243,6 +341,7 @@ export const AIGamePage: React.FC = () => {
               <Chessboard
                 {...({
                   position: chess.getFen(),
+                  onSquareClick: handleSquareClick,
                   onPieceDrop: handlePieceDrop,
                   boardOrientation: 'white',
                   customBoardStyle: {
@@ -253,6 +352,23 @@ export const AIGamePage: React.FC = () => {
                   },
                   customLightSquareStyle: {
                     backgroundColor: currentTheme.lightSquare,
+                  },
+                  customSquareStyles: {
+                    // Highlight selected square
+                    ...(selectedSquare ? {
+                      [selectedSquare]: {
+                        backgroundColor: 'rgba(255, 255, 0, 0.4)',
+                        boxShadow: 'inset 0 0 0 3px rgba(255, 255, 0, 0.8)',
+                      }
+                    } : {}),
+                    // Highlight possible moves
+                    ...possibleMoves.reduce((acc, square) => ({
+                      ...acc,
+                      [square]: {
+                        background: 'radial-gradient(circle, rgba(0, 255, 0, 0.5) 25%, transparent 25%)',
+                        borderRadius: '50%',
+                      }
+                    }), {})
                   },
                   customDropSquareStyle: {
                     boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
