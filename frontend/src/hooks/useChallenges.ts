@@ -128,7 +128,7 @@ export const useChallenges = () => {
 
     let newStreak = { ...streak };
 
-    if (streak.lastCompletedDate === yesterday) {
+    if (streak.lastCompletedDate === yesterdayDate) {
       // Продолжение серии
       newStreak.current += 1;
       newStreak.longest = Math.max(newStreak.current, newStreak.longest);

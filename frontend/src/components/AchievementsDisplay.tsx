@@ -8,7 +8,7 @@ import { AchievementBadge } from './AchievementBadge';
 import { useAchievements } from '../hooks/useAchievements';
 import type { AchievementCategory } from '../config/achievements';
 import { achievementCategories } from '../config/achievements';
-import { telegramService } from '../services/telegram.service';
+import { telegramService } from '../services/telegramService';
 
 export const AchievementsDisplay: React.FC = () => {
   const {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { soundUrls, SoundType } from '../config/sounds';
+import { soundUrls, type SoundType } from '../config/sounds';
 
 const SOUND_ENABLED_KEY = 'chess_sound_enabled';
 const SOUND_VOLUME_KEY = 'chess_sound_volume';

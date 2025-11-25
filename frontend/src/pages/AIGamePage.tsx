@@ -73,7 +73,7 @@ export const AIGamePage: React.FC = () => {
     }
 
     // Check if it's a capture before making the move
-    const targetPiece = chess.gameState.game?.get(targetSquare as Square);
+    const targetPiece = chess.game.get(targetSquare as Square);
     const isCapture = targetPiece !== null && targetPiece !== undefined;
 
     const success = chess.makeMove(sourceSquare as Square, targetSquare as Square);
@@ -98,7 +98,7 @@ export const AIGamePage: React.FC = () => {
               const to = aiMove.slice(2, 4) as Square;
 
               // Check if AI move is a capture
-              const aiTargetPiece = chess.gameState.game?.get(to);
+              const aiTargetPiece = chess.game.get(to);
               const isAICapture = aiTargetPiece !== null && aiTargetPiece !== undefined;
 
               const aiMoveSuccess = chess.makeMove(from, to);

@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import type { Achievement } from '../config/achievements';
 import { rarityColors } from '../config/achievements';
-import { telegramService } from '../services/telegram.service';
+import { telegramService } from '../services/telegramService';
 
 interface AchievementNotificationProps {
   achievement: Achievement | null;
@@ -23,7 +23,7 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
   useEffect(() => {
     if (achievement) {
       // Haptic feedback
-      telegramService.hapticFeedback('success');
+      telegramService.notificationOccurred('success');
 
       // Animate in
       setTimeout(() => setIsVisible(true), 100);
