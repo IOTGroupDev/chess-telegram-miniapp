@@ -310,8 +310,28 @@ const ArenaPage: React.FC = () => {
           </div>
         )}
 
+        {/* Quick Links */}
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate('/leaderboard')}
+            className="bg-slate-800/50 border border-yellow-500/30 hover:border-yellow-500/50 rounded-xl p-4 text-center transition-all active:scale-95"
+          >
+            <div className="text-3xl mb-2">🏆</div>
+            <div className="text-white font-bold text-sm">Leaderboard</div>
+            <div className="text-xs text-slate-400">Top Warriors</div>
+          </button>
+          <button
+            onClick={() => navigate('/arena/stats')}
+            className="bg-slate-800/50 border border-purple-500/30 hover:border-purple-500/50 rounded-xl p-4 text-center transition-all active:scale-95"
+          >
+            <div className="text-3xl mb-2">📊</div>
+            <div className="text-white font-bold text-sm">Your Stats</div>
+            <div className="text-xs text-slate-400">Battle Record</div>
+          </button>
+        </div>
+
         {/* Call to Action */}
-        <div className="mt-8 bg-gradient-to-br from-red-900/40 to-orange-900/40 border-2 border-red-500/50 rounded-xl p-6 text-center backdrop-blur-sm">
+        <div className="mt-6 bg-gradient-to-br from-red-900/40 to-orange-900/40 border-2 border-red-500/50 rounded-xl p-6 text-center backdrop-blur-sm">
           <div className="text-3xl mb-2">⚡</div>
           <h3 className="text-xl font-black text-white mb-2">READY TO FIGHT?</h3>
           <p className="text-sm text-slate-300 mb-4">
