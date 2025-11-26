@@ -16,7 +16,7 @@ import { wakeLockService } from './services/wakeLockService';
 import {useEffect} from 'react';
 
 
-function App() {
+function AppRoutes() {
   // Theme is initialized in main.tsx via telegramThemeService
   const location = useLocation();
   useEffect(() => {
@@ -64,4 +64,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <AppRoutes/>
+    </Router>
+  )
+}
