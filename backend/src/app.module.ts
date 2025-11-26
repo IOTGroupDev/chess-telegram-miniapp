@@ -18,6 +18,8 @@ import { RatingModule } from './rating/rating.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { TournamentModule } from './tournament/tournament.module';
 import { PuzzleModule } from './puzzle/puzzle.module';
+import { WalletModule } from './wallet/wallet.module';
+import { GameBetsModule } from './game-bets/game-bets.module';
 
 @Module({
   imports: [
@@ -44,6 +46,12 @@ import { PuzzleModule } from './puzzle/puzzle.module';
 
     // Tactical puzzle system
     PuzzleModule,
+
+    // User wallet management (coins, stars)
+    WalletModule,
+
+    // Game betting system
+    GameBetsModule,
   ],
 })
 export class AppModule {}

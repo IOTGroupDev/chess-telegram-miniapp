@@ -12,7 +12,14 @@ export type Json =
   | Json[]
 
 // Enums
-export type GameStatus = 'waiting' | 'active' | 'finished' | 'aborted';
+export type GameStatus =
+  | 'pending_bet_setup'
+  | 'pending_bet_acceptance'
+  | 'pending_deposits'
+  | 'waiting'
+  | 'active'
+  | 'finished'
+  | 'aborted';
 export type GameWinner = 'white' | 'black' | 'draw';
 export type GameEndReason =
   | 'checkmate'
@@ -35,6 +42,19 @@ export type MoveClassification =
   | 'missed_win';
 export type TournamentType = 'arena' | 'swiss' | 'knockout';
 export type TournamentStatus = 'upcoming' | 'active' | 'finished' | 'cancelled';
+
+// Betting System Enums
+export type BetType = 'free' | 'coins' | 'stars';
+export type BetStatus = 'pending' | 'locked' | 'completed' | 'cancelled' | 'refunded';
+export type TransactionType =
+  | 'deposit_bet'
+  | 'refund_bet'
+  | 'win_payout'
+  | 'deposit_stars'
+  | 'withdraw_coins'
+  | 'platform_fee'
+  | 'draw_refund';
+export type CurrencyType = 'coins' | 'stars';
 
 export interface Database {
   public: {
@@ -574,9 +594,175 @@ export interface Database {
           losses?: number;
         };
       };
+
+      // Betting System Tables
+      user_wallets: {
+        Row: {
+          id: string;
+          user_id: string;
+          balance_coins: number;
+          balance_stars: number;
+          total_deposited: number;
+          total_withdrawn: number;
+          total_won: number;
+          total_lost: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          balance_coins?: number;
+          balance_stars?: number;
+          total_deposited?: number;
+          total_withdrawn?: number;
+          total_won?: number;
+          total_lost?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          balance_coins?: number;
+          balance_stars?: number;
+          total_deposited?: number;
+          total_withdrawn?: number;
+          total_won?: number;
+          total_lost?: number;
+          updated_at?: string;
+        };
+      };
+
+      game_bets: {
+        Row: {
+          id: string;
+          game_id: string;
+          bet_type: BetType;
+          bet_amount: number | null;
+          currency: CurrencyType | null;
+          white_deposit_status: BetStatus;
+          black_deposit_status: BetStatus;
+          white_deposited_at: string | null;
+          black_deposited_at: string | null;
+          total_pot: number;
+          platform_fee_percentage: number;
+          platform_fee: number;
+          winner_payout: number | null;
+          terms_accepted_by_white: boolean;
+          terms_accepted_by_black: boolean;
+          status: BetStatus;
+          payout_completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          game_id: string;
+          bet_type: BetType;
+          bet_amount?: number | null;
+          currency?: CurrencyType | null;
+          white_deposit_status?: BetStatus;
+          black_deposit_status?: BetStatus;
+          white_deposited_at?: string | null;
+          black_deposited_at?: string | null;
+          total_pot?: number;
+          platform_fee_percentage?: number;
+          platform_fee?: number;
+          winner_payout?: number | null;
+          terms_accepted_by_white?: boolean;
+          terms_accepted_by_black?: boolean;
+          status?: BetStatus;
+          payout_completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          bet_type?: BetType;
+          bet_amount?: number | null;
+          currency?: CurrencyType | null;
+          white_deposit_status?: BetStatus;
+          black_deposit_status?: BetStatus;
+          white_deposited_at?: string | null;
+          black_deposited_at?: string | null;
+          total_pot?: number;
+          platform_fee_percentage?: number;
+          platform_fee?: number;
+          winner_payout?: number | null;
+          terms_accepted_by_white?: boolean;
+          terms_accepted_by_black?: boolean;
+          status?: BetStatus;
+          payout_completed_at?: string | null;
+          updated_at?: string;
+        };
+      };
+
+      wallet_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          wallet_id: string;
+          transaction_type: TransactionType;
+          amount: number;
+          currency: CurrencyType;
+          balance_before: number;
+          balance_after: number;
+          game_id: string | null;
+          game_bet_id: string | null;
+          description: string | null;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          wallet_id: string;
+          transaction_type: TransactionType;
+          amount: number;
+          currency: CurrencyType;
+          balance_before: number;
+          balance_after: number;
+          game_id?: string | null;
+          game_bet_id?: string | null;
+          description?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          // Transactions are immutable
+        };
+      };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      calculate_bet_payout: {
+        Args: {
+          bet_amount: number;
+          fee_percentage?: number;
+        };
+        Returns: number;
+      };
+      deposit_game_bet: {
+        Args: {
+          p_game_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      refund_game_bet: {
+        Args: {
+          p_game_id: string;
+          p_reason?: string;
+        };
+        Returns: void;
+      };
+      has_sufficient_balance: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+          p_currency: CurrencyType;
+        };
+        Returns: boolean;
+      };
+    };
     Enums: {
       game_status: GameStatus;
       game_winner: GameWinner;
@@ -585,6 +771,9 @@ export interface Database {
       move_classification: MoveClassification;
       tournament_type: TournamentType;
       tournament_status: TournamentStatus;
+      bet_type: BetType;
+      bet_status: BetStatus;
+      transaction_type: TransactionType;
     };
   };
 }
@@ -597,6 +786,11 @@ export type GameAnalysis = Database['public']['Tables']['game_analysis']['Row'];
 export type Puzzle = Database['public']['Tables']['puzzles']['Row'];
 export type Opening = Database['public']['Tables']['openings']['Row'];
 export type Tournament = Database['public']['Tables']['tournaments']['Row'];
+
+// Betting System types
+export type UserWallet = Database['public']['Tables']['user_wallets']['Row'];
+export type GameBet = Database['public']['Tables']['game_bets']['Row'];
+export type WalletTransaction = Database['public']['Tables']['wallet_transactions']['Row'];
 
 // Game with relations
 export type GameWithPlayers = Game & {
@@ -614,6 +808,25 @@ export type GameFull = Game & {
   moves: Move[];
 };
 
+// Game with bet information
+export type GameWithBet = Game & {
+  bet: GameBet | null;
+};
+
+export type GameFullWithBet = GameFull & {
+  bet: GameBet | null;
+};
+
+// Wallet with user info
+export type WalletWithUser = UserWallet & {
+  user: User;
+};
+
+// Transaction with game info
+export type TransactionWithGame = WalletTransaction & {
+  game: Game | null;
+};
+
 // Realtime payload types
 export type RealtimeGameUpdate = {
   eventType: 'UPDATE';
@@ -626,6 +839,18 @@ export type RealtimeMoveInsert = {
   new: Move;
 };
 
+export type RealtimeBetUpdate = {
+  eventType: 'UPDATE';
+  new: GameBet;
+  old: GameBet;
+};
+
+export type RealtimeWalletUpdate = {
+  eventType: 'UPDATE';
+  new: UserWallet;
+  old: UserWallet;
+};
+
 // Broadcast payloads
 export type ClockTickPayload = {
   whiteTime: number;
@@ -635,4 +860,16 @@ export type ClockTickPayload = {
 
 export type DrawOfferPayload = {
   offeredBy: 'white' | 'black';
+};
+
+export type BetProposalPayload = {
+  betType: BetType;
+  amount: number | null;
+  currency: CurrencyType | null;
+  proposedBy: 'white' | 'black';
+};
+
+export type BetDepositPayload = {
+  depositedBy: 'white' | 'black';
+  bothDeposited: boolean;
 };
