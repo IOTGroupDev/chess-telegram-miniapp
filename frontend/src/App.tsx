@@ -17,7 +17,13 @@ function App() {
 
   return (
     <Router>
-      <div className="App" style={{ minHeight: '100vh', width: '100%' }}>
+      <div className="App" style={{
+        minHeight: '100vh',
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         <Routes>
           <Route path="/" element={<StartPage />} />
           <Route path="/main" element={<MainMenu />} />

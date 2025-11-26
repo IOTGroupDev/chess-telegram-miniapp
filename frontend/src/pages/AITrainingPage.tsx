@@ -333,7 +333,15 @@ export const AITrainingPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
+      <div style={{
+        minHeight: '100vh',
+        height: '100%',
+        width: '100%',
+        backgroundColor: bgColor,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p style={{ color: textColor }}>Загрузка тренировки...</p>
@@ -344,7 +352,15 @@ export const AITrainingPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
+      <div style={{
+        minHeight: '100vh',
+        height: '100%',
+        width: '100%',
+        backgroundColor: bgColor,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
         <div className="text-center p-6">
           <h1 className="text-2xl font-bold mb-4" style={{ color: textColor }}>Ошибка</h1>
           <p className="text-red-400 mb-4">{error}</p>
@@ -372,15 +388,19 @@ export const AITrainingPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen"
       style={{
+        minHeight: '100vh',
+        height: '100%',
+        width: '100%',
         backgroundColor: bgColor,
         color: textColor,
         paddingTop: 'max(env(safe-area-inset-top), 16px)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
+        paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
-      <div className="max-w-2xl mx-auto p-3 sm:p-4">
+      <div className="max-w-2xl mx-auto p-3 sm:p-4 flex-1" style={{ width: '100%' }}>
         {/* Move Quality Floating Notification with Explanation */}
         {moveQuality && (
           <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-full px-4 animate-slide-down`}>
