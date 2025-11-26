@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Square } from 'chess.js';
-import { ChessBoard } from '../components/ChessBoard';
+import { ChessBoard } from '../components/ChessBoardModern';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
@@ -303,12 +303,17 @@ export const AIGamePage: React.FC = () => {
     };
   }, [stockfish.isThinking]);
 
+  // Get Telegram theme colors
+  const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
+  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
+  const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">Загрузка игры...</p>
+          <p style={{ color: textColor }}>Загрузка игры...</p>
         </div>
       </div>
     );
@@ -316,9 +321,9 @@ export const AIGamePage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center p-6">
-          <h1 className="text-2xl font-bold text-white mb-4">Ошибка</h1>
+          <h1 className="text-2xl font-bold mb-4" style={{ color: textColor }}>Ошибка</h1>
           <p className="text-red-400 mb-4">{error}</p>
           <button
             onClick={initializeGame}
@@ -332,47 +337,64 @@ export const AIGamePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        paddingTop: 'max(env(safe-area-inset-top), 16px)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Header with Players */}
         <div className="mb-4">
           {/* AI Player */}
-          <div className="flex items-center justify-between mb-3 bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+          <div
+            className="flex items-center justify-between mb-3 rounded-xl p-3 border shadow-sm"
+            style={{
+              backgroundColor: secondaryBgColor,
+              borderColor: window.Telegram?.WebApp?.themeParams?.hint_color || '#a8a8a8'
+            }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center font-bold shadow-lg">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-2xl shadow-lg">
                 🤖
               </div>
               <div>
-                <h3 className="text-base font-bold text-white leading-tight">Stockfish AI</h3>
-                <p className="text-xs text-slate-400">Depth: 15</p>
+                <h3 className="text-base font-bold leading-tight" style={{ color: textColor }}>Stockfish AI</h3>
+                <p className="text-xs opacity-60" style={{ color: textColor }}>Depth: 15</p>
               </div>
             </div>
             {stockfish.isThinking && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-blue-500/30">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 rounded-full border border-blue-500/30">
                 <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-                <span className="text-xs text-blue-300 font-medium">Thinking...</span>
-                <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Screen stays awake">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
+                <span className="text-xs text-blue-600 font-medium">Thinking...</span>
               </div>
             )}
           </div>
 
           {/* Human Player */}
-          <div className="flex items-center justify-between bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+          <div
+            className="flex items-center justify-between rounded-xl p-3 border shadow-sm"
+            style={{
+              backgroundColor: secondaryBgColor,
+              borderColor: window.Telegram?.WebApp?.themeParams?.hint_color || '#a8a8a8'
+            }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center font-bold shadow-lg">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-2xl shadow-lg">
                 👤
               </div>
               <div>
-                <h3 className="text-base font-bold text-white leading-tight">You</h3>
-                <p className="text-xs text-slate-400">Rating: 1500</p>
+                <h3 className="text-base font-bold leading-tight" style={{ color: textColor }}>You</h3>
+                <p className="text-xs opacity-60" style={{ color: textColor }}>Rating: 1500</p>
               </div>
             </div>
             {chess.gameState.isPlayerTurn && !chess.gameState.isGameOver && !stockfish.isThinking && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 rounded-full border border-green-500/30">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 rounded-full border border-green-500/30">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                <span className="text-xs text-green-300 font-medium">Your turn</span>
+                <span className="text-xs text-green-600 font-medium">Your turn</span>
               </div>
             )}
           </div>
@@ -380,10 +402,7 @@ export const AIGamePage: React.FC = () => {
 
         {/* Chess Board Container */}
         <div className="relative mb-4">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
-            {/* Glow effect */}
-            <div className={`absolute -inset-1 bg-gradient-to-r ${currentTheme.glowColor} rounded-2xl blur opacity-20`}></div>
-
+          <div className="relative rounded-2xl overflow-hidden shadow-xl">
             {/* Actual board */}
             <div className="relative">
               <ChessBoard
@@ -398,23 +417,23 @@ export const AIGamePage: React.FC = () => {
 
           {/* Game Over Overlay */}
           {chess.gameState.isGameOver && (
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+            <div className="absolute inset-0 bg-black/85 backdrop-blur-md rounded-2xl flex items-center justify-center z-10">
               <div className="text-center px-6">
-                <div className="text-6xl mb-3">
+                <div className="text-7xl mb-4">
                   {chess.gameState.winner === 'draw'
                     ? '🤝'
                     : chess.gameState.winner === 'white'
-                    ? '🎉'
+                    ? '🏆'
                     : '😔'}
                 </div>
-                <h3 className="text-3xl font-black mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                <h3 className="text-4xl font-black mb-3 text-white">
                   {chess.gameState.winner === 'draw'
                     ? 'Draw!'
                     : chess.gameState.winner === 'white'
                     ? 'You Won!'
                     : 'AI Won!'}
                 </h3>
-                <p className="text-slate-300 mb-6">
+                <p className="text-gray-300 text-lg mb-6">
                   {chess.gameState.winner === 'draw'
                     ? 'Well played by both sides!'
                     : chess.gameState.winner === 'white'
@@ -430,7 +449,7 @@ export const AIGamePage: React.FC = () => {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={handleNewGame}
-            className="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -439,7 +458,7 @@ export const AIGamePage: React.FC = () => {
           </button>
           <button
             onClick={handleSurrender}
-            className="bg-red-600/50 hover:bg-red-600 text-white font-bold py-4 rounded-xl backdrop-blur-sm border border-red-500/20 hover:border-red-500/40 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
