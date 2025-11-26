@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { StartPage } from './pages/StartPage';
 import { MainMenu } from './pages/MainMenu';
 import { AIGamePage } from './pages/AIGamePage';
@@ -12,60 +12,36 @@ import TournamentDetailsPage from './pages/TournamentDetailsPage';
 import PuzzlePage from './pages/PuzzlePage';
 import PuzzleStatsPage from './pages/PuzzleStatsPage';
 
-import { wakeLockService } from './services/wakeLockService';
-import {useEffect} from 'react';
-
-
-function AppRoutes() {
+function App() {
   // Theme is initialized in main.tsx via telegramThemeService
-  const location = useLocation();
-  useEffect(() => {
-    const pathsThatNeedWakeLock = [
-      '/main',
-      '/ai-game',
-      '/ai-training',
-      '/online-game',
-    ];
-
-    const shouldKeepAwake = pathsThatNeedWakeLock.some((path) =>
-      location.pathname.startsWith(path),
-    );
-
-    console.log('[WakeLock][App] route:', location.pathname, '→ keepAwake:', shouldKeepAwake);
-
-    if (shouldKeepAwake) {
-      wakeLockService.acquire();
-    } else {
-      wakeLockService.release();
-    }
-
-  }, [location.pathname]);
 
   return (
-    <Routes>
-      <Route path="/" element={<StartPage />} />
-      <Route path="/main" element={<MainMenu />} />
-      <Route path="/ai-game" element={<AIGamePage />} />
-      <Route path="/ai-training" element={<AITrainingPage />} />
-      <Route path="/online-game/:gameId" element={<OnlineGamePage />} />
-      <Route path="/join/:inviteCode" element={<OnlineGamePage />} />
-      <Route path="/history" element={<HistoryPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/challenges" element={<ChallengesPage />} />
-      <Route path="/tournaments" element={<TournamentsPage />} />
-      <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
-      <Route path="/puzzles" element={<PuzzlePage />} />
-      <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
-    </Routes>
+    <Router>
+      <div className="App" style={{
+        minHeight: '100vh',
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        <Routes>
+          <Route path="/" element={<StartPage />} />
+          <Route path="/main" element={<MainMenu />} />
+          <Route path="/ai-game" element={<AIGamePage />} />
+          <Route path="/ai-training" element={<AITrainingPage />} />
+          <Route path="/online-game/:gameId" element={<OnlineGamePage />} />
+          <Route path="/join/:inviteCode" element={<OnlineGamePage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/challenges" element={<ChallengesPage />} />
+          <Route path="/tournaments" element={<TournamentsPage />} />
+          <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
+          <Route path="/puzzles" element={<PuzzlePage />} />
+          <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
-export default function App() {
-  return (
-    <Router>
-      <div className="app-shell">
-        <AppRoutes />
-      </div>
-    </Router>
-)
-}
+export default App;
