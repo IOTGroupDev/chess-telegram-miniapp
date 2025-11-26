@@ -4,6 +4,7 @@ import './index.css'
 import './styles/telegram-app.css'
 import './styles/telegram-buttons.css'
 import App from './App.tsx'
+import { telegramThemeService } from './services/telegramThemeService'
 
 // Declare Telegram WebApp types
 declare global {
@@ -27,6 +28,9 @@ async function initApp() {
     window.Telegram.WebApp.ready();
 
     console.log('[Init] Telegram SDK ready, platform:', window.Telegram.WebApp.platform);
+
+    // Initialize theme customization
+    telegramThemeService.initialize();
   } else {
     console.log('[Init] Telegram SDK not found, running in development mode');
   }

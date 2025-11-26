@@ -15,9 +15,10 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Background will be set by Telegram theme service */
+  background: var(--tg-theme-bg-color, #ffffff);
   min-height: 100vh;
-  color: #ffffff;
+  color: var(--tg-theme-text-color, #000000);
   overflow-x: hidden;
 }
 
