@@ -160,20 +160,83 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     }
   }
 
+  const coordinateFontSize = Math.max(10, boardWidth / 30);
+  const coordinatePadding = Math.max(4, boardWidth / 80);
+
   return (
     <div className="flex justify-center">
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(8, 1fr)',
-          width: boardWidth,
-          height: boardWidth,
-          borderRadius: '12px',
-          overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.1)',
-        }}
-      >
-        {squares}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {/* Rank labels (1-8) on the left */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-around',
+              height: boardWidth,
+              marginRight: coordinatePadding,
+            }}
+          >
+            {ranks.map((rank) => (
+              <div
+                key={rank}
+                style={{
+                  fontSize: `${coordinateFontSize}px`,
+                  fontWeight: 'bold',
+                  color: '#666',
+                  userSelect: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: `${boardWidth / 8}px`,
+                }}
+              >
+                {rank}
+              </div>
+            ))}
+          </div>
+
+          {/* Chess board */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(8, 1fr)',
+              width: boardWidth,
+              height: boardWidth,
+              borderRadius: '12px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.1)',
+            }}
+          >
+            {squares}
+          </div>
+        </div>
+
+        {/* File labels (a-h) at the bottom */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-around',
+            width: boardWidth,
+            marginTop: coordinatePadding,
+            marginLeft: `${coordinateFontSize + coordinatePadding * 2}px`,
+          }}
+        >
+          {files.map((file) => (
+            <div
+              key={file}
+              style={{
+                fontSize: `${coordinateFontSize}px`,
+                fontWeight: 'bold',
+                color: '#666',
+                userSelect: 'none',
+                width: `${boardWidth / 8}px`,
+                textAlign: 'center',
+              }}
+            >
+              {file}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
