@@ -21,6 +21,16 @@ export const AITrainingPage: React.FC = () => {
   const [, forceUpdate] = useState({});
   const [moveExplanation, setMoveExplanation] = useState<string | null>(null);
   const [moveSuggestion, setMoveSuggestion] = useState<string | null>(null);
+  const [aiAnalysisText, setAiAnalysisText] = useState<string | null>(null);
+  const [isLoadingAiAnalysis, setIsLoadingAiAnalysis] = useState(false);
+  const [showAiAnalysisModal, setShowAiAnalysisModal] = useState(false);
+  const [lastAnalyzedMove, setLastAnalyzedMove] = useState<{
+    playerMove: string;
+    fenBefore: string;
+    fenAfter: string;
+    evalBefore: number;
+    evalAfter: number;
+  } | null>(null);
 
   // Click-to-move state
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
@@ -107,6 +117,15 @@ export const AITrainingPage: React.FC = () => {
       setMoveExplanation(analysis.explanation);
       setMoveSuggestion(analysis.suggestion);
 
+      // Save move data for detailed AI analysis
+      setLastAnalyzedMove({
+        playerMove,
+        fenBefore: fenBeforeMove,
+        fenAfter: fenAfterMove,
+        evalBefore,
+        evalAfter,
+      });
+
       // Trigger haptic feedback
       if (analysis.quality === 'best' || analysis.quality === 'good') {
         telegramService.notificationOccurred('success');
@@ -119,6 +138,52 @@ export const AITrainingPage: React.FC = () => {
       console.error('Move analysis failed:', err);
     }
   }, [stockfish]);
+
+  /**
+   * Get detailed AI analysis for the last move
+   */
+  const handleDetailedAnalysis = useCallback(async () => {
+    if (!lastAnalyzedMove || !moveQuality || !bestMove) {
+      telegramService.showAlert('Нет данных для анализа');
+      return;
+    }
+
+    setIsLoadingAiAnalysis(true);
+    setShowAiAnalysisModal(true);
+    telegramService.impactOccurred('medium');
+
+    try {
+      const response = await fetch('/api/analysis/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerMove: lastAnalyzedMove.playerMove,
+          bestMove: bestMove,
+          fenBefore: lastAnalyzedMove.fenBefore,
+          fenAfter: lastAnalyzedMove.fenAfter,
+          evalBefore: lastAnalyzedMove.evalBefore,
+          evalAfter: lastAnalyzedMove.evalAfter,
+          moveQuality: moveQuality,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI analysis');
+      }
+
+      const data = await response.json();
+      setAiAnalysisText(data.data.explanation);
+      telegramService.notificationOccurred('success');
+    } catch (err) {
+      console.error('AI analysis failed:', err);
+      telegramService.notificationOccurred('error');
+      setAiAnalysisText('❌ Не удалось получить детальный анализ. Попробуйте позже.');
+    } finally {
+      setIsLoadingAiAnalysis(false);
+    }
+  }, [lastAnalyzedMove, moveQuality, bestMove]);
 
   /**
    * Handle square click (click-to-move)
@@ -348,15 +413,14 @@ export const AITrainingPage: React.FC = () => {
                 </p>
               )}
 
-              {/* Detailed Analysis Button (Coming Soon) */}
+              {/* Detailed Analysis Button */}
               {moveQuality !== 'best' && (
                 <button
                   className="mt-3 w-full bg-white/20 hover:bg-white/30 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all active:scale-95 backdrop-blur-sm border border-white/30"
-                  onClick={() => {
-                    telegramService.showAlert('🚧 AI-анализ будет доступен в следующем обновлении!\n\nПодробный анализ с объяснением позиции и альтернативных вариантов.');
-                  }}
+                  onClick={handleDetailedAnalysis}
+                  disabled={isLoadingAiAnalysis}
                 >
-                  📊 Подробный анализ (скоро)
+                  🤖 {isLoadingAiAnalysis ? 'Анализирую...' : 'Подробный AI-анализ'}
                 </button>
               )}
             </div>
@@ -370,6 +434,55 @@ export const AITrainingPage: React.FC = () => {
               <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
             </svg>
             <span className="font-bold">Лучший ход: {bestMove.substring(0, 2).toUpperCase()} → {bestMove.substring(2, 4).toUpperCase()}</span>
+          </div>
+        )}
+
+        {/* AI Analysis Modal */}
+        {showAiAnalysisModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-white/10 animate-slide-in-up">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🤖</span>
+                  <h3 className="text-xl font-bold text-white">AI-Анализ</h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAiAnalysisModal(false);
+                    setAiAnalysisText(null);
+                  }}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-95"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="bg-black/30 rounded-xl p-4 mb-4 min-h-[150px]">
+                {isLoadingAiAnalysis ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-3"></div>
+                    <p className="text-slate-300 text-sm">Получаю анализ от AI тренера...</p>
+                  </div>
+                ) : aiAnalysisText ? (
+                  <p className="text-white text-sm leading-relaxed whitespace-pre-wrap">{aiAnalysisText}</p>
+                ) : (
+                  <p className="text-slate-400 text-sm">Нет данных для анализа</p>
+                )}
+              </div>
+
+              {/* Footer */}
+              <button
+                onClick={() => {
+                  setShowAiAnalysisModal(false);
+                  setAiAnalysisText(null);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all active:scale-95"
+              >
+                Понятно
+              </button>
+            </div>
           </div>
         )}
 
