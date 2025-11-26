@@ -4,10 +4,13 @@
  */
 
 import { Controller, Post, Body, HttpCode, HttpStatus, Logger } from '@nestjs/common';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { AuthService } from './auth.service';
 
 class TelegramAuthDto {
-  initData: string;
+  @IsString()
+  @IsNotEmpty()
+  initData!: string;
 }
 
 @Controller('auth')
