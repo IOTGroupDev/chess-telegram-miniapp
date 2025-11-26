@@ -1,0 +1,70 @@
+{
+  "app": {
+    "title": "Chess Master",
+    "subtitle": "Master every move"
+  },
+  "menu": {
+    "playOnline": "Play Online",
+    "playAI": "vs AI",
+    "arena": "ARENA",
+    "aiTraining": "AI Training",
+    "puzzles": "Puzzles",
+    "tournaments": "Tournaments",
+    "watchLive": "Watch Live Matches",
+    "challenges": "Daily Challenges",
+    "history": "Game History",
+    "shareWithFriends": "Share with Friends",
+    "profile": "Profile"
+  },
+  "menu_descriptions": {
+    "playOnline": "Challenge players",
+    "playAI": "Fight Stockfish",
+    "arena": "Battle in tournaments • Earn badges",
+    "aiTraining": "Learn with real-time hints & analysis",
+    "puzzles": "Solve tactics",
+    "tournaments": "Compete now",
+    "watchLive": "Watch live matches"
+  },
+  "badges": {
+    "hot": "HOT",
+    "new": "NEW",
+    "live": "LIVE"
+  },
+  "profile": {
+    "rating": "Rating",
+    "level": "Level"
+  },
+  "game": {
+    "findingOpponent": "Finding opponent...",
+    "waitMessage": "This may take a moment",
+    "noPlayersOnline": "No players online",
+    "noPlayersMessage": "Could not find an opponent. Would you like to play with AI?",
+    "playWithAI": "Play with AI",
+    "cancel": "Cancel",
+    "move": "Move",
+    "check": "Check",
+    "checkmate": "Checkmate",
+    "draw": "Draw",
+    "resign": "Resign",
+    "offerDraw": "Offer Draw"
+  },
+  "errors": {
+    "authRequired": "Telegram authorization required",
+    "createGameFailed": "Failed to create online game. Please try again later.",
+    "genericError": "An error occurred. Please try again later."
+  },
+  "footer": {
+    "poweredBy": "Powered by Stockfish 15 • Made with ♟️"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close"
+  }
+}

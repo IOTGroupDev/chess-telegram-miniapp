@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/telegram-app.css'
 import './styles/telegram-buttons.css'
+import './i18n' // Initialize i18n before rendering
 import App from './App.tsx'
 import { telegramThemeService } from './services/telegramThemeService'
 
