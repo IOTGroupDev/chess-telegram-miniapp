@@ -8,6 +8,10 @@
   box-sizing: border-box;
 }
 
+html, body {
+  height: -webkit-fill-available;
+}
+
 html, body, #root {
   margin: 0;
   padding: 0;
@@ -327,11 +331,11 @@ code {
   .chess-board {
     max-width: calc(100vw - 2rem);
   }
-  
+
   .chess-piece {
     font-size: 2rem;
   }
-  
+
   .btn-primary,
   .btn-secondary,
   .btn-danger,
@@ -339,11 +343,11 @@ code {
   .btn-warning {
     @apply py-3 px-6 text-sm;
   }
-  
+
   .game-card {
     @apply p-6;
   }
-  
+
   .menu-card {
     @apply p-4;
   }
@@ -394,12 +398,12 @@ code {
   .chess-board {
     border-radius: 12px;
   }
-  
+
   .chess-square.possible-move::after {
     width: 16px;
     height: 16px;
   }
-  
+
   .chess-square.capture-move::after {
     width: 24px;
     height: 24px;
