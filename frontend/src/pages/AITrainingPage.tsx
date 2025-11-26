@@ -6,6 +6,7 @@ import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { telegramService } from '../services/telegramService';
+import { moveAnalysisService } from '../services/moveAnalysisService';
 import type { GameState } from '../types';
 
 export const AITrainingPage: React.FC = () => {
@@ -18,6 +19,8 @@ export const AITrainingPage: React.FC = () => {
   const [moveQuality, setMoveQuality] = useState<'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder' | null>(null);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [, forceUpdate] = useState({});
+  const [moveExplanation, setMoveExplanation] = useState<string | null>(null);
+  const [moveSuggestion, setMoveSuggestion] = useState<string | null>(null);
 
   // Click-to-move state
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
@@ -69,44 +72,53 @@ export const AITrainingPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const analyzeMove = useCallback(async (playerMove: string, fen: string) => {
+  const analyzeMove = useCallback(async (playerMove: string, fenBeforeMove: string, fenAfterMove: string) => {
     try {
-      // Get best move from engine
-      const aiMove = await stockfish.getBestMove(fen, 18);
-      if (aiMove) {
-        setBestMove(aiMove);
+      // Get evaluation before the move
+      const evalBefore = await stockfish.quickEval(fenBeforeMove);
+      if (evalBefore === null) return;
 
-        // Compare player move with best move
-        if (playerMove === aiMove) {
-          setMoveQuality('best');
-          telegramService.notificationOccurred('success');
-        } else {
-          // Get evaluation to determine move quality
-          const beforeEval = evaluation;
-          const afterEval = stockfish.evaluation || 0;
-          const evalDiff = Math.abs(afterEval - beforeEval);
+      // Get best move for position BEFORE player's move
+      const bestMoveForPosition = await stockfish.getBestMove(fenBeforeMove, 18);
+      if (!bestMoveForPosition) return;
 
-          if (evalDiff < 0.3) {
-            setMoveQuality('good');
-            telegramService.notificationOccurred('success');
-          } else if (evalDiff < 1.0) {
-            setMoveQuality('inaccuracy');
-            telegramService.notificationOccurred('warning');
-          } else if (evalDiff < 3.0) {
-            setMoveQuality('mistake');
-            telegramService.notificationOccurred('error');
-          } else {
-            setMoveQuality('blunder');
-            telegramService.notificationOccurred('error');
-          }
+      setBestMove(bestMoveForPosition);
 
-          setEvaluation(afterEval);
-        }
+      // Get evaluation after the move
+      const evalAfter = await stockfish.quickEval(fenAfterMove);
+      if (evalAfter === null) return;
+
+      setEvaluation(evalAfter);
+
+      // Use heuristic analysis service to get explanation
+      const analysis = moveAnalysisService.analyzeMoveHeuristic(
+        playerMove,
+        bestMoveForPosition,
+        fenBeforeMove,
+        fenAfterMove,
+        evalBefore,
+        evalAfter
+      );
+
+      console.log(`Move analysis: ${playerMove} vs ${bestMoveForPosition}, evalBefore: ${evalBefore.toFixed(2)}, evalAfter: ${evalAfter.toFixed(2)}, loss: ${analysis.evalLoss.toFixed(2)}`);
+
+      // Set quality, explanation and suggestion
+      setMoveQuality(analysis.quality);
+      setMoveExplanation(analysis.explanation);
+      setMoveSuggestion(analysis.suggestion);
+
+      // Trigger haptic feedback
+      if (analysis.quality === 'best' || analysis.quality === 'good') {
+        telegramService.notificationOccurred('success');
+      } else if (analysis.quality === 'inaccuracy') {
+        telegramService.notificationOccurred('warning');
+      } else {
+        telegramService.notificationOccurred('error');
       }
     } catch (err) {
       console.error('Move analysis failed:', err);
     }
-  }, [evaluation, stockfish]);
+  }, [stockfish]);
 
   /**
    * Handle square click (click-to-move)
@@ -153,15 +165,18 @@ export const AITrainingPage: React.FC = () => {
     }
 
     const playerMove = sourceSquare + targetSquare;
+    const fenBeforeMove = chess.getFen(); // Save FEN BEFORE the move
     const success = chess.makeMove(sourceSquare, targetSquare);
 
     if (success) {
+      const fenAfterMove = chess.getFen(); // Get FEN AFTER the move
+
       // Clear selection after successful move
       setSelectedSquare(null);
       setPossibleMoves([]);
 
       // Analyze the move asynchronously (fire and forget)
-      analyzeMove(playerMove, chess.getFen());
+      analyzeMove(playerMove, fenBeforeMove, fenAfterMove);
 
       // Get AI move after player move
       if (!chess.gameState.isGameOver) {
@@ -222,12 +237,14 @@ export const AITrainingPage: React.FC = () => {
     initializeGame();
   }, [initializeGame]);
 
-  // Auto-clear move quality notification after 3 seconds
+  // Auto-clear move quality notification after 5 seconds (increased for explanations)
   useEffect(() => {
     if (moveQuality) {
       const timer = setTimeout(() => {
         setMoveQuality(null);
-      }, 3000);
+        setMoveExplanation(null);
+        setMoveSuggestion(null);
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [moveQuality]);
@@ -296,22 +313,53 @@ export const AITrainingPage: React.FC = () => {
       }}
     >
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
-        {/* Move Quality Floating Notification */}
+        {/* Move Quality Floating Notification with Explanation */}
         {moveQuality && (
-          <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-slide-down ${
-            moveQuality === 'best' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
-            moveQuality === 'good' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
-            moveQuality === 'inaccuracy' ? 'bg-gradient-to-r from-yellow-500 to-orange-400' :
-            moveQuality === 'mistake' ? 'bg-gradient-to-r from-orange-500 to-red-500' :
-            'bg-gradient-to-r from-red-600 to-pink-600'
-          }`}>
-            <span className="text-2xl">
-              {moveQuality === 'best' ? '🎯' :
-               moveQuality === 'good' ? '✅' :
-               moveQuality === 'inaccuracy' ? '⚠️' :
-               moveQuality === 'mistake' ? '❌' : '💥'}
-            </span>
-            <span className="font-bold text-white">{getMoveQualityText()?.replace(/^[^\s]+\s/, '')}</span>
+          <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-full px-4 animate-slide-down`}>
+            <div className={`rounded-2xl shadow-2xl p-4 ${
+              moveQuality === 'best' ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
+              moveQuality === 'good' ? 'bg-gradient-to-br from-blue-500 to-cyan-600' :
+              moveQuality === 'inaccuracy' ? 'bg-gradient-to-br from-yellow-500 to-orange-500' :
+              moveQuality === 'mistake' ? 'bg-gradient-to-br from-orange-500 to-red-500' :
+              'bg-gradient-to-br from-red-600 to-pink-700'
+            }`}>
+              {/* Title */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-3xl">
+                  {moveQuality === 'best' ? '🎯' :
+                   moveQuality === 'good' ? '✅' :
+                   moveQuality === 'inaccuracy' ? '⚠️' :
+                   moveQuality === 'mistake' ? '❌' : '💥'}
+                </span>
+                <span className="font-bold text-white text-lg">{getMoveQualityText()?.replace(/^[^\s]+\s/, '')}</span>
+              </div>
+
+              {/* Explanation */}
+              {moveExplanation && (
+                <p className="text-white text-sm mb-2 leading-relaxed">
+                  {moveExplanation}
+                </p>
+              )}
+
+              {/* Suggestion */}
+              {moveSuggestion && (
+                <p className="text-white/90 text-sm font-medium">
+                  {moveSuggestion}
+                </p>
+              )}
+
+              {/* Detailed Analysis Button (Coming Soon) */}
+              {moveQuality !== 'best' && (
+                <button
+                  className="mt-3 w-full bg-white/20 hover:bg-white/30 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all active:scale-95 backdrop-blur-sm border border-white/30"
+                  onClick={() => {
+                    telegramService.showAlert('🚧 AI-анализ будет доступен в следующем обновлении!\n\nПодробный анализ с объяснением позиции и альтернативных вариантов.');
+                  }}
+                >
+                  📊 Подробный анализ (скоро)
+                </button>
+              )}
+            </div>
           </div>
         )}
 
