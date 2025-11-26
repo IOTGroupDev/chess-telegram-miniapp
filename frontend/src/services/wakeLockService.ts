@@ -142,6 +142,7 @@ class WakeLockService {
 
   private fallbackVideo: HTMLVideoElement | null = null;
   private envReady = false;
+  private permissionDenied = false;
 
   constructor() {
     if (typeof window === 'undefined' || typeof document === 'undefined' || typeof navigator === 'undefined') {
@@ -225,6 +226,11 @@ class WakeLockService {
 
     this.shouldBeActive = true;
 
+    if (this.permissionDenied) {
+      this.startFallbackVideo();
+      return false;
+    }
+
     if (this.isSupported && (navigator).wakeLock) {
       try {
         // используем локальную переменную, чтобы TS понял, что не null
@@ -248,12 +254,14 @@ class WakeLockService {
 
         return true;
       } catch (err) {
-        console.error('[WakeLock] ❌ Failed to acquire wake lock:', err);
-        if (err instanceof Error) {
-          console.error('[WakeLock] Error name:', err.name);
-          console.error('[WakeLock] Error message:', err.message);
+        const domErr = err as DOMException;
+
+        if (domErr && (domErr.name === 'NotAllowedError' || domErr.name === 'SecurityError')) {
+          console.warn('[WakeLock] Permission denied for wake lock, will use fallback from now on');
+          this.permissionDenied = true; // 👈 больше не будем пытаться брать wake lock
+        } else {
+          console.error('[WakeLock] ❌ Failed to acquire wake lock:', err);
         }
-        // пойдём в fallback
       }
     } else {
       console.warn('[WakeLock] Wake Lock API not supported in this browser, using fallback');
