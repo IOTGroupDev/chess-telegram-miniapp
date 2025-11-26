@@ -4,6 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@supports (-webkit-touch-callout: none) {
+  html, body, #root {
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
