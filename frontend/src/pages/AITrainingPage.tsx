@@ -153,7 +153,13 @@ export const AITrainingPage: React.FC = () => {
     telegramService.impactOccurred('medium');
 
     try {
-      const response = await fetch('/api/analysis/move', {
+      // Get API URL from environment or use relative path
+      const apiUrl = import.meta.env.VITE_ENGINE_API_URL || '';
+      const endpoint = `${apiUrl}/api/analysis/move`;
+
+      console.log('[AI Analysis] Calling endpoint:', endpoint);
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,17 +175,24 @@ export const AITrainingPage: React.FC = () => {
         }),
       });
 
+      console.log('[AI Analysis] Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to get AI analysis');
+        const errorText = await response.text();
+        console.error('[AI Analysis] Error response:', errorText);
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('[AI Analysis] Success:', data);
       setAiAnalysisText(data.data.explanation);
       telegramService.notificationOccurred('success');
     } catch (err) {
-      console.error('AI analysis failed:', err);
+      console.error('[AI Analysis] Failed:', err);
       telegramService.notificationOccurred('error');
-      setAiAnalysisText('❌ Не удалось получить детальный анализ. Попробуйте позже.');
+
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setAiAnalysisText(`❌ Не удалось получить детальный анализ.\n\nОшибка: ${errorMessage}\n\nПроверьте:\n1. Backend запущен?\n2. AI_PROVIDER и AI_API_KEY настроены в backend/.env?\n3. Доступ к API (CORS)?`);
     } finally {
       setIsLoadingAiAnalysis(false);
     }
@@ -302,17 +315,7 @@ export const AITrainingPage: React.FC = () => {
     initializeGame();
   }, [initializeGame]);
 
-  // Auto-clear move quality notification after 5 seconds (increased for explanations)
-  useEffect(() => {
-    if (moveQuality) {
-      const timer = setTimeout(() => {
-        setMoveQuality(null);
-        setMoveExplanation(null);
-        setMoveSuggestion(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [moveQuality]);
+  // Note: Removed auto-clear - user dismisses manually with button
 
   // Auto-clear hint after 5 seconds
   useEffect(() => {
@@ -381,15 +384,27 @@ export const AITrainingPage: React.FC = () => {
         {/* Move Quality Floating Notification with Explanation */}
         {moveQuality && (
           <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-full px-4 animate-slide-down`}>
-            <div className={`rounded-2xl shadow-2xl p-4 ${
+            <div className={`rounded-2xl shadow-2xl p-4 relative ${
               moveQuality === 'best' ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
               moveQuality === 'good' ? 'bg-gradient-to-br from-blue-500 to-cyan-600' :
               moveQuality === 'inaccuracy' ? 'bg-gradient-to-br from-yellow-500 to-orange-500' :
               moveQuality === 'mistake' ? 'bg-gradient-to-br from-orange-500 to-red-500' :
               'bg-gradient-to-br from-red-600 to-pink-700'
             }`}>
+              {/* Close Button */}
+              <button
+                onClick={() => {
+                  setMoveQuality(null);
+                  setMoveExplanation(null);
+                  setMoveSuggestion(null);
+                }}
+                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white text-sm transition-all active:scale-95"
+              >
+                ✕
+              </button>
+
               {/* Title */}
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 pr-6">
                 <span className="text-3xl">
                   {moveQuality === 'best' ? '🎯' :
                    moveQuality === 'good' ? '✅' :
@@ -408,21 +423,35 @@ export const AITrainingPage: React.FC = () => {
 
               {/* Suggestion */}
               {moveSuggestion && (
-                <p className="text-white/90 text-sm font-medium">
+                <p className="text-white/90 text-sm font-medium mb-3">
                   {moveSuggestion}
                 </p>
               )}
 
-              {/* Detailed Analysis Button */}
-              {moveQuality !== 'best' && (
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                {/* Detailed Analysis Button */}
+                {moveQuality !== 'best' && (
+                  <button
+                    className="flex-1 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all active:scale-95 backdrop-blur-sm border border-white/30"
+                    onClick={handleDetailedAnalysis}
+                    disabled={isLoadingAiAnalysis}
+                  >
+                    🤖 {isLoadingAiAnalysis ? 'Анализирую...' : 'AI-анализ'}
+                  </button>
+                )}
+                {/* Dismiss Button */}
                 <button
-                  className="mt-3 w-full bg-white/20 hover:bg-white/30 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all active:scale-95 backdrop-blur-sm border border-white/30"
-                  onClick={handleDetailedAnalysis}
-                  disabled={isLoadingAiAnalysis}
+                  className={`bg-white/30 hover:bg-white/40 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-all active:scale-95 backdrop-blur-sm border border-white/40 ${moveQuality === 'best' ? 'flex-1' : ''}`}
+                  onClick={() => {
+                    setMoveQuality(null);
+                    setMoveExplanation(null);
+                    setMoveSuggestion(null);
+                  }}
                 >
-                  🤖 {isLoadingAiAnalysis ? 'Анализирую...' : 'Подробный AI-анализ'}
+                  Понял ✓
                 </button>
-              )}
+              </div>
             </div>
           </div>
         )}
