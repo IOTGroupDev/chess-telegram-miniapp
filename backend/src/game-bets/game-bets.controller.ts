@@ -19,6 +19,13 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { GameBetsService, CreateBetDto } from './game-bets.service';
 
+interface AuthRequest extends Request {
+  user: {
+    sub: string;
+    email?: string;
+  };
+}
+
 @Controller('game-bets')
 @UseGuards(JwtAuthGuard)
 export class GameBetsController {
@@ -31,7 +38,7 @@ export class GameBetsController {
    * Get bet for a specific game
    */
   @Get(':gameId')
-  async getBet(@Param('gameId') gameId: string, @Request() req) {
+  async getBet(@Param('gameId') gameId: string, @Request() req: AuthRequest) {
     const userId = req.user.sub;
     this.logger.log(`GET /game-bets/${gameId} - User: ${userId}`);
 
@@ -48,7 +55,7 @@ export class GameBetsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createBet(@Request() req, @Body() createBetDto: CreateBetDto) {
+  async createBet(@Request() req: AuthRequest, @Body() createBetDto: CreateBetDto) {
     const userId = req.user.sub;
     this.logger.log(`POST /game-bets - User: ${userId}`);
 
@@ -66,7 +73,7 @@ export class GameBetsController {
    */
   @Post(':gameId/accept')
   @HttpCode(HttpStatus.OK)
-  async acceptBet(@Param('gameId') gameId: string, @Request() req) {
+  async acceptBet(@Param('gameId') gameId: string, @Request() req: AuthRequest) {
     const userId = req.user.sub;
     this.logger.log(`POST /game-bets/${gameId}/accept - User: ${userId}`);
 
@@ -84,7 +91,7 @@ export class GameBetsController {
    */
   @Post(':gameId/deposit')
   @HttpCode(HttpStatus.OK)
-  async depositBet(@Param('gameId') gameId: string, @Request() req) {
+  async depositBet(@Param('gameId') gameId: string, @Request() req: AuthRequest) {
     const userId = req.user.sub;
     this.logger.log(`POST /game-bets/${gameId}/deposit - User: ${userId}`);
 
@@ -103,7 +110,7 @@ export class GameBetsController {
    */
   @Delete(':gameId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async cancelBet(@Param('gameId') gameId: string, @Request() req) {
+  async cancelBet(@Param('gameId') gameId: string, @Request() req: AuthRequest) {
     const userId = req.user.sub;
     this.logger.log(`DELETE /game-bets/${gameId} - User: ${userId}`);
 

@@ -18,6 +18,13 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { WalletService } from './wallet.service';
 
+interface AuthRequest extends Request {
+  user: {
+    sub: string;
+    email?: string;
+  };
+}
+
 @Controller('wallet')
 @UseGuards(JwtAuthGuard)
 export class WalletController {
@@ -30,7 +37,7 @@ export class WalletController {
    * Get current user's wallet
    */
   @Get()
-  async getWallet(@Request() req) {
+  async getWallet(@Request() req: AuthRequest) {
     const userId = req.user.sub;
     this.logger.log(`GET /wallet - User: ${userId}`);
     return this.walletService.getWallet(userId);
@@ -41,7 +48,7 @@ export class WalletController {
    * Get balance for specific currency
    */
   @Get('balance')
-  async getBalance(@Request() req, @Query('currency') currency: 'coins' | 'stars' = 'coins') {
+  async getBalance(@Request() req: AuthRequest, @Query('currency') currency: 'coins' | 'stars' = 'coins') {
     const userId = req.user.sub;
     this.logger.log(`GET /wallet/balance?currency=${currency} - User: ${userId}`);
 
@@ -59,7 +66,7 @@ export class WalletController {
    */
   @Get('transactions')
   async getTransactions(
-    @Request() req,
+    @Request() req: AuthRequest,
     @Query('limit') limit: string = '50',
     @Query('offset') offset: string = '0',
   ) {
@@ -86,7 +93,7 @@ export class WalletController {
    * Get wallet statistics (winnings, losses, etc.)
    */
   @Get('statistics')
-  async getStatistics(@Request() req) {
+  async getStatistics(@Request() req: AuthRequest) {
     const userId = req.user.sub;
     this.logger.log(`GET /wallet/statistics - User: ${userId}`);
     return this.walletService.getStatistics(userId);
@@ -99,7 +106,7 @@ export class WalletController {
   @Post('check-balance')
   @HttpCode(HttpStatus.OK)
   async checkBalance(
-    @Request() req,
+    @Request() req: AuthRequest,
     @Body() body: { amount: number; currency: 'coins' | 'stars' },
   ) {
     const userId = req.user.sub;
@@ -125,7 +132,7 @@ export class WalletController {
    */
   @Post('add-coins')
   @HttpCode(HttpStatus.OK)
-  async addCoins(@Request() req, @Body() body: { amount: number; description?: string }) {
+  async addCoins(@Request() req: AuthRequest, @Body() body: { amount: number; description?: string }) {
     const userId = req.user.sub;
     this.logger.log(`POST /wallet/add-coins - User: ${userId}, Amount: ${body.amount}`);
 
@@ -147,7 +154,7 @@ export class WalletController {
    */
   @Post('withdraw')
   @HttpCode(HttpStatus.OK)
-  async withdrawCoins(@Request() req, @Body() body: { amount: number; description?: string }) {
+  async withdrawCoins(@Request() req: AuthRequest, @Body() body: { amount: number; description?: string }) {
     const userId = req.user.sub;
     this.logger.log(`POST /wallet/withdraw - User: ${userId}, Amount: ${body.amount}`);
 
