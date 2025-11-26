@@ -63,7 +63,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <Router>
-      <div className="App min-h-[100dvh] w-full flex flex-col">
+      <div className="app-shell">
         <AppRoutes />
       </div>
     </Router>
