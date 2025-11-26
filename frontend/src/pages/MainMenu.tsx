@@ -109,8 +109,8 @@ export const MainMenu: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      <div className="max-w-md mx-auto px-4" >
+    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-safe">
+      <div className="max-w-md mx-auto px-4">
         {/* Compact Header */}
         <div className="text-center mb-6" style={{ paddingTop: 'max(env(safe-area-inset-top), 50px)' }}>
           <div className="inline-flex items-center gap-3 mb-3">
@@ -264,21 +264,21 @@ export const MainMenu: React.FC = () => {
         </div>
 
         {/* Footer Branding */}
-        <div className="text-center py-4">
+        <div className="text-center py-4 pb-6">
           <p className="text-white/40 text-xs">Powered by Stockfish 15 • Made with ♟️</p>
         </div>
-
-        {/* Loading Overlay */}
-        {isCreatingGame && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50">
-            <div className="glass rounded-3xl p-8 border border-white/20 text-center max-w-xs">
-              <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white text-lg font-semibold">Finding opponent...</p>
-              <p className="text-white/60 text-sm mt-2">This may take a moment</p>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Loading Overlay */}
+      {isCreatingGame && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="glass rounded-3xl p-8 border border-white/20 text-center max-w-xs">
+            <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white text-lg font-semibold">Finding opponent...</p>
+            <p className="text-white/60 text-sm mt-2">This may take a moment</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

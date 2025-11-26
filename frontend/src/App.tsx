@@ -19,10 +19,15 @@ function App() {
     <Router>
       <div className="App" style={{
         minHeight: '100vh',
+        minHeight: '100dvh',
         height: '100%',
         width: '100%',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        borderTopLeftRadius: '12px',
+        borderTopRightRadius: '12px',
+        overflow: 'hidden',
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
       }}>
         <Routes>
           <Route path="/" element={<StartPage />} />
