@@ -12,6 +12,7 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 import { EngineModule } from './engine/engine.module';
 import { RatingModule } from './rating/rating.module';
 import { AnalysisModule } from './analysis/analysis.module';
@@ -25,6 +26,9 @@ import { PuzzleModule } from './puzzle/puzzle.module';
       isGlobal: true,
       envFilePath: ['.env', '.env.production'],
     }),
+
+    // Telegram authentication with Supabase JWT
+    AuthModule,
 
     // Chess engine services (Stockfish via UCI)
     EngineModule,

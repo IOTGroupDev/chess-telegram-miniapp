@@ -16,6 +16,10 @@ export interface AppState {
   user: TelegramUser | null;
   isAuthorized: boolean;
 
+  // Auth
+  accessToken: string | null;
+  supabaseUserId: string | null;
+
   // App state
   isLoading: boolean;
   error: string | null;
@@ -28,6 +32,8 @@ export interface AppState {
   // Actions
   setUser: (user: TelegramUser | null) => void;
   setAuthorized: (authorized: boolean) => void;
+  setAccessToken: (token: string | null) => void;
+  setSupabaseUserId: (userId: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setLanguage: (language: string) => void;
@@ -42,6 +48,8 @@ export const useAppStore = create<AppState>()(
       // Initial state
       user: null,
       isAuthorized: false,
+      accessToken: null,
+      supabaseUserId: null,
       isLoading: false,
       error: null,
       language: 'en',
@@ -51,6 +59,8 @@ export const useAppStore = create<AppState>()(
       // Actions
       setUser: (user) => set({ user, isAuthorized: !!user }),
       setAuthorized: (authorized) => set({ isAuthorized: authorized }),
+      setAccessToken: (token) => set({ accessToken: token }),
+      setSupabaseUserId: (userId) => set({ supabaseUserId: userId }),
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
       setLanguage: (language) => set({ language }),
@@ -59,6 +69,8 @@ export const useAppStore = create<AppState>()(
       reset: () => set({
         user: null,
         isAuthorized: false,
+        accessToken: null,
+        supabaseUserId: null,
         isLoading: false,
         error: null,
         language: 'en',
@@ -72,6 +84,8 @@ export const useAppStore = create<AppState>()(
         user: state.user,
         isAuthorized: state.isAuthorized,
         language: state.language,
+        accessToken: state.accessToken,
+        supabaseUserId: state.supabaseUserId,
       }),
     }
   )
