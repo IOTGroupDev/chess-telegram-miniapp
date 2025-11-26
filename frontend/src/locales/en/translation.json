@@ -125,5 +125,20 @@
     "cancelBet": "Cancel Bet",
     "depositTimeout": "If deposit is not made within 5 minutes, the game will be cancelled",
     "createBetFailed": "Failed to create bet. Please try again."
+  },
+  "payment": {
+    "purchaseStars": "Purchase Stars",
+    "purchaseStarsDesc": "Buy Telegram Stars to use in games",
+    "stars": "Stars",
+    "bonus": "bonus",
+    "total": "Total",
+    "selectPackage": "Select a Package",
+    "customAmount": "Custom Amount",
+    "enterAmount": "Enter amount",
+    "youWillReceive": "You will receive",
+    "purchaseButton": "Purchase Stars",
+    "info1": "Telegram Stars are used for betting in games",
+    "info2": "Secure payment via Telegram Payment System",
+    "info3": "Non-refundable after purchase"
   }
 }

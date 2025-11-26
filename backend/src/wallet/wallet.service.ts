@@ -167,12 +167,61 @@ export class WalletService {
     await this.supabase.from('wallet_transactions').insert({
       user_id: userId,
       wallet_id: wallet.id,
-      transaction_type: 'deposit_stars', // Using existing enum value
+      transaction_type: 'deposit_coins',
       amount,
       currency: 'coins',
       balance_before: wallet.balance_coins,
       balance_after: wallet.balance_coins + amount,
       description,
+    });
+
+    return updatedWallet;
+  }
+
+  /**
+   * Add Stars to wallet (from Telegram payment)
+   */
+  async addStars(
+    userId: string,
+    amount: number,
+    description: string = 'Stars purchase',
+    metadata?: any,
+  ): Promise<UserWallet> {
+    this.logger.log(`Adding ${amount} Stars to user ${userId}`);
+
+    if (amount <= 0) {
+      throw new BadRequestException('Amount must be positive');
+    }
+
+    const wallet = await this.getWallet(userId);
+
+    // Update wallet balance
+    const { data: updatedWallet, error: updateError } = await this.supabase
+      .from('user_wallets')
+      .update({
+        balance_stars: wallet.balance_stars + amount,
+        total_deposited: wallet.total_deposited + amount,
+      })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      this.logger.error(`Error updating wallet: ${updateError.message}`);
+      throw new BadRequestException('Failed to update wallet');
+    }
+
+    // Record transaction
+    await this.supabase.from('wallet_transactions').insert({
+      user_id: userId,
+      wallet_id: wallet.id,
+      transaction_type: 'deposit_stars',
+      amount,
+      currency: 'stars',
+      balance_before: wallet.balance_stars,
+      balance_after: wallet.balance_stars + amount,
+      description,
+      metadata,
     });
 
     return updatedWallet;

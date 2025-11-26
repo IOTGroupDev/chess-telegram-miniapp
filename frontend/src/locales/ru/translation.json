@@ -125,5 +125,20 @@
     "cancelBet": "Отменить ставку",
     "depositTimeout": "Если депозит не будет внесен в течение 5 минут, игра будет отменена",
     "createBetFailed": "Не удалось создать ставку. Попробуйте снова."
+  },
+  "payment": {
+    "purchaseStars": "Купить Stars",
+    "purchaseStarsDesc": "Купите Telegram Stars для игр",
+    "stars": "Stars",
+    "bonus": "бонус",
+    "total": "Всего",
+    "selectPackage": "Выберите пакет",
+    "customAmount": "Своя сумма",
+    "enterAmount": "Введите сумму",
+    "youWillReceive": "Вы получите",
+    "purchaseButton": "Купить Stars",
+    "info1": "Telegram Stars используются для ставок в играх",
+    "info2": "Безопасная оплата через Telegram Payment System",
+    "info3": "Невозвратная покупка"
   }
 }
