@@ -109,7 +109,7 @@ export const MainMenu: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
       <div className="max-w-md mx-auto px-4" >
         {/* Compact Header */}
         <div className="text-center mb-6" style={{ paddingTop: 'max(env(safe-area-inset-top), 50px)' }}>

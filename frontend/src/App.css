@@ -5,6 +5,10 @@
   margin: 0;
   padding: 0;
 }
+.app {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #3a266d 0%, #1e2758 100%) fixed;
+}
 
 .logo {
   height: 6em;

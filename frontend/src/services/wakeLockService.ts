@@ -190,7 +190,7 @@ class WakeLockService {
     video.style.bottom = '0';
     video.style.left = '0';
 
-    video.src = '../assets/keepalive.mp4';
+    video.src = '../../public/keepalive.mp4';
 
     document.body.appendChild(video);
     this.fallbackVideo = video;
