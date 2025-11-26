@@ -44,14 +44,14 @@ export const OnlineGamePage: React.FC = () => {
 
   // Create gameState for ChessBoard
   const gameStateForBoard = useMemo((): GameState => ({
-    game: game,
+    game: game as any, // GameWithPlayers from Supabase has different structure
     isPlayerTurn: isMyTurn,
     selectedSquare: selectedSquare,
     possibleMoves: possibleMoves,
     isGameOver: gameStatus === 'finished',
-    winner: winner,
+    winner: winner as 'white' | 'black' | 'draw' | null,
     fen: chess?.fen() || '',
-    moves: moves || [],
+    moves: moves as any, // Supabase moves have different structure
     status: gameStatus as 'active' | 'finished' | 'waiting',
   }), [game, isMyTurn, selectedSquare, possibleMoves, gameStatus, winner, chess, moves]);
 
@@ -96,22 +96,25 @@ export const OnlineGamePage: React.FC = () => {
     }
   };
 
-  const handlePieceDrop = async (sourceSquare: string, targetSquare: string) => {
+  const handlePieceDrop = (sourceSquare: string, targetSquare: string): boolean => {
     if (!chess || !isMyTurn || gameStatus === 'finished') {
       telegramService.notificationOccurred('error');
       return false;
     }
 
-    const success = await makeSupabaseMove(sourceSquare, targetSquare);
-    if (success) {
-      // Clear selection after successful move
-      setSelectedSquare(null);
-      setPossibleMoves([]);
-      telegramService.notificationOccurred('success');
-    } else {
-      telegramService.notificationOccurred('error');
-    }
-    return success;
+    // Fire and forget async move
+    makeSupabaseMove(sourceSquare, targetSquare).then(success => {
+      if (success) {
+        // Clear selection after successful move
+        setSelectedSquare(null);
+        setPossibleMoves([]);
+        telegramService.notificationOccurred('success');
+      } else {
+        telegramService.notificationOccurred('error');
+      }
+    });
+
+    return true; // Return true immediately to allow the move visually
   };
 
   const handleResign = async () => {
@@ -131,7 +134,6 @@ export const OnlineGamePage: React.FC = () => {
   // Get Telegram theme colors
   const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
   const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
-  const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
 
   if (isLoading) {
     return (

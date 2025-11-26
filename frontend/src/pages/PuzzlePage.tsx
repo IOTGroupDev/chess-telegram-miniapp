@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Chess, Square } from 'chess.js';
+import { Chess } from 'chess.js';
+import type { Square } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoardModern';
 import { usePuzzle } from '../hooks/usePuzzle';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
@@ -292,7 +293,6 @@ const PuzzlePage: React.FC = () => {
   // Get Telegram theme colors
   const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
   const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
-  const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
 
   if (loading) {
     return (

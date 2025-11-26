@@ -225,7 +225,6 @@ export const AITrainingPage: React.FC = () => {
   // Get Telegram theme colors
   const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
   const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
-  const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
 
   if (isLoading) {
     return (
