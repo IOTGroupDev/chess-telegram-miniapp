@@ -322,17 +322,16 @@ const PuzzlePage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-[100dvh] w-full pb-safe"
       style={{
         backgroundColor: '#1e293b',
         color: textColor,
-        paddingTop: 'max(env(safe-area-inset-top), 12px)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Compact Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4" style={{ paddingTop: 'max(env(safe-area-inset-top), 50px)' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-lg shadow-lg">
               {currentPuzzle.rating}
