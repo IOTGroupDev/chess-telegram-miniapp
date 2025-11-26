@@ -69,44 +69,56 @@ export const AITrainingPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const analyzeMove = useCallback(async (playerMove: string, fen: string) => {
+  const analyzeMove = useCallback(async (playerMove: string, fenBeforeMove: string, fenAfterMove: string) => {
     try {
-      // Get best move from engine
-      const aiMove = await stockfish.getBestMove(fen, 18);
-      if (aiMove) {
-        setBestMove(aiMove);
+      // Get evaluation before the move
+      const evalBefore = await stockfish.quickEval(fenBeforeMove);
+      if (evalBefore === null) return;
 
-        // Compare player move with best move
-        if (playerMove === aiMove) {
-          setMoveQuality('best');
-          telegramService.notificationOccurred('success');
-        } else {
-          // Get evaluation to determine move quality
-          const beforeEval = evaluation;
-          const afterEval = stockfish.evaluation || 0;
-          const evalDiff = Math.abs(afterEval - beforeEval);
+      // Get best move for position BEFORE player's move
+      const bestMoveForPosition = await stockfish.getBestMove(fenBeforeMove, 18);
+      if (!bestMoveForPosition) return;
 
-          if (evalDiff < 0.3) {
-            setMoveQuality('good');
-            telegramService.notificationOccurred('success');
-          } else if (evalDiff < 1.0) {
-            setMoveQuality('inaccuracy');
-            telegramService.notificationOccurred('warning');
-          } else if (evalDiff < 3.0) {
-            setMoveQuality('mistake');
-            telegramService.notificationOccurred('error');
-          } else {
-            setMoveQuality('blunder');
-            telegramService.notificationOccurred('error');
-          }
+      setBestMove(bestMoveForPosition);
 
-          setEvaluation(afterEval);
-        }
+      // Get evaluation after the move
+      const evalAfter = await stockfish.quickEval(fenAfterMove);
+      if (evalAfter === null) return;
+
+      setEvaluation(evalAfter);
+
+      // Compare player move with best move
+      if (playerMove === bestMoveForPosition) {
+        setMoveQuality('best');
+        telegramService.notificationOccurred('success');
+        return;
+      }
+
+      // Calculate how much the position worsened (from white's perspective)
+      const evalChange = evalAfter - evalBefore;
+
+      // If evaluation got worse (negative change for white)
+      const evalLoss = -evalChange; // Positive value means position got worse for white
+
+      console.log(`Move analysis: ${playerMove} vs ${bestMoveForPosition}, evalBefore: ${evalBefore.toFixed(2)}, evalAfter: ${evalAfter.toFixed(2)}, loss: ${evalLoss.toFixed(2)}`);
+
+      if (evalLoss < 0.3) {
+        setMoveQuality('good');
+        telegramService.notificationOccurred('success');
+      } else if (evalLoss < 1.0) {
+        setMoveQuality('inaccuracy');
+        telegramService.notificationOccurred('warning');
+      } else if (evalLoss < 3.0) {
+        setMoveQuality('mistake');
+        telegramService.notificationOccurred('error');
+      } else {
+        setMoveQuality('blunder');
+        telegramService.notificationOccurred('error');
       }
     } catch (err) {
       console.error('Move analysis failed:', err);
     }
-  }, [evaluation, stockfish]);
+  }, [stockfish]);
 
   /**
    * Handle square click (click-to-move)
@@ -153,15 +165,18 @@ export const AITrainingPage: React.FC = () => {
     }
 
     const playerMove = sourceSquare + targetSquare;
+    const fenBeforeMove = chess.getFen(); // Save FEN BEFORE the move
     const success = chess.makeMove(sourceSquare, targetSquare);
 
     if (success) {
+      const fenAfterMove = chess.getFen(); // Get FEN AFTER the move
+
       // Clear selection after successful move
       setSelectedSquare(null);
       setPossibleMoves([]);
 
       // Analyze the move asynchronously (fire and forget)
-      analyzeMove(playerMove, chess.getFen());
+      analyzeMove(playerMove, fenBeforeMove, fenAfterMove);
 
       // Get AI move after player move
       if (!chess.gameState.isGameOver) {
