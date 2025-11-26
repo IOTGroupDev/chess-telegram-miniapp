@@ -19,6 +19,16 @@ class AnalyzeGameDto {
   pgn!: string;
 }
 
+class AnalyzeMoveDto {
+  playerMove!: string;
+  bestMove!: string;
+  fenBefore!: string;
+  fenAfter!: string;
+  evalBefore!: number;
+  evalAfter!: number;
+  moveQuality!: 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder';
+}
+
 @Controller('analysis')
 export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
@@ -49,6 +59,31 @@ export class AnalysisController {
     return {
       success: true,
       data: analysis,
+    };
+  }
+
+  /**
+   * POST /api/analysis/move
+   * Get AI-powered detailed analysis for a single move
+   */
+  @Post('move')
+  @HttpCode(HttpStatus.OK)
+  async analyzeMove(@Body() dto: AnalyzeMoveDto) {
+    const explanation = await this.analysisService.analyzeSingleMove(
+      dto.playerMove,
+      dto.bestMove,
+      dto.fenBefore,
+      dto.fenAfter,
+      dto.evalBefore,
+      dto.evalAfter,
+      dto.moveQuality,
+    );
+
+    return {
+      success: true,
+      data: {
+        explanation,
+      },
     };
   }
 

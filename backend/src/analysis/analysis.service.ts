@@ -429,4 +429,123 @@ Keep it concise and helpful for a chess player reviewing their game.`;
     const biggestMistake = keyMoments[0];
     return `${winner} played more accurately overall. The critical moment was move ${biggestMistake.moveNumber} (${biggestMistake.san}), a ${biggestMistake.classification} that changed the evaluation significantly.`;
   }
+
+  /**
+   * Analyze a single move with AI-powered explanation (Russian)
+   */
+  async analyzeSingleMove(
+    playerMove: string,
+    bestMove: string,
+    fenBefore: string,
+    fenAfter: string,
+    evalBefore: number,
+    evalAfter: number,
+    moveQuality: 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder',
+  ): Promise<string> {
+    try {
+      const prompt = this.buildMoveAnalysisPrompt(
+        playerMove,
+        bestMove,
+        fenBefore,
+        fenAfter,
+        evalBefore,
+        evalAfter,
+        moveQuality,
+      );
+
+      const response = await this.callAI(prompt);
+      return response;
+    } catch (error) {
+      this.logger.error('AI move analysis failed', error);
+      return this.generateFallbackMoveExplanation(
+        playerMove,
+        bestMove,
+        evalBefore,
+        evalAfter,
+        moveQuality,
+      );
+    }
+  }
+
+  /**
+   * Build prompt for single move analysis (Russian)
+   */
+  private buildMoveAnalysisPrompt(
+    playerMove: string,
+    bestMove: string,
+    fenBefore: string,
+    fenAfter: string,
+    evalBefore: number,
+    evalAfter: number,
+    moveQuality: 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder',
+  ): string {
+    const evalLoss = -(evalAfter - evalBefore);
+    const from = playerMove.substring(0, 2).toUpperCase();
+    const to = playerMove.substring(2, 4).toUpperCase();
+    const bestFrom = bestMove.substring(0, 2).toUpperCase();
+    const bestTo = bestMove.substring(2, 4).toUpperCase();
+
+    return `Ты шахматный тренер. Объясни игроку почему его ход был ${this.getQualityNameRu(moveQuality)}.
+
+Ход игрока: ${from}→${to}
+Лучший ход: ${bestFrom}→${bestTo}
+Качество хода: ${this.getQualityNameRu(moveQuality)}
+Оценка до хода: ${evalBefore.toFixed(2)}
+Оценка после хода: ${evalAfter.toFixed(2)}
+Потеря оценки: ${evalLoss.toFixed(2)} пешек
+
+Позиция до хода (FEN): ${fenBefore}
+
+Дай краткое объяснение (2-4 предложения) на русском языке:
+1. Почему этот ход ${moveQuality === 'best' ? 'отличный' : 'не оптимальный'}
+2. Что было лучше и почему
+3. Какой тактический мотив или стратегическую идею игрок пропустил
+
+Пиши простым языком, как тренер для ученика. Не используй шахматную нотацию, говори понятно.`;
+  }
+
+  /**
+   * Get Russian name for move quality
+   */
+  private getQualityNameRu(quality: string): string {
+    const names: Record<string, string> = {
+      best: 'лучшим',
+      good: 'хорошим',
+      inaccuracy: 'неточностью',
+      mistake: 'ошибкой',
+      blunder: 'грубой ошибкой',
+    };
+    return names[quality] || quality;
+  }
+
+  /**
+   * Generate fallback explanation for a move without AI
+   */
+  private generateFallbackMoveExplanation(
+    playerMove: string,
+    bestMove: string,
+    evalBefore: number,
+    evalAfter: number,
+    moveQuality: string,
+  ): string {
+    const evalLoss = -(evalAfter - evalBefore);
+    const from = playerMove.substring(0, 2).toUpperCase();
+    const to = playerMove.substring(2, 4).toUpperCase();
+    const bestFrom = bestMove.substring(0, 2).toUpperCase();
+    const bestTo = bestMove.substring(2, 4).toUpperCase();
+
+    if (moveQuality === 'best') {
+      return `Отличный ход! ${from}→${to} — это именно то, что рекомендует шахматный движок. Вы нашли оптимальное продолжение в этой позиции.`;
+    }
+
+    if (evalLoss < 1.0) {
+      return `Ваш ход ${from}→${to} неплох, но ${bestFrom}→${bestTo} было бы чуть точнее. Разница небольшая (${evalLoss.toFixed(2)} пешки), позиция остается играбельной.`;
+    }
+
+    if (evalLoss < 3.0) {
+      return `Ход ${from}→${to} ухудшил позицию на ${evalLoss.toFixed(1)} пешек. Лучше было ${bestFrom}→${bestTo}. Старайтесь просчитывать последствия на несколько ходов вперед.`;
+    }
+
+    return `Серьезная ошибка! ${from}→${to} сильно ухудшило позицию (−${evalLoss.toFixed(1)} пешек). Правильным ходом было ${bestFrom}→${bestTo}. Проверяйте, не остаются ли ваши фигуры под боем.`;
+  }
 }
