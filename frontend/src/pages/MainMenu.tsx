@@ -109,10 +109,10 @@ export const MainMenu: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
       <div className="max-w-md mx-auto px-4" >
         {/* Compact Header */}
-        <div className="text-center mb-6" style={{ paddingTop: 'max(env(safe-area-inset-top), 40px)' }}>
+        <div className="text-center mb-6" style={{ paddingTop: 'max(env(safe-area-inset-top), 50px)' }}>
           <div className="inline-flex items-center gap-3 mb-3">
             <div className="text-5xl">♔</div>
             <div className="text-left">
