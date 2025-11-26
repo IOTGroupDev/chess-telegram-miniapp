@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Square } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
+import { ChessBoard } from '../components/ChessBoardModern';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
-import { useTheme } from '../hooks/useTheme';
 import { telegramService } from '../services/telegramService';
+import type { GameState } from '../types';
 
 export const AITrainingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
@@ -20,8 +19,25 @@ export const AITrainingPage: React.FC = () => {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [, forceUpdate] = useState({});
 
+  // Click-to-move state
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
+
   const chess = useChess();
   const stockfish = useStockfish();
+
+  // Create gameState for ChessBoard
+  const gameStateForBoard = useMemo((): GameState => ({
+    game: null,
+    isPlayerTurn: chess.gameState.isPlayerTurn,
+    selectedSquare: selectedSquare,
+    possibleMoves: possibleMoves,
+    isGameOver: chess.gameState.isGameOver,
+    winner: chess.gameState.winner,
+    fen: chess.getFen(),
+    moves: [],
+    status: chess.gameState.isGameOver ? 'finished' : 'active',
+  }), [chess.gameState, selectedSquare, possibleMoves, chess]);
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -92,6 +108,45 @@ export const AITrainingPage: React.FC = () => {
     }
   }, [evaluation, stockfish]);
 
+  /**
+   * Handle square click (click-to-move)
+   */
+  const handleSquareClick = useCallback((square: Square) => {
+    if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
+      return;
+    }
+
+    const piece = chess.game.get(square);
+
+    // If no piece selected yet
+    if (!selectedSquare) {
+      // Select piece if it's player's piece (white)
+      if (piece && piece.color === 'w') {
+        setSelectedSquare(square);
+        const moves = chess.getPossibleMoves(square);
+        setPossibleMoves(moves as Square[]);
+        telegramService.impactOccurred('light');
+      }
+      return;
+    }
+
+    // If clicking on the same square, deselect
+    if (square === selectedSquare) {
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+      return;
+    }
+
+    // If clicking on another player's piece, switch selection
+    if (piece && piece.color === 'w') {
+      setSelectedSquare(square);
+      const moves = chess.getPossibleMoves(square);
+      setPossibleMoves(moves as Square[]);
+      telegramService.impactOccurred('light');
+      return;
+    }
+  }, [chess, stockfish, selectedSquare]);
+
   const handlePieceDrop = useCallback((sourceSquare: Square, targetSquare: Square) => {
     if (chess.gameState.isGameOver || !chess.gameState.isPlayerTurn || stockfish.isThinking) {
       return false;
@@ -101,6 +156,10 @@ export const AITrainingPage: React.FC = () => {
     const success = chess.makeMove(sourceSquare, targetSquare);
 
     if (success) {
+      // Clear selection after successful move
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+
       // Analyze the move asynchronously (fire and forget)
       analyzeMove(playerMove, chess.getFen());
 
@@ -163,12 +222,17 @@ export const AITrainingPage: React.FC = () => {
     initializeGame();
   }, [initializeGame]);
 
+  // Get Telegram theme colors
+  const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
+  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
+  const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">Загрузка тренировки...</p>
+          <p style={{ color: textColor }}>Загрузка тренировки...</p>
         </div>
       </div>
     );
@@ -176,9 +240,9 @@ export const AITrainingPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center p-6">
-          <h1 className="text-2xl font-bold text-white mb-4">Ошибка</h1>
+          <h1 className="text-2xl font-bold mb-4" style={{ color: textColor }}>Ошибка</h1>
           <p className="text-red-400 mb-4">{error}</p>
           <button
             onClick={initializeGame}
@@ -203,7 +267,15 @@ export const AITrainingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        paddingTop: 'max(env(safe-area-inset-top), 16px)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Move Quality Floating Notification */}
         {moveQuality && (
@@ -297,35 +369,16 @@ export const AITrainingPage: React.FC = () => {
 
         {/* Chess Board Container */}
         <div className="relative mb-4">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
-            {/* Glow effect */}
-            <div className={`absolute -inset-1 bg-gradient-to-r ${currentTheme.glowColor} rounded-2xl blur opacity-20`}></div>
-
-            {/* Actual board */}
-            <div className="relative">
-              <Chessboard
-                {...{
-                  position: chess.getFen(),
-                  onPieceDrop: (sourceSquare: string, targetSquare: string) =>
-                    handlePieceDrop(sourceSquare as Square, targetSquare as Square),
-                  boardOrientation: 'white',
-                  customBoardStyle: {
-                    borderRadius: '0',
-                  },
-                  customDarkSquareStyle: {
-                    backgroundColor: currentTheme.darkSquare,
-                  },
-                  customLightSquareStyle: {
-                    backgroundColor: currentTheme.lightSquare,
-                  },
-                  customDropSquareStyle: {
-                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
-                  },
-                  arePiecesDraggable: chess.gameState.isPlayerTurn && !chess.gameState.isGameOver && !stockfish.isThinking,
-                  animationDuration: 200,
-                } as any}
-              />
-            </div>
+          <div className="relative rounded-2xl overflow-hidden shadow-xl">
+            <ChessBoard
+              position={chess.getFen()}
+              onSquareClick={handleSquareClick}
+              onPieceDrop={(sourceSquare, targetSquare) =>
+                handlePieceDrop(sourceSquare as Square, targetSquare as Square)
+              }
+              gameState={gameStateForBoard}
+              boardWidth={Math.min(window.innerWidth - 32, 500)}
+            />
           </div>
 
           {/* Game Over Overlay */}

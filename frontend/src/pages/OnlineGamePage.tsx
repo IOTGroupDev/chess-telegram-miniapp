@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Chessboard } from 'react-chessboard';
+import type { Square } from 'chess.js';
+import { ChessBoard } from '../components/ChessBoardModern';
 import { useSupabaseGame } from '../hooks/useSupabaseGame';
 import { useAppStore } from '../store/useAppStore';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
-import { useTheme } from '../hooks/useTheme';
 import { telegramService } from '../services/telegramService';
+import type { GameState } from '../types';
 
 export const OnlineGamePage: React.FC = () => {
   const navigate = useNavigate();
   const { gameId } = useParams<{ gameId: string }>();
   const { user } = useAppStore();
   const [showDrawOffer, setShowDrawOffer] = useState(false);
-  const { currentTheme } = useTheme();
+
+  // Click-to-move state
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -38,6 +42,60 @@ export const OnlineGamePage: React.FC = () => {
     ((game.move_number % 2 === 0 && game.white_player_id === String(user?.id)) ||
      (game.move_number % 2 === 1 && game.black_player_id === String(user?.id)));
 
+  // Create gameState for ChessBoard
+  const gameStateForBoard = useMemo((): GameState => ({
+    game: game,
+    isPlayerTurn: isMyTurn,
+    selectedSquare: selectedSquare,
+    possibleMoves: possibleMoves,
+    isGameOver: gameStatus === 'finished',
+    winner: winner,
+    fen: chess?.fen() || '',
+    moves: moves || [],
+    status: gameStatus as 'active' | 'finished' | 'waiting',
+  }), [game, isMyTurn, selectedSquare, possibleMoves, gameStatus, winner, chess, moves]);
+
+  /**
+   * Handle square click (click-to-move)
+   */
+  const handleSquareClick = (square: Square) => {
+    if (!chess || !isMyTurn || gameStatus === 'finished') {
+      return;
+    }
+
+    const piece = chess.get(square);
+    const amIWhite = game?.white_player_id === String(user?.id);
+    const myColorCode = amIWhite ? 'w' : 'b';
+
+    // If no piece selected yet
+    if (!selectedSquare) {
+      // Select piece if it's player's piece
+      if (piece && piece.color === myColorCode) {
+        setSelectedSquare(square);
+        const moves = chess.moves({ square, verbose: true });
+        setPossibleMoves(moves.map(m => m.to));
+        telegramService.impactOccurred('light');
+      }
+      return;
+    }
+
+    // If clicking on the same square, deselect
+    if (square === selectedSquare) {
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+      return;
+    }
+
+    // If clicking on another player's piece, switch selection
+    if (piece && piece.color === myColorCode) {
+      setSelectedSquare(square);
+      const moves = chess.moves({ square, verbose: true });
+      setPossibleMoves(moves.map(m => m.to));
+      telegramService.impactOccurred('light');
+      return;
+    }
+  };
+
   const handlePieceDrop = async (sourceSquare: string, targetSquare: string) => {
     if (!chess || !isMyTurn || gameStatus === 'finished') {
       telegramService.notificationOccurred('error');
@@ -46,6 +104,9 @@ export const OnlineGamePage: React.FC = () => {
 
     const success = await makeSupabaseMove(sourceSquare, targetSquare);
     if (success) {
+      // Clear selection after successful move
+      setSelectedSquare(null);
+      setPossibleMoves([]);
       telegramService.notificationOccurred('success');
     } else {
       telegramService.notificationOccurred('error');
@@ -67,12 +128,17 @@ export const OnlineGamePage: React.FC = () => {
     telegramService.notificationOccurred('success');
   };
 
+  // Get Telegram theme colors
+  const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
+  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
+  const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">Загрузка игры...</p>
+          <p style={{ color: textColor }}>Загрузка игры...</p>
         </div>
       </div>
     );
@@ -80,9 +146,9 @@ export const OnlineGamePage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center p-6">
-          <h1 className="text-2xl font-bold text-white mb-4">Ошибка</h1>
+          <h1 className="text-2xl font-bold mb-4" style={{ color: textColor }}>Ошибка</h1>
           <p className="text-red-400 mb-4">{error}</p>
           <button
             onClick={() => navigate('/main')}
@@ -101,7 +167,15 @@ export const OnlineGamePage: React.FC = () => {
   const opponentColor = amIWhite ? 'black' : 'white';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        paddingTop: 'max(env(safe-area-inset-top), 16px)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Header with Players */}
         <div className="mb-4">
@@ -152,34 +226,14 @@ export const OnlineGamePage: React.FC = () => {
 
         {/* Chess Board Container */}
         <div className="relative mb-4">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
-            {/* Glow effect */}
-            <div className={`absolute -inset-1 bg-gradient-to-r ${currentTheme.glowColor} rounded-2xl blur opacity-20`}></div>
-
-            {/* Actual board */}
-            <div className="relative">
-              <Chessboard
-                {...{
-                  position: chess?.fen() || 'start',
-                  onPieceDrop: handlePieceDrop,
-                  boardOrientation: myColor,
-                  customBoardStyle: {
-                    borderRadius: '0',
-                  },
-                  customDarkSquareStyle: {
-                    backgroundColor: currentTheme.darkSquare,
-                  },
-                  customLightSquareStyle: {
-                    backgroundColor: currentTheme.lightSquare,
-                  },
-                  customDropSquareStyle: {
-                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
-                  },
-                  arePiecesDraggable: isMyTurn && gameStatus === 'active',
-                  animationDuration: 200,
-                } as any}
-              />
-            </div>
+          <div className="relative rounded-2xl overflow-hidden shadow-xl">
+            <ChessBoard
+              position={chess?.fen() || 'start'}
+              onSquareClick={handleSquareClick}
+              onPieceDrop={handlePieceDrop}
+              gameState={gameStateForBoard}
+              boardWidth={Math.min(window.innerWidth - 32, 500)}
+            />
           </div>
 
           {/* Game Over Overlay */}

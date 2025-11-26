@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Chess } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
+import { Chess, Square } from 'chess.js';
+import { ChessBoard } from '../components/ChessBoardModern';
 import { usePuzzle } from '../hooks/usePuzzle';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
-import { useTheme } from '../hooks/useTheme';
 import { useAchievements } from '../hooks/useAchievements';
 import { useChallenges } from '../hooks/useChallenges';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { telegramService } from '../services/telegramService';
+import type { GameState } from '../types';
 
 const PuzzlePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentPuzzle, loading, error, fetchNextPuzzle, submitAttempt } = usePuzzle();
-  const { currentTheme } = useTheme();
   const { recordPuzzleSolved, recordPuzzleFailed, recentlyUnlocked } = useAchievements();
   const { trackPuzzleSolved } = useChallenges();
 
@@ -30,6 +29,23 @@ const PuzzlePage: React.FC = () => {
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [showHint, setShowHint] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  // Click-to-move state
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
+
+  // Create gameState for ChessBoard
+  const gameStateForBoard = useMemo((): GameState => ({
+    game: null,
+    isPlayerTurn: status === 'playing',
+    selectedSquare: selectedSquare,
+    possibleMoves: possibleMoves,
+    isGameOver: status === 'complete',
+    winner: result?.solved ? 'white' : (result ? 'black' : null),
+    fen: game?.fen() || '',
+    moves: [],
+    status: status === 'complete' ? 'finished' : 'active',
+  }), [game, status, selectedSquare, possibleMoves, result]);
 
   /**
    * Load initial puzzle
@@ -89,9 +105,52 @@ const PuzzlePage: React.FC = () => {
   };
 
   /**
+   * Handle square click (click-to-move)
+   */
+  const handleSquareClick = (square: Square) => {
+    if (!game || status !== 'playing') return;
+
+    // Check if it's player's turn
+    const playerTurn = game.turn() === (playerColor === 'white' ? 'w' : 'b');
+    if (!playerTurn) return;
+
+    const piece = game.get(square);
+
+    // If no piece selected yet
+    if (!selectedSquare) {
+      // Select piece if it's player's piece
+      if (piece && piece.color === (playerColor === 'white' ? 'w' : 'b')) {
+        setSelectedSquare(square);
+        const moves = game.moves({ square, verbose: true });
+        setPossibleMoves(moves.map(m => m.to));
+        telegramService.impactOccurred('light');
+      }
+      return;
+    }
+
+    // If clicking on the same square, deselect
+    if (square === selectedSquare) {
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+      return;
+    }
+
+    // If clicking on another player's piece, switch selection
+    if (piece && piece.color === (playerColor === 'white' ? 'w' : 'b')) {
+      setSelectedSquare(square);
+      const moves = game.moves({ square, verbose: true });
+      setPossibleMoves(moves.map(m => m.to));
+      telegramService.impactOccurred('light');
+      return;
+    }
+
+    // Otherwise, this is a potential move - handled in onDrop
+  };
+
+  /**
    * Handle player move
    */
-  const onDrop = (sourceSquare: string, targetSquare: string, piece: string) => {
+  const onDrop = (sourceSquare: string, targetSquare: string) => {
     if (!game || status !== 'playing') return false;
 
     const newAttempts = attempts + 1;
@@ -104,9 +163,10 @@ const PuzzlePage: React.FC = () => {
     // Try to make the move
     let move;
     try {
-      // Check for promotion
+      // Check for promotion - auto-promote to queen
+      const sourcePiece = game.get(sourceSquare as Square);
       const promotion =
-        piece[1].toLowerCase() === 'p' &&
+        sourcePiece?.type === 'p' &&
         ((targetSquare[1] === '8' && playerColor === 'white') ||
           (targetSquare[1] === '1' && playerColor === 'black'))
           ? 'q'
@@ -118,6 +178,10 @@ const PuzzlePage: React.FC = () => {
         promotion,
       });
     } catch (error) {
+      // Clear selection on invalid move
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+
       setStatus('incorrect');
       telegramService.notificationOccurred('error');
 
@@ -129,6 +193,10 @@ const PuzzlePage: React.FC = () => {
     }
 
     if (!move) return false;
+
+    // Clear selection after move
+    setSelectedSquare(null);
+    setPossibleMoves([]);
 
     const moveUci = move.from + move.to + (move.promotion || '');
     setMoveHistory([...moveHistory, moveUci]);
@@ -221,17 +289,22 @@ const PuzzlePage: React.FC = () => {
     fetchNextPuzzle();
   };
 
+  // Get Telegram theme colors
+  const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
+  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
+  const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading puzzle...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
+        <div className="text-xl" style={{ color: textColor }}>Loading puzzle...</div>
       </div>
     );
   }
 
   if (error || !currentPuzzle || !game) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center">
           <div className="text-red-500 text-xl mb-4">
             {error || 'No puzzles available'}
@@ -248,7 +321,15 @@ const PuzzlePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        paddingTop: 'max(env(safe-area-inset-top), 16px)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Compact Header */}
         <div className="flex items-center justify-between mb-3">
@@ -294,35 +375,14 @@ const PuzzlePage: React.FC = () => {
 
         {/* Chess Board Container with modern styling */}
         <div className="relative mb-4">
-          {/* Board wrapper with glow effect */}
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
-            {/* Glow effect */}
-            <div className={`absolute -inset-1 bg-gradient-to-r ${currentTheme.glowColor} rounded-2xl blur opacity-20`}></div>
-
-            {/* Actual board */}
-            <div className="relative">
-              <Chessboard
-                {...{
-                  position: game.fen(),
-                  onPieceDrop: onDrop,
-                  boardOrientation: playerColor,
-                  customBoardStyle: {
-                    borderRadius: '0',
-                  },
-                  customDarkSquareStyle: {
-                    backgroundColor: currentTheme.darkSquare,
-                  },
-                  customLightSquareStyle: {
-                    backgroundColor: currentTheme.lightSquare,
-                  },
-                  customDropSquareStyle: {
-                    boxShadow: 'inset 0 0 1px 6px rgba(255,255,0,0.6)',
-                  },
-                  arePiecesDraggable: status === 'playing',
-                  animationDuration: 200,
-                } as any}
-              />
-            </div>
+          <div className="relative rounded-2xl overflow-hidden shadow-xl">
+            <ChessBoard
+              position={game.fen()}
+              onSquareClick={handleSquareClick}
+              onPieceDrop={onDrop}
+              gameState={gameStateForBoard}
+              boardWidth={Math.min(window.innerWidth - 32, 500)}
+            />
           </div>
 
           {/* Overlay for complete state */}
