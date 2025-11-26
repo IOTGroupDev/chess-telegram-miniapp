@@ -70,7 +70,7 @@ class MoveAnalysisService {
    */
   private generateExplanation(
     playerMove: string,
-    bestMove: string,
+    _bestMove: string,
     fenBefore: string,
     fenAfter: string,
     evalLoss: number,
@@ -158,7 +158,7 @@ class MoveAnalysisService {
   /**
    * Check for tactical mistakes
    */
-  private checkTacticalMistakes(chessBefore: Chess, chessAfter: Chess, playerMove: string): string | null {
+  private checkTacticalMistakes(_chessBefore: Chess, chessAfter: Chess, playerMove: string): string | null {
     // Check if piece moved to attacked square
     const to = playerMove.substring(2, 4);
     const piece = chessAfter.get(to as any);
