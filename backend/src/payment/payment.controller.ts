@@ -22,6 +22,13 @@ import {
   SuccessfulPayment,
 } from './payment.service';
 
+interface AuthRequest extends Request {
+  user: {
+    sub: string;
+    email?: string;
+  };
+}
+
 @Controller('payment')
 export class PaymentController {
   private readonly logger = new Logger(PaymentController.name);
@@ -36,7 +43,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async createInvoice(
-    @Request() req,
+    @Request() req: AuthRequest,
     @Body() createInvoiceDto: CreateInvoiceDto,
   ) {
     const userId = req.user.sub;
@@ -80,7 +87,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async successfulPayment(
-    @Request() req,
+    @Request() req: AuthRequest,
     @Body() payment: SuccessfulPayment,
   ) {
     const userId = req.user.sub;
