@@ -4,12 +4,28 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store/useAppStore';
 import { telegramService } from '../services/telegramService';
 import supabase from '../lib/supabaseClient';
+import { useWallet } from '../hooks/useWallet';
+import { useGameBet } from '../hooks/useGameBet';
+import { GameModePopup } from '../components/GameModePopup';
+import { BetAmountPopup } from '../components/BetAmountPopup';
+import type { BetType, CurrencyType } from '../types/supabase';
 
 export const MainMenu: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, setCurrentGame } = useAppStore();
   const [isCreatingGame, setIsCreatingGame] = useState(false);
+
+  // Betting flow state
+  const [showGameModePopup, setShowGameModePopup] = useState(false);
+  const [showBetAmountPopup, setShowBetAmountPopup] = useState(false);
+  const [selectedBetType, setSelectedBetType] = useState<BetType | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType | null>(null);
+  const [pendingGameId, setPendingGameId] = useState<string | null>(null);
+
+  // Hooks
+  const { wallet } = useWallet(user?.id || null);
+  const { createBet } = useGameBet(pendingGameId, user?.id || null);
 
   const handlePlayAI = () => {
     setCurrentGame(null, 'ai');
@@ -78,12 +94,133 @@ export const MainMenu: React.FC = () => {
     }
   };
 
-  const handleCreateInviteLink = () => {
-    // Generate invite link for sharing
-    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://yourapp.com/join/${inviteCode}`)}`;
+  const handleCreateInviteLink = async () => {
+    if (!user?.id) {
+      telegramService.showAlert(t('errors.authRequired'));
+      return;
+    }
 
-    telegramService.openLink(inviteLink);
+    try {
+      setIsCreatingGame(true);
+
+      // Generate invite code
+      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      // Create game with pending_bet_setup status
+      const { data: game, error: gameError } = await supabase
+        .from('games')
+        .insert({
+          white_player_id: user.id,
+          status: 'pending_bet_setup',
+          invite_code: inviteCode,
+          time_control: 'blitz',
+          time_limit: 300, // 5 minutes
+          time_increment: 3, // 3 seconds
+          is_rated: true,
+          is_public: false,
+        })
+        .select()
+        .single();
+
+      if (gameError) throw gameError;
+
+      // Set pending game and show GameModePopup
+      setPendingGameId(game.id);
+      setShowGameModePopup(true);
+      setIsCreatingGame(false);
+    } catch (error) {
+      console.error('Failed to create game:', error);
+      telegramService.showAlert(t('errors.createGameFailed'));
+      setIsCreatingGame(false);
+    }
+  };
+
+  // Handle game mode selection
+  const handleGameModeSelect = async (betType: BetType) => {
+    setSelectedBetType(betType);
+    setShowGameModePopup(false);
+
+    if (betType === 'free') {
+      // Free game - create bet and share immediately
+      try {
+        await createBet(betType);
+
+        // Get invite code for sharing
+        const { data: game } = await supabase
+          .from('games')
+          .select('invite_code')
+          .eq('id', pendingGameId)
+          .single();
+
+        if (game?.invite_code) {
+          const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(
+            `${window.location.origin}/join/${game.invite_code}`
+          )}`;
+          telegramService.openLink(inviteLink);
+        }
+
+        // Navigate to game waiting room
+        setCurrentGame(pendingGameId, 'online');
+        navigate(`/online-game/${pendingGameId}`);
+      } catch (error) {
+        console.error('Failed to create free bet:', error);
+        telegramService.showAlert(t('errors.createBetFailed'));
+      }
+    } else {
+      // Paid game - show amount popup
+      setSelectedCurrency(betType === 'stars' ? 'stars' : 'coins');
+      setShowBetAmountPopup(true);
+    }
+  };
+
+  // Handle bet amount confirmation
+  const handleBetAmountConfirm = async (amount: number) => {
+    if (!selectedBetType || !selectedCurrency || !pendingGameId) return;
+
+    try {
+      setShowBetAmountPopup(false);
+      setIsCreatingGame(true);
+
+      // Create bet
+      await createBet(selectedBetType, amount, selectedCurrency);
+
+      // Get invite code for sharing
+      const { data: game } = await supabase
+        .from('games')
+        .select('invite_code')
+        .eq('id', pendingGameId)
+        .single();
+
+      if (game?.invite_code) {
+        const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(
+          `${window.location.origin}/join/${game.invite_code}`
+        )}`;
+        telegramService.openLink(inviteLink);
+      }
+
+      // Navigate to game waiting room
+      setCurrentGame(pendingGameId, 'online');
+      navigate(`/online-game/${pendingGameId}`);
+    } catch (error) {
+      console.error('Failed to create bet:', error);
+      telegramService.showAlert(t('errors.createBetFailed'));
+      setIsCreatingGame(false);
+    }
+  };
+
+  // Handle popup cancellation
+  const handlePopupCancel = async () => {
+    setShowGameModePopup(false);
+    setShowBetAmountPopup(false);
+
+    // Delete the pending game if cancelled
+    if (pendingGameId) {
+      await supabase.from('games').delete().eq('id', pendingGameId);
+      setPendingGameId(null);
+    }
+
+    setSelectedBetType(null);
+    setSelectedCurrency(null);
   };
 
   const handleViewHistory = () => {
@@ -322,6 +459,25 @@ export const MainMenu: React.FC = () => {
             <p className="text-white/60 text-sm mt-2">{t('game.waitMessage')}</p>
           </div>
         </div>
+      )}
+
+      {/* Betting Flow Popups */}
+      <GameModePopup
+        show={showGameModePopup}
+        onSelect={handleGameModeSelect}
+        onClose={handlePopupCancel}
+      />
+
+      {selectedCurrency && wallet && (
+        <BetAmountPopup
+          show={showBetAmountPopup}
+          currency={selectedCurrency}
+          userBalance={
+            selectedCurrency === 'coins' ? wallet.balance_coins : wallet.balance_stars
+          }
+          onConfirm={handleBetAmountConfirm}
+          onCancel={handlePopupCancel}
+        />
       )}
     </div>
   );
