@@ -108,6 +108,14 @@ export const MainMenu: React.FC = () => {
     navigate('/challenges');
   };
 
+  const handleArena = () => {
+    navigate('/arena');
+  };
+
+  const handlePublicMatches = () => {
+    navigate('/public-matches');
+  };
+
   return (
     <div className="min-h-[100dvh] w-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-safe">
       <div className="max-w-md mx-auto px-4">
@@ -175,7 +183,28 @@ export const MainMenu: React.FC = () => {
             </div>
           </div>
 
-          {/* AI Training - Featured */}
+          {/* Arena - Featured (MK Style) */}
+          <div
+            onClick={handleArena}
+            className="col-span-2 glass rounded-2xl p-5 border-2 border-red-500/50 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-orange-500/10 to-yellow-500/10"></div>
+            <div className="relative flex items-center gap-4">
+              <div className="text-5xl">⚔️</div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-white font-black text-xl">ARENA</h3>
+                  <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">HOT</span>
+                </div>
+                <p className="text-orange-200 text-sm">Battle in tournaments • Earn badges</p>
+              </div>
+              <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+
+          {/* AI Training */}
           <div
             onClick={handleAITraining}
             className="col-span-2 glass rounded-2xl p-5 border-2 border-yellow-400/40 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer relative overflow-hidden"
@@ -225,6 +254,19 @@ export const MainMenu: React.FC = () => {
 
         {/* Secondary Actions - Compact List */}
         <div className="space-y-2 mb-6">
+          {/* Public Matches / Spectate */}
+          <div
+            onClick={handlePublicMatches}
+            className="glass rounded-xl p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer flex items-center gap-3"
+          >
+            <div className="text-2xl">👁️</div>
+            <span className="text-white font-medium text-sm flex-1">Watch Live Matches</span>
+            <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">LIVE</span>
+            <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+
           {/* Daily Challenges */}
           <div
             onClick={handleViewChallenges}

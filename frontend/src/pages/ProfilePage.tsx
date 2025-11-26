@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { telegramService } from '../services/telegramService';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
@@ -7,11 +7,15 @@ import { SoundSettings } from '../components/SoundSettings';
 import { AchievementsDisplay } from '../components/AchievementsDisplay';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { useAchievements } from '../hooks/useAchievements';
+import { BADGES } from '../types/arena';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const user = telegramService.getUser();
   const { stats, recentlyUnlocked } = useAchievements();
+
+  // Mock arena badges (in real app would come from backend)
+  const [unlockedBadges] = useState(['first_blood', 'gladiator', 'speedrun_master']);
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -95,6 +99,84 @@ export const ProfilePage: React.FC = () => {
         {/* Sound Settings */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-6">
           <SoundSettings />
+        </div>
+
+        {/* Arena Badges */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-6">
+          <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">⚔️</span>
+            <span>Arena Badges</span>
+          </h3>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Object.values(BADGES).map((badge) => {
+              const isUnlocked = unlockedBadges.includes(badge.id);
+              const rarityColors = {
+                common: 'from-slate-600 to-slate-700',
+                rare: 'from-blue-600 to-cyan-700',
+                epic: 'from-purple-600 to-pink-700',
+                legendary: 'from-yellow-500 to-orange-600',
+              };
+
+              return (
+                <div
+                  key={badge.id}
+                  className={`relative rounded-xl p-4 border-2 transition-all ${
+                    isUnlocked
+                      ? `bg-gradient-to-br ${rarityColors[badge.rarity]} border-white/30 shadow-lg`
+                      : 'bg-slate-900/50 border-slate-700 opacity-40'
+                  }`}
+                >
+                  {/* Rarity indicator */}
+                  {isUnlocked && (
+                    <div className="absolute top-1 right-1">
+                      {badge.rarity === 'legendary' && <span className="text-xs">✨</span>}
+                      {badge.rarity === 'epic' && <span className="text-xs">💫</span>}
+                      {badge.rarity === 'rare' && <span className="text-xs">⭐</span>}
+                    </div>
+                  )}
+
+                  <div className="text-center">
+                    <div className={`text-3xl mb-2 ${!isUnlocked && 'grayscale'}`}>
+                      {badge.icon}
+                    </div>
+                    <div className="text-xs font-bold text-white mb-1">
+                      {badge.name}
+                    </div>
+                    <div className="text-xs text-slate-300 opacity-80">
+                      {badge.description}
+                    </div>
+                  </div>
+
+                  {!isUnlocked && (
+                    <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">🔒</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Badge Stats */}
+          <div className="mt-4 flex items-center justify-center gap-6 text-sm">
+            <div className="text-center">
+              <div className="text-lg font-bold text-yellow-400">{unlockedBadges.length}</div>
+              <div className="text-xs text-slate-400">Unlocked</div>
+            </div>
+            <div className="w-px h-8 bg-white/10"></div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-blue-400">{Object.keys(BADGES).length}</div>
+              <div className="text-xs text-slate-400">Total</div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate('/arena')}
+            className="mt-4 w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl transition-all active:scale-95"
+          >
+            ⚔️ Enter Arena to Unlock More
+          </button>
         </div>
 
         {/* Achievements Display */}

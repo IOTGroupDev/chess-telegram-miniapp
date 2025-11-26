@@ -11,6 +11,8 @@ import TournamentsPage from './pages/TournamentsPage';
 import TournamentDetailsPage from './pages/TournamentDetailsPage';
 import PuzzlePage from './pages/PuzzlePage';
 import PuzzleStatsPage from './pages/PuzzleStatsPage';
+import ArenaPage from './pages/ArenaPage';
+import PublicMatchesPage from './pages/PublicMatchesPage';
 
 function App() {
   // Theme is initialized in main.tsx via telegramThemeService
@@ -43,6 +45,8 @@ function App() {
           <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
           <Route path="/puzzles" element={<PuzzlePage />} />
           <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
+          <Route path="/arena" element={<ArenaPage />} />
+          <Route path="/public-matches" element={<PublicMatchesPage />} />
         </Routes>
       </div>
     </Router>
