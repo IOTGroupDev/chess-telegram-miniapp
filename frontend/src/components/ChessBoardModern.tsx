@@ -152,7 +152,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                 zIndex: 2,
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               }}
-              dangerouslySetInnerHTML={{ __html: chessPieceSVG[piece] || '' }}
+              dangerouslySetInnerHTML={{ __html: chessPieceSVG[piece as keyof typeof chessPieceSVG] || '' }}
             />
           )}
         </div>

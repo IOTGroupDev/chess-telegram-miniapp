@@ -5,7 +5,6 @@ import { ChessBoard } from '../components/ChessBoardModern';
 import { useChess } from '../hooks/useChess';
 import { useStockfish } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
-import { useTheme } from '../hooks/useTheme';
 import { useSound } from '../hooks/useSound';
 import { useAchievements } from '../hooks/useAchievements';
 import { useChallenges } from '../hooks/useChallenges';
@@ -25,7 +24,6 @@ export const AIGamePage: React.FC = () => {
 
   const chess = useChess();
   const stockfish = useStockfish();
-  const { currentTheme } = useTheme();
   const { playSound } = useSound();
   const { recordWin, recordLoss, recordDraw, recentlyUnlocked } = useAchievements();
   const { trackWin, trackLoss, trackDraw } = useChallenges();
