@@ -1,0 +1,314 @@
+/**
+ * Arena Animations & Effects
+ * Mortal Kombat inspired styling
+ */
+
+/* Fire glow animation */
+@keyframes fire-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 68, 0, 0.5), 0 0 40px rgba(255, 136, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 68, 0, 0.8), 0 0 60px rgba(255, 136, 0, 0.6);
+  }
+}
+
+.fire-glow {
+  animation: fire-glow 2s ease-in-out infinite;
+}
+
+/* Pulsing live indicator */
+@keyframes pulse-live {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.pulse-live {
+  animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+/* Trophy bounce */
+@keyframes trophy-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.trophy-bounce {
+  animation: trophy-bounce 2s ease-in-out infinite;
+}
+
+/* Blood drip effect (for dramatic effect) */
+@keyframes blood-drip {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+}
+
+.blood-drip {
+  animation: blood-drip 2s ease-in forwards;
+}
+
+/* Lightning flash */
+@keyframes lightning-flash {
+  0%, 100% {
+    opacity: 0;
+  }
+  5%, 15% {
+    opacity: 0.8;
+  }
+  10% {
+    opacity: 0.2;
+  }
+}
+
+.lightning-flash {
+  animation: lightning-flash 4s ease-in-out infinite;
+}
+
+/* Shake on victory */
+@keyframes victory-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.victory-shake {
+  animation: victory-shake 0.5s ease-in-out;
+}
+
+/* Glitch effect for dramatic moments */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.glitch-effect {
+  animation: glitch 0.3s ease-in-out infinite;
+}
+
+/* Zoom in on hover */
+@keyframes zoom-in {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
+}
+
+.zoom-in:hover {
+  animation: zoom-in 0.2s ease-in-out forwards;
+}
+
+/* Flicker text (like old arcade) */
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.9;
+  }
+}
+
+.flicker-text {
+  animation: flicker 2s ease-in-out infinite;
+}
+
+/* Rotating crown for champion */
+@keyframes rotate-crown {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.rotate-crown {
+  animation: rotate-crown 3s linear infinite;
+  display: inline-block;
+}
+
+/* Gradient shift for epic buttons */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Slide up entrance */
+@keyframes slide-up-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up-entrance {
+  animation: slide-up-entrance 0.5s ease-out;
+}
+
+/* Scale pop for new badges */
+@keyframes badge-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.badge-pop {
+  animation: badge-pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Smoke effect background */
+@keyframes smoke {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-100px) translateX(50px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.smoke-effect {
+  animation: smoke 5s ease-in-out infinite;
+}
+
+/* Blood splatter on defeat */
+.blood-splatter {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.3) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.match-card:hover .blood-splatter {
+  opacity: 1;
+}
+
+/* Electric border pulse */
+@keyframes electric-pulse {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    border-color: rgba(251, 146, 60, 0.8);
+    box-shadow: 0 0 20px rgba(251, 146, 60, 0.8), 0 0 40px rgba(239, 68, 68, 0.4);
+  }
+}
+
+.electric-border {
+  animation: electric-pulse 2s ease-in-out infinite;
+}
+
+/* Neon glow text */
+.neon-text {
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+}
+
+/* Stagger animation for list items */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.stagger-item {
+  animation: stagger-in 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+.stagger-item:nth-child(6) { animation-delay: 0.3s; }
+.stagger-item:nth-child(7) { animation-delay: 0.35s; }
+.stagger-item:nth-child(8) { animation-delay: 0.4s; }
