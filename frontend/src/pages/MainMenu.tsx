@@ -80,7 +80,7 @@ export const MainMenu: React.FC = () => {
     // Generate invite link for sharing
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://yourapp.com/join/${inviteCode}`)}`;
-    
+
     telegramService.openLink(inviteLink);
   };
 
@@ -109,10 +109,10 @@ export const MainMenu: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
-      <div className="max-w-md mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      <div className="max-w-md mx-auto px-4 py-6" >
         {/* Compact Header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
           <div className="inline-flex items-center gap-3 mb-3">
             <div className="text-5xl">♔</div>
             <div className="text-left">
