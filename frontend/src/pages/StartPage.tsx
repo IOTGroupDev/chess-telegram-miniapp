@@ -53,10 +53,10 @@ export const StartPage: React.FC = () => {
 
   if (isInitializing || isLoading) {
     return (
-      <div className="min-h-screen bg-telegram-bg flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1e293b' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-telegram-button mx-auto mb-4"></div>
-          <p className="text-telegram-text text-lg">Инициализация...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Инициализация...</p>
         </div>
       </div>
     );
@@ -64,13 +64,13 @@ export const StartPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-telegram-bg flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#1e293b' }}>
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-telegram-text mb-4">
+          <h1 className="text-2xl font-bold text-white mb-4">
             Ошибка инициализации
           </h1>
-          <p className="text-telegram-hint mb-6">
+          <p className="text-slate-400 mb-6">
             {error}
           </p>
           <div className="space-y-3">
@@ -98,23 +98,23 @@ export const StartPage: React.FC = () => {
   if (isAuthorized && user) {
     // User is authorized, redirect to main menu
     return (
-      <div className="min-h-screen bg-telegram-bg flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1e293b' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-telegram-button mx-auto mb-4"></div>
-          <p className="text-telegram-text text-lg">Переход в главное меню...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Переход в главное меню...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-telegram-bg flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#1e293b' }}>
       <div className="text-center max-w-md">
         <div className="text-8xl mb-6">♔</div>
-        <h1 className="text-4xl font-bold text-telegram-text mb-4">
+        <h1 className="text-4xl font-bold text-white mb-4">
           Шахматы
         </h1>
-        <p className="text-telegram-hint text-lg mb-8">
+        <p className="text-slate-400 text-lg mb-8">
           Играйте в шахматы с друзьями или против ИИ
         </p>
         

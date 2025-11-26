@@ -12,7 +12,7 @@ const PuzzleStatsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1e293b' }}>
         <div className="text-white text-xl">Loading statistics...</div>
       </div>
     );
@@ -20,7 +20,7 @@ const PuzzleStatsPage: React.FC = () => {
 
   if (!statistics) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1e293b' }}>
         <div className="text-white text-xl">No statistics available</div>
       </div>
     );
@@ -31,7 +31,7 @@ const PuzzleStatsPage: React.FC = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
+    <div className="min-h-screen text-white p-4" style={{ backgroundColor: '#1e293b' }}>
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <button onClick={() => navigate('/main')} className="text-blue-400 mb-4">

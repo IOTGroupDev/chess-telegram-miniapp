@@ -306,7 +306,7 @@ export const AIGamePage: React.FC = () => {
   }, [stockfish.isThinking]);
 
   // Get Telegram theme colors
-  const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
+  const bgColor = '#1e293b';
   const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
   const secondaryBgColor = window.Telegram?.WebApp?.themeParams?.secondary_bg_color || '#f4f4f5';
 

@@ -38,7 +38,7 @@ const TournamentsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1e293b' }}>
         <div className="text-white text-xl">Загрузка турниров...</div>
       </div>
     );
@@ -46,7 +46,7 @@ const TournamentsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1e293b' }}>
         <div className="text-red-500 text-xl">Ошибка: {error}</div>
       </div>
     );

@@ -132,8 +132,8 @@ export const OnlineGamePage: React.FC = () => {
   };
 
   // Get Telegram theme colors
-  const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
-  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
+  const bgColor = '#1e293b';
+  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#ffffff';
 
   if (isLoading) {
     return (

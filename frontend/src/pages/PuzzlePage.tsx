@@ -291,13 +291,13 @@ const PuzzlePage: React.FC = () => {
   };
 
   // Get Telegram theme colors
-  const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
-  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
+  const bgColor = '#1e293b';
+  const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#ffffff';
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
-        <div className="text-xl" style={{ color: textColor }}>Loading puzzle...</div>
+        <div className="text-xl text-white">Loading puzzle...</div>
       </div>
     );
   }
@@ -324,15 +324,15 @@ const PuzzlePage: React.FC = () => {
     <div
       className="min-h-screen"
       style={{
-        backgroundColor: bgColor,
+        backgroundColor: '#1e293b',
         color: textColor,
-        paddingTop: 'max(env(safe-area-inset-top), 16px)',
+        paddingTop: 'max(env(safe-area-inset-top), 12px)',
         paddingBottom: 'env(safe-area-inset-bottom)'
       }}
     >
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Compact Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-lg shadow-lg">
               {currentPuzzle.rating}
