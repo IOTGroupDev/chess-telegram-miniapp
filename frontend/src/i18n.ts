@@ -10,6 +10,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Import translation files
 import enTranslation from './locales/en/translation.json';
 import ruTranslation from './locales/ru/translation.json';
+import esTranslation from './locales/es/translation.json';
 
 // Custom language detector for Telegram Mini App
 const telegramLanguageDetector = {
@@ -41,9 +42,12 @@ i18n
       ru: {
         translation: ruTranslation,
       },
+      es: {
+        translation: esTranslation,
+      },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'ru'],
+    supportedLngs: ['en', 'ru', 'es'],
     debug: false, // Set to true for debugging
 
     // Language detection order

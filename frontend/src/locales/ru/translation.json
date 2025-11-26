@@ -1,34 +1,34 @@
 {
   "app": {
     "title": "Chess Master",
-    "subtitle": "Освой каждый ход"
+    "subtitle": "Стань мастером каждого хода"
   },
   "menu": {
-    "playOnline": "Играть онлайн",
-    "playAI": "vs AI",
+    "playOnline": "Онлайн игра",
+    "playAI": "Против AI",
     "arena": "АРЕНА",
-    "aiTraining": "AI Тренировка",
-    "puzzles": "Головоломки",
+    "aiTraining": "Обучение с AI",
+    "puzzles": "Задачи",
     "tournaments": "Турниры",
-    "watchLive": "Смотреть матчи",
-    "challenges": "Ежедневные челленджи",
-    "history": "История игр",
-    "shareWithFriends": "Поделиться с друзьями",
+    "watchLive": "Смотреть прямо сейчас",
+    "challenges": "Ежедневные задания",
+    "history": "История партий",
+    "shareWithFriends": "Пригласить друзей",
     "profile": "Профиль"
   },
   "menu_descriptions": {
-    "playOnline": "Сразиться с игроками",
-    "playAI": "Сразиться с Stockfish",
-    "arena": "Сражайся в турнирах • Получай значки",
-    "aiTraining": "Учись с подсказками и анализом",
-    "puzzles": "Решай тактические задачи",
-    "tournaments": "Соревнуйся сейчас",
-    "watchLive": "Смотреть матчи вживую"
+    "playOnline": "Играй с живыми соперниками",
+    "playAI": "Сразись со Stockfish",
+    "arena": "Участвуй в турнирах • Зарабатывай награды",
+    "aiTraining": "Тренируйся с подсказками в реальном времени",
+    "puzzles": "Решай шахматные задачи",
+    "tournaments": "Соревнуйся прямо сейчас",
+    "watchLive": "Наблюдай за игрой других"
   },
   "badges": {
     "hot": "ХИТ",
-    "new": "НОВОЕ",
-    "live": "В ЭФИРЕ"
+    "new": "НОВИНКА",
+    "live": "LIVE"
   },
   "profile": {
     "rating": "Рейтинг",

@@ -1,0 +1,70 @@
+{
+  "app": {
+    "title": "Chess Master",
+    "subtitle": "Domina cada movimiento"
+  },
+  "menu": {
+    "playOnline": "Jugar en línea",
+    "playAI": "vs IA",
+    "arena": "ARENA",
+    "aiTraining": "Entrenamiento IA",
+    "puzzles": "Rompecabezas",
+    "tournaments": "Torneos",
+    "watchLive": "Ver partidas en vivo",
+    "challenges": "Desafíos diarios",
+    "history": "Historial de partidas",
+    "shareWithFriends": "Compartir con amigos",
+    "profile": "Perfil"
+  },
+  "menu_descriptions": {
+    "playOnline": "Desafía a jugadores",
+    "playAI": "Enfrenta a Stockfish",
+    "arena": "Batalla en torneos • Gana insignias",
+    "aiTraining": "Aprende con pistas y análisis en tiempo real",
+    "puzzles": "Resuelve tácticas",
+    "tournaments": "Compite ahora",
+    "watchLive": "Ver partidas en vivo"
+  },
+  "badges": {
+    "hot": "HOT",
+    "new": "NUEVO",
+    "live": "EN VIVO"
+  },
+  "profile": {
+    "rating": "Rating",
+    "level": "Nivel"
+  },
+  "game": {
+    "findingOpponent": "Buscando oponente...",
+    "waitMessage": "Esto puede tomar un momento",
+    "noPlayersOnline": "No hay jugadores en línea",
+    "noPlayersMessage": "No se pudo encontrar un oponente. ¿Quieres jugar con la IA?",
+    "playWithAI": "Jugar con IA",
+    "cancel": "Cancelar",
+    "move": "Movimiento",
+    "check": "Jaque",
+    "checkmate": "Jaque mate",
+    "draw": "Empate",
+    "resign": "Rendirse",
+    "offerDraw": "Ofrecer empate"
+  },
+  "errors": {
+    "authRequired": "Se requiere autorización de Telegram",
+    "createGameFailed": "No se pudo crear la partida en línea. Inténtalo de nuevo más tarde.",
+    "genericError": "Ha ocurrido un error. Inténtalo de nuevo más tarde."
+  },
+  "footer": {
+    "poweredBy": "Desarrollado con Stockfish 15 • Hecho con ♟️"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "close": "Cerrar"
+  }
+}

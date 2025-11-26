@@ -16,6 +16,7 @@ interface LanguageOption {
 const languages: LanguageOption[] = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
 ];
 
 export const LanguageSelector: React.FC = () => {

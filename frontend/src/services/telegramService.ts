@@ -106,6 +106,7 @@ class TelegramService {
     const languageMap: { [key: string]: string } = {
       'ru': 'ru',
       'en': 'en',
+      'es': 'es',
       'uk': 'ru', // Ukrainian -> Russian (fallback)
       'be': 'ru', // Belarusian -> Russian (fallback)
       'kk': 'ru', // Kazakh -> Russian (fallback)
