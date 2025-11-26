@@ -6,6 +6,7 @@
 
 import { useAppStore } from '../store/useAppStore';
 import type { TelegramUser } from '../store/useAppStore';
+import i18n from '../i18n';
 
 // // Extend Window interface for Telegram WebApp
 // declare global {
@@ -62,11 +63,20 @@ class TelegramService {
         this.store.setUser(user);
         this.store.setAuthorized(true);
 
+        // Set language from Telegram
+        if (userData.language_code) {
+          const language = this.mapTelegramLanguage(userData.language_code);
+          i18n.changeLanguage(language);
+          this.store.setLanguage(language);
+          console.log('🌍 Language set from Telegram:', language);
+        }
+
         console.log('✅ Telegram Mini App initialized:', {
           version: this.webApp.version,
           platform: this.webApp.platform,
           colorScheme: this.webApp.colorScheme,
           user: user.first_name,
+          language: userData.language_code,
         });
       } else {
         console.log('⚠️ No user data available from Telegram');
@@ -86,6 +96,23 @@ class TelegramService {
       this.store.setError('Failed to initialize Telegram WebApp');
       this.setupMockEnvironment();
     }
+  }
+
+  /**
+   * Map Telegram language code to supported app languages
+   */
+  private mapTelegramLanguage(telegramLang: string): string {
+    // Map Telegram language codes to app language codes
+    const languageMap: { [key: string]: string } = {
+      'ru': 'ru',
+      'en': 'en',
+      'es': 'es',
+      'uk': 'ru', // Ukrainian -> Russian (fallback)
+      'be': 'ru', // Belarusian -> Russian (fallback)
+      'kk': 'ru', // Kazakh -> Russian (fallback)
+    };
+
+    return languageMap[telegramLang] || 'en'; // Default to English
   }
 
   /**
@@ -299,6 +326,17 @@ class TelegramService {
 
   public requestContact(callback?: (granted: boolean) => void): void {
     this.webApp?.requestContact(callback);
+  }
+
+  // Language
+  public changeLanguage(language: string): void {
+    i18n.changeLanguage(language);
+    this.store.setLanguage(language);
+    console.log('🌍 Language changed to:', language);
+  }
+
+  public getCurrentLanguage(): string {
+    return i18n.language;
   }
 }
 

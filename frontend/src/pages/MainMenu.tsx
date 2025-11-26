@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store/useAppStore';
 import { telegramService } from '../services/telegramService';
 import supabase from '../lib/supabaseClient';
 
 export const MainMenu: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, setCurrentGame } = useAppStore();
   const [isCreatingGame, setIsCreatingGame] = useState(false);
 
@@ -16,7 +18,7 @@ export const MainMenu: React.FC = () => {
 
   const handlePlayOnline = async () => {
     if (!user?.id) {
-      telegramService.showAlert('Необходима авторизация через Telegram');
+      telegramService.showAlert(t('errors.authRequired'));
       return;
     }
 
@@ -55,11 +57,11 @@ export const MainMenu: React.FC = () => {
 
         const webApp = telegramService.getWebApp();
         webApp.showPopup({
-          title: 'Нет игроков онлайн',
-          message: 'Не удалось найти противника. Хотите сыграть с AI?',
+          title: t('game.noPlayersOnline'),
+          message: t('game.noPlayersMessage'),
           buttons: [
-            { id: 'ai', type: 'default', text: 'Играть с AI' },
-            { id: 'cancel', type: 'cancel', text: 'Отмена' }
+            { id: 'ai', type: 'default', text: t('game.playWithAI') },
+            { id: 'cancel', type: 'cancel', text: t('game.cancel') }
           ]
         }, (buttonId: string) => {
           if (buttonId === 'ai') {
@@ -71,7 +73,7 @@ export const MainMenu: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to create online game:', error);
-      telegramService.showAlert('Не удалось создать онлайн-игру. Попробуйте позже.');
+      telegramService.showAlert(t('errors.createGameFailed'));
       setIsCreatingGame(false);
     }
   };
@@ -124,8 +126,8 @@ export const MainMenu: React.FC = () => {
           <div className="inline-flex items-center gap-3 mb-3">
             <div className="text-5xl">♔</div>
             <div className="text-left">
-              <h1 className="text-3xl font-black text-white tracking-tight">Chess Master</h1>
-              <p className="text-sm text-blue-200">Master every move</p>
+              <h1 className="text-3xl font-black text-white tracking-tight">{t('app.title')}</h1>
+              <p className="text-sm text-blue-200">{t('app.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -140,7 +142,7 @@ export const MainMenu: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-white font-bold text-base leading-tight">{user.first_name}</h3>
-                  <p className="text-blue-200 text-xs">Rating: 1500 • Level 5</p>
+                  <p className="text-blue-200 text-xs">{t('profile.rating')}: 1500 • {t('profile.level')} 5</p>
                 </div>
               </div>
               <button
@@ -165,8 +167,8 @@ export const MainMenu: React.FC = () => {
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-2xl"></div>
             <div className="relative">
               <div className="text-4xl mb-2">🎮</div>
-              <h3 className="text-white font-bold text-base mb-1">Play Online</h3>
-              <p className="text-blue-200 text-xs leading-tight">Challenge players</p>
+              <h3 className="text-white font-bold text-base mb-1">{t('menu.playOnline')}</h3>
+              <p className="text-blue-200 text-xs leading-tight">{t('menu_descriptions.playOnline')}</p>
             </div>
           </div>
 
@@ -178,8 +180,8 @@ export const MainMenu: React.FC = () => {
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-2xl"></div>
             <div className="relative">
               <div className="text-4xl mb-2">🤖</div>
-              <h3 className="text-white font-bold text-base mb-1">vs AI</h3>
-              <p className="text-blue-200 text-xs leading-tight">Fight Stockfish</p>
+              <h3 className="text-white font-bold text-base mb-1">{t('menu.playAI')}</h3>
+              <p className="text-blue-200 text-xs leading-tight">{t('menu_descriptions.playAI')}</p>
             </div>
           </div>
 
@@ -193,10 +195,10 @@ export const MainMenu: React.FC = () => {
               <div className="text-5xl">⚔️</div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-white font-black text-xl">ARENA</h3>
-                  <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">HOT</span>
+                  <h3 className="text-white font-black text-xl">{t('menu.arena')}</h3>
+                  <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">{t('badges.hot')}</span>
                 </div>
-                <p className="text-orange-200 text-sm">Battle in tournaments • Earn badges</p>
+                <p className="text-orange-200 text-sm">{t('menu_descriptions.arena')}</p>
               </div>
               <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -214,10 +216,10 @@ export const MainMenu: React.FC = () => {
               <div className="text-5xl">🎓</div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-white font-black text-xl">AI Training</h3>
-                  <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">NEW</span>
+                  <h3 className="text-white font-black text-xl">{t('menu.aiTraining')}</h3>
+                  <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">{t('badges.new')}</span>
                 </div>
-                <p className="text-blue-200 text-sm">Learn with real-time hints & analysis</p>
+                <p className="text-blue-200 text-sm">{t('menu_descriptions.aiTraining')}</p>
               </div>
               <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -233,8 +235,8 @@ export const MainMenu: React.FC = () => {
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-pink-500/20 to-rose-500/20 rounded-full blur-2xl"></div>
             <div className="relative">
               <div className="text-4xl mb-2">🧩</div>
-              <h3 className="text-white font-bold text-base mb-1">Puzzles</h3>
-              <p className="text-blue-200 text-xs leading-tight">Solve tactics</p>
+              <h3 className="text-white font-bold text-base mb-1">{t('menu.puzzles')}</h3>
+              <p className="text-blue-200 text-xs leading-tight">{t('menu_descriptions.puzzles')}</p>
             </div>
           </div>
 
@@ -246,8 +248,8 @@ export const MainMenu: React.FC = () => {
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-500/20 to-amber-500/20 rounded-full blur-2xl"></div>
             <div className="relative">
               <div className="text-4xl mb-2">🏆</div>
-              <h3 className="text-white font-bold text-base mb-1">Tournaments</h3>
-              <p className="text-blue-200 text-xs leading-tight">Compete now</p>
+              <h3 className="text-white font-bold text-base mb-1">{t('menu.tournaments')}</h3>
+              <p className="text-blue-200 text-xs leading-tight">{t('menu_descriptions.tournaments')}</p>
             </div>
           </div>
         </div>
@@ -260,8 +262,8 @@ export const MainMenu: React.FC = () => {
             className="glass rounded-xl p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer flex items-center gap-3"
           >
             <div className="text-2xl">👁️</div>
-            <span className="text-white font-medium text-sm flex-1">Watch Live Matches</span>
-            <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">LIVE</span>
+            <span className="text-white font-medium text-sm flex-1">{t('menu.watchLive')}</span>
+            <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">{t('badges.live')}</span>
             <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -273,8 +275,8 @@ export const MainMenu: React.FC = () => {
             className="glass rounded-xl p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer flex items-center gap-3"
           >
             <div className="text-2xl">🎯</div>
-            <span className="text-white font-medium text-sm flex-1">Daily Challenges</span>
-            <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
+            <span className="text-white font-medium text-sm flex-1">{t('menu.challenges')}</span>
+            <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full">{t('badges.new')}</span>
             <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -286,7 +288,7 @@ export const MainMenu: React.FC = () => {
             className="glass rounded-xl p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer flex items-center gap-3"
           >
             <div className="text-2xl">📚</div>
-            <span className="text-white font-medium text-sm flex-1">Game History</span>
+            <span className="text-white font-medium text-sm flex-1">{t('menu.history')}</span>
             <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -298,7 +300,7 @@ export const MainMenu: React.FC = () => {
             className="glass rounded-xl p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer flex items-center gap-3"
           >
             <div className="text-2xl">🔗</div>
-            <span className="text-white font-medium text-sm flex-1">Share with Friends</span>
+            <span className="text-white font-medium text-sm flex-1">{t('menu.shareWithFriends')}</span>
             <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -307,7 +309,7 @@ export const MainMenu: React.FC = () => {
 
         {/* Footer Branding */}
         <div className="text-center py-4 pb-6">
-          <p className="text-white/40 text-xs">Powered by Stockfish 15 • Made with ♟️</p>
+          <p className="text-white/40 text-xs">{t('footer.poweredBy')}</p>
         </div>
       </div>
 
@@ -316,8 +318,8 @@ export const MainMenu: React.FC = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50">
           <div className="glass rounded-3xl p-8 border border-white/20 text-center max-w-xs">
             <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-lg font-semibold">Finding opponent...</p>
-            <p className="text-white/60 text-sm mt-2">This may take a moment</p>
+            <p className="text-white text-lg font-semibold">{t('game.findingOpponent')}</p>
+            <p className="text-white/60 text-sm mt-2">{t('game.waitMessage')}</p>
           </div>
         </div>
       )}

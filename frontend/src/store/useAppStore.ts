@@ -15,20 +15,22 @@ export interface AppState {
   // Telegram user data
   user: TelegramUser | null;
   isAuthorized: boolean;
-  
+
   // App state
   isLoading: boolean;
   error: string | null;
-  
+  language: string;
+
   // Game state
   currentGameId: string | null;
   gameMode: 'ai' | 'online' | null;
-  
+
   // Actions
   setUser: (user: TelegramUser | null) => void;
   setAuthorized: (authorized: boolean) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setLanguage: (language: string) => void;
   setCurrentGame: (gameId: string | null, mode: 'ai' | 'online' | null) => void;
   clearError: () => void;
   reset: () => void;
@@ -42,6 +44,7 @@ export const useAppStore = create<AppState>()(
       isAuthorized: false,
       isLoading: false,
       error: null,
+      language: 'en',
       currentGameId: null,
       gameMode: null,
 
@@ -50,6 +53,7 @@ export const useAppStore = create<AppState>()(
       setAuthorized: (authorized) => set({ isAuthorized: authorized }),
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
+      setLanguage: (language) => set({ language }),
       setCurrentGame: (gameId, mode) => set({ currentGameId: gameId, gameMode: mode }),
       clearError: () => set({ error: null }),
       reset: () => set({
@@ -57,6 +61,7 @@ export const useAppStore = create<AppState>()(
         isAuthorized: false,
         isLoading: false,
         error: null,
+        language: 'en',
         currentGameId: null,
         gameMode: null,
       }),
@@ -66,6 +71,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthorized: state.isAuthorized,
+        language: state.language,
       }),
     }
   )

@@ -1,0 +1,70 @@
+{
+  "app": {
+    "title": "Chess Master",
+    "subtitle": "Стань мастером каждого хода"
+  },
+  "menu": {
+    "playOnline": "Онлайн игра",
+    "playAI": "Против AI",
+    "arena": "АРЕНА",
+    "aiTraining": "Обучение с AI",
+    "puzzles": "Задачи",
+    "tournaments": "Турниры",
+    "watchLive": "Смотреть прямо сейчас",
+    "challenges": "Ежедневные задания",
+    "history": "История партий",
+    "shareWithFriends": "Пригласить друзей",
+    "profile": "Профиль"
+  },
+  "menu_descriptions": {
+    "playOnline": "Играй с живыми соперниками",
+    "playAI": "Сразись со Stockfish",
+    "arena": "Участвуй в турнирах • Зарабатывай награды",
+    "aiTraining": "Тренируйся с подсказками в реальном времени",
+    "puzzles": "Решай шахматные задачи",
+    "tournaments": "Соревнуйся прямо сейчас",
+    "watchLive": "Наблюдай за игрой других"
+  },
+  "badges": {
+    "hot": "ХИТ",
+    "new": "НОВИНКА",
+    "live": "LIVE"
+  },
+  "profile": {
+    "rating": "Рейтинг",
+    "level": "Уровень"
+  },
+  "game": {
+    "findingOpponent": "Поиск противника...",
+    "waitMessage": "Это может занять время",
+    "noPlayersOnline": "Нет игроков онлайн",
+    "noPlayersMessage": "Не удалось найти противника. Хотите сыграть с AI?",
+    "playWithAI": "Играть с AI",
+    "cancel": "Отмена",
+    "move": "Ход",
+    "check": "Шах",
+    "checkmate": "Мат",
+    "draw": "Ничья",
+    "resign": "Сдаться",
+    "offerDraw": "Предложить ничью"
+  },
+  "errors": {
+    "authRequired": "Необходима авторизация через Telegram",
+    "createGameFailed": "Не удалось создать онлайн-игру. Попробуйте позже.",
+    "genericError": "Произошла ошибка. Попробуйте позже."
+  },
+  "footer": {
+    "poweredBy": "Работает на Stockfish 15 • Сделано с ♟️"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "back": "Назад",
+    "next": "Далее",
+    "close": "Закрыть"
+  }
+}
