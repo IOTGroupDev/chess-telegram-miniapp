@@ -192,6 +192,31 @@ export class AuthService {
         userId = newUser.id;
         userData = newUser;
         this.logger.log(`New user ${userId} created successfully`);
+
+        // Ensure wallet was created by trigger
+        // If trigger failed, create wallet manually using database function
+        const { data: wallet, error: walletError } = await this.supabase
+          .from('user_wallets')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        if (walletError || !wallet) {
+          this.logger.warn(`Wallet not found for new user ${userId}, creating via fallback`);
+
+          // Call database function to ensure wallet exists
+          const { data: walletId, error: createWalletError } = await this.supabase
+            .rpc('ensure_user_wallet', { p_user_id: userId });
+
+          if (createWalletError) {
+            this.logger.error(`Failed to create wallet for user ${userId}`, createWalletError);
+            // Don't throw - user is created, wallet can be created later
+          } else {
+            this.logger.log(`Wallet ${walletId} created via fallback for user ${userId}`);
+          }
+        } else {
+          this.logger.log(`Wallet ${wallet.id} created successfully for user ${userId}`);
+        }
       }
 
       // Generate JWT token compatible with Supabase

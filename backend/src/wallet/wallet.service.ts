@@ -54,6 +54,7 @@ export class WalletService {
 
   /**
    * Get user wallet by user ID
+   * Automatically creates wallet if it doesn't exist (fallback for missing trigger)
    */
   async getWallet(userId: string): Promise<UserWallet> {
     this.logger.log(`Getting wallet for user: ${userId}`);
@@ -66,7 +67,31 @@ export class WalletService {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new NotFoundException(`Wallet not found for user ${userId}`);
+        // Wallet not found - try to create it using database function
+        this.logger.warn(`Wallet not found for user ${userId}, attempting to create via fallback`);
+
+        const { data: walletId, error: createError } = await this.supabase
+          .rpc('ensure_user_wallet', { p_user_id: userId });
+
+        if (createError) {
+          this.logger.error(`Failed to create wallet for user ${userId}: ${createError.message}`);
+          throw new NotFoundException(`Wallet not found for user ${userId} and could not be created`);
+        }
+
+        // Fetch the newly created wallet
+        const { data: newWallet, error: fetchError } = await this.supabase
+          .from('user_wallets')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (fetchError || !newWallet) {
+          this.logger.error(`Failed to fetch newly created wallet for user ${userId}`);
+          throw new BadRequestException('Failed to fetch wallet after creation');
+        }
+
+        this.logger.log(`Wallet ${walletId} created via fallback for user ${userId}`);
+        return newWallet;
       }
       this.logger.error(`Error fetching wallet: ${error.message}`);
       throw new BadRequestException('Failed to fetch wallet');
