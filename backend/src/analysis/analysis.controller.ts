@@ -11,26 +11,47 @@ import {
   HttpStatus,
   Get,
   Param,
+  Logger,
 } from '@nestjs/common';
+import { IsString, IsNumber, IsIn } from 'class-validator';
+import { Type } from 'class-transformer';
 import { AnalysisService } from './analysis.service';
 
 // DTOs
 class AnalyzeGameDto {
+  @IsString()
   pgn!: string;
 }
 
 class AnalyzeMoveDto {
+  @IsString()
   playerMove!: string;
+
+  @IsString()
   bestMove!: string;
+
+  @IsString()
   fenBefore!: string;
+
+  @IsString()
   fenAfter!: string;
+
+  @IsNumber()
+  @Type(() => Number)
   evalBefore!: number;
+
+  @IsNumber()
+  @Type(() => Number)
   evalAfter!: number;
+
+  @IsIn(['best', 'good', 'inaccuracy', 'mistake', 'blunder'])
   moveQuality!: 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder';
 }
 
 @Controller('analysis')
 export class AnalysisController {
+  private readonly logger = new Logger(AnalysisController.name);
+
   constructor(private readonly analysisService: AnalysisService) {}
 
   /**
@@ -69,6 +90,9 @@ export class AnalysisController {
   @Post('move')
   @HttpCode(HttpStatus.OK)
   async analyzeMove(@Body() dto: AnalyzeMoveDto) {
+    this.logger.log('[analyzeMove] Request received');
+    this.logger.debug('[analyzeMove] DTO:', JSON.stringify(dto));
+
     const explanation = await this.analysisService.analyzeSingleMove(
       dto.playerMove,
       dto.bestMove,
@@ -78,6 +102,8 @@ export class AnalysisController {
       dto.evalAfter,
       dto.moveQuality,
     );
+
+    this.logger.log('[analyzeMove] Analysis completed');
 
     return {
       success: true,
