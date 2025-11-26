@@ -442,7 +442,22 @@ Keep it concise and helpful for a chess player reviewing their game.`;
     evalAfter: number,
     moveQuality: 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder',
   ): Promise<string> {
+    this.logger.log(`[AI Analysis] Analyzing move: ${playerMove}, quality: ${moveQuality}`);
+    this.logger.log(`[AI Analysis] AI Provider: ${this.aiProvider}, API Key configured: ${!!this.aiApiKey}`);
+
     try {
+      // Check if AI is configured
+      if (!this.aiApiKey) {
+        this.logger.warn('[AI Analysis] AI_API_KEY not configured, using fallback explanation');
+        return this.generateFallbackMoveExplanation(
+          playerMove,
+          bestMove,
+          evalBefore,
+          evalAfter,
+          moveQuality,
+        );
+      }
+
       const prompt = this.buildMoveAnalysisPrompt(
         playerMove,
         bestMove,
@@ -453,10 +468,12 @@ Keep it concise and helpful for a chess player reviewing their game.`;
         moveQuality,
       );
 
+      this.logger.log('[AI Analysis] Calling AI API...');
       const response = await this.callAI(prompt);
+      this.logger.log('[AI Analysis] AI response received successfully');
       return response;
     } catch (error) {
-      this.logger.error('AI move analysis failed', error);
+      this.logger.error('[AI Analysis] AI move analysis failed, using fallback', error);
       return this.generateFallbackMoveExplanation(
         playerMove,
         bestMove,
@@ -534,18 +551,20 @@ Keep it concise and helpful for a chess player reviewing their game.`;
     const bestFrom = bestMove.substring(0, 2).toUpperCase();
     const bestTo = bestMove.substring(2, 4).toUpperCase();
 
+    let explanation = '';
+
     if (moveQuality === 'best') {
-      return `Отличный ход! ${from}→${to} — это именно то, что рекомендует шахматный движок. Вы нашли оптимальное продолжение в этой позиции.`;
+      explanation = `Отличный ход! ${from}→${to} — это именно то, что рекомендует шахматный движок. Вы нашли оптимальное продолжение в этой позиции.`;
+    } else if (evalLoss < 1.0) {
+      explanation = `Ваш ход ${from}→${to} неплох, но ${bestFrom}→${bestTo} было бы чуть точнее. Разница небольшая (${evalLoss.toFixed(2)} пешки), позиция остается играбельной.`;
+    } else if (evalLoss < 3.0) {
+      explanation = `Ход ${from}→${to} ухудшил позицию на ${evalLoss.toFixed(1)} пешек. Лучше было ${bestFrom}→${bestTo}. Старайтесь просчитывать последствия на несколько ходов вперед.`;
+    } else {
+      explanation = `Серьезная ошибка! ${from}→${to} сильно ухудшило позицию (−${evalLoss.toFixed(1)} пешек). Правильным ходом было ${bestFrom}→${bestTo}. Проверяйте, не остаются ли ваши фигуры под боем.`;
     }
 
-    if (evalLoss < 1.0) {
-      return `Ваш ход ${from}→${to} неплох, но ${bestFrom}→${bestTo} было бы чуть точнее. Разница небольшая (${evalLoss.toFixed(2)} пешки), позиция остается играбельной.`;
-    }
-
-    if (evalLoss < 3.0) {
-      return `Ход ${from}→${to} ухудшил позицию на ${evalLoss.toFixed(1)} пешек. Лучше было ${bestFrom}→${bestTo}. Старайтесь просчитывать последствия на несколько ходов вперед.`;
-    }
-
-    return `Серьезная ошибка! ${from}→${to} сильно ухудшило позицию (−${evalLoss.toFixed(1)} пешек). Правильным ходом было ${bestFrom}→${bestTo}. Проверяйте, не остаются ли ваши фигуры под боем.`;
+    // Add note about AI being unavailable
+    const aiNote = '\n\n💡 Примечание: AI-анализ недоступен (не настроен AI_API_KEY). Это автоматическое объяснение на основе оценки позиции.';
+    return explanation + aiNote;
   }
 }
