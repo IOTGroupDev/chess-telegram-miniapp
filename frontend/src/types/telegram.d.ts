@@ -19,7 +19,7 @@ export interface TelegramWebApp {
     user?: TelegramUser;
     auth_date: number;
     hash: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   version: string;
   platform: string;
@@ -111,7 +111,7 @@ export interface TelegramWebApp {
 declare global {
   interface Window {
     Telegram?: {
-      WebApp: TelegramWebApp;
+      WebApp?: TelegramWebApp;
     };
   }
 }

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { StartPage } from './pages/StartPage';
 import { MainMenu } from './pages/MainMenu';
 import { AIGamePage } from './pages/AIGamePage';
@@ -12,8 +12,34 @@ import TournamentDetailsPage from './pages/TournamentDetailsPage';
 import PuzzlePage from './pages/PuzzlePage';
 import PuzzleStatsPage from './pages/PuzzleStatsPage';
 
+import { wakeLockService } from './services/wakeLockService';
+import {useEffect} from 'react';
+
+
 function App() {
   // Theme is initialized in main.tsx via telegramThemeService
+  const location = useLocation();
+  useEffect(() => {
+    const pathsThatNeedWakeLock = [
+      '/main',
+      '/ai-game',
+      '/ai-training',
+      '/online-game',
+    ];
+
+    const shouldKeepAwake = pathsThatNeedWakeLock.some((path) =>
+      location.pathname.startsWith(path),
+    );
+
+    console.log('[WakeLock][App] route:', location.pathname, '→ keepAwake:', shouldKeepAwake);
+
+    if (shouldKeepAwake) {
+      wakeLockService.acquire();
+    } else {
+      wakeLockService.release();
+    }
+
+  }, [location.pathname]);
 
   return (
     <Router>
