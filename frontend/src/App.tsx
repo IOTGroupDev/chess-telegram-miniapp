@@ -42,32 +42,30 @@ function AppRoutes() {
   }, [location.pathname]);
 
   return (
-    <Router>
-      <div className="App" style={{ minHeight: '100vh', width: '100%' }}>
-        <Routes>
-          <Route path="/" element={<StartPage />} />
-          <Route path="/main" element={<MainMenu />} />
-          <Route path="/ai-game" element={<AIGamePage />} />
-          <Route path="/ai-training" element={<AITrainingPage />} />
-          <Route path="/online-game/:gameId" element={<OnlineGamePage />} />
-          <Route path="/join/:inviteCode" element={<OnlineGamePage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/challenges" element={<ChallengesPage />} />
-          <Route path="/tournaments" element={<TournamentsPage />} />
-          <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
-          <Route path="/puzzles" element={<PuzzlePage />} />
-          <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
-        </Routes>
-      </div>
-    </Router>
+    <Routes>
+      <Route path="/" element={<StartPage />} />
+      <Route path="/main" element={<MainMenu />} />
+      <Route path="/ai-game" element={<AIGamePage />} />
+      <Route path="/ai-training" element={<AITrainingPage />} />
+      <Route path="/online-game/:gameId" element={<OnlineGamePage />} />
+      <Route path="/join/:inviteCode" element={<OnlineGamePage />} />
+      <Route path="/history" element={<HistoryPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/challenges" element={<ChallengesPage />} />
+      <Route path="/tournaments" element={<TournamentsPage />} />
+      <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
+      <Route path="/puzzles" element={<PuzzlePage />} />
+      <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
+    </Routes>
   );
 }
 
 export default function App() {
   return (
     <Router>
-      <AppRoutes/>
+      <div className="App" style={{ minHeight: '100vh', width: '100%' }}>
+        <AppRoutes />
+      </div>
     </Router>
-  )
+)
 }
