@@ -17,7 +17,7 @@ function App() {
 
   return (
     <Router>
-      <div className="App">
+      <div className="App" style={{ minHeight: '100vh', width: '100%' }}>
         <Routes>
           <Route path="/" element={<StartPage />} />
           <Route path="/main" element={<MainMenu />} />

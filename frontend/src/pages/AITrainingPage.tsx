@@ -222,6 +222,26 @@ export const AITrainingPage: React.FC = () => {
     initializeGame();
   }, [initializeGame]);
 
+  // Auto-clear move quality notification after 3 seconds
+  useEffect(() => {
+    if (moveQuality) {
+      const timer = setTimeout(() => {
+        setMoveQuality(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [moveQuality]);
+
+  // Auto-clear hint after 5 seconds
+  useEffect(() => {
+    if (showHint) {
+      const timer = setTimeout(() => {
+        setShowHint(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showHint]);
+
   // Get Telegram theme colors
   const bgColor = window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff';
   const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#000000';
