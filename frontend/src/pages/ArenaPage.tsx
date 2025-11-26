@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { telegramService } from '../services/telegramService';
-import type { Tournament, TournamentMatch, PlayerStats } from '../types/arena';
+import type { Tournament, TournamentMatch } from '../types/arena';
 
 const ArenaPage: React.FC = () => {
   const navigate = useNavigate();

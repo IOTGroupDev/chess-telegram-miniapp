@@ -42,7 +42,7 @@ const PublicMatchesPage: React.FC = () => {
     },
   ]);
 
-  const [selectedMatch, setSelectedMatch] = useState<PublicMatch | null>(null);
+  const [, setSelectedMatch] = useState<PublicMatch | null>(null);
 
   const handleSpectate = (match: PublicMatch) => {
     setSelectedMatch(match);
