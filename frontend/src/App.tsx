@@ -14,6 +14,8 @@ import PuzzleStatsPage from './pages/PuzzleStatsPage';
 
 import { wakeLockService } from './services/wakeLockService';
 import {useEffect} from 'react';
+import ArenaPage from './pages/ArenaPage.tsx';
+import PublicMatchesPage from './pages/PublicMatchesPage.tsx';
 
 
 function AppRoutes() {
@@ -56,6 +58,8 @@ function AppRoutes() {
       <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
       <Route path="/puzzles" element={<PuzzlePage />} />
       <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
+      <Route path="/arena" element={<ArenaPage />} />
+      <Route path="/public-matches" element={<PublicMatchesPage />} />
     </Routes>
   );
 }
