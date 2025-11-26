@@ -101,6 +101,15 @@ const { bet, createBet, acceptBet, depositBet } = useGameBet(gameId, userId);
 - Внесение депозита
 - Real-time обновления статуса
 
+**`frontend/src/hooks/useTelegramPayment.ts`**
+```typescript
+const { packages, createInvoice, sendInvoice, processSuccessfulPayment } = useTelegramPayment(token);
+```
+- Покупка Telegram Stars
+- Создание и отправка инвойсов
+- Обработка успешных платежей
+- Получение доступных пакетов с бонусами
+
 #### Компоненты UI
 
 **`GameModePopup.tsx`**
@@ -128,6 +137,13 @@ const { bet, createBet, acceptBet, depositBet } = useGameBet(gameId, userId);
 - Кнопка внесения депозита
 - Real-time обновление когда оба внесли
 - Автозапуск игры
+
+**`PurchaseStarsPopup.tsx`**
+- Покупка Telegram Stars пакетами
+- Отображение текущего баланса
+- Пакеты с бонусами
+- Кастомная сумма покупки
+- Интеграция с Telegram Payment API
 
 ---
 
@@ -256,30 +272,39 @@ const { bet, createBet, acceptBet, depositBet } = useGameBet(gameId, userId);
 - Бизнес-логика для обработки ставок
 - Валидация
 
-#### 3. TelegramPaymentService
+#### 3. PaymentModule ✅
 ```typescript
-// backend/src/telegram/telegram-payment.service.ts
+// backend/src/payment/payment.module.ts
+// backend/src/payment/payment.service.ts
+// backend/src/payment/payment.controller.ts
 ```
-Нужно создать:
-- Интеграция с Telegram Stars API
-- `createInvoice()` - создание инвойса
-- `handlePreCheckoutQuery()` - валидация перед оплатой
-- `handleSuccessfulPayment()` - обработка успешной оплаты
-- Webhook endpoints
+Реализовано:
+- ✅ Интеграция с Telegram Stars API
+- ✅ `createStarsInvoice()` - создание инвойса для покупки Stars
+- ✅ `validatePreCheckout()` - валидация перед оплатой
+- ✅ `processSuccessfulPayment()` - обработка успешной оплаты
+- ✅ `getStarsPackages()` - пакеты Stars с бонусами
+- ✅ REST API endpoints
 
-Пример:
+Пакеты Stars с бонусами:
+- 10 Stars - Starter Pack
+- 50 Stars + 5 bonus - Popular Pack
+- 100 Stars + 15 bonus - Premium Pack
+- 250 Stars + 50 bonus - Elite Pack
+- 500 Stars + 125 bonus - Champion Pack
+- 1000 Stars + 300 bonus - Master Pack
+
+Frontend:
+- ✅ `useTelegramPayment` hook
+- ✅ `PurchaseStarsPopup` component
+- ✅ Локализация (EN/RU)
+
+API:
 ```typescript
-async createStarsInvoice(userId: number, amount: number, gameId: string) {
-  const invoice = await this.bot.telegram.createInvoiceLink({
-    title: `Ставка на игру`,
-    description: `Внесение ${amount} Stars`,
-    payload: JSON.stringify({ gameId, userId }),
-    provider_token: '', // Empty for Stars
-    currency: 'XTR',
-    prices: [{ label: 'Ставка', amount }],
-  });
-  return invoice;
-}
+POST /api/payment/create-invoice    // Create invoice
+POST /api/payment/pre-checkout       // Validate pre-checkout
+POST /api/payment/successful-payment // Process payment
+GET  /api/payment/packages           // Get Stars packages
 ```
 
 ### Frontend Integration
@@ -394,21 +419,28 @@ wallet_transactions (новая)
 ## 📝 API Endpoints (TODO)
 
 ```typescript
-// Wallet endpoints
+// Wallet endpoints ✅
 GET    /api/wallet                    // Get user wallet
 GET    /api/wallet/transactions       // Get transaction history
-POST   /api/wallet/deposit-stars      // Deposit via Telegram Stars
+GET    /api/wallet/balance/:currency  // Get balance for currency
+POST   /api/wallet/coins/add          // Add coins (admin/rewards)
+POST   /api/wallet/coins/withdraw     // Withdraw coins
+GET    /api/wallet/statistics         // Get wallet statistics
 
-// Game Bets endpoints
+// Game Bets endpoints ✅
 GET    /api/game-bets/:gameId         // Get bet for game
 POST   /api/game-bets                 // Create bet
-PUT    /api/game-bets/:id/accept      // Accept bet terms
-PUT    /api/game-bets/:id/deposit     // Deposit (calls DB function)
-DELETE /api/game-bets/:id             // Cancel bet
+POST   /api/game-bets/:gameId/accept  // Accept bet terms
+POST   /api/game-bets/:gameId/deposit // Deposit (calls DB function)
+DELETE /api/game-bets/:gameId         // Cancel bet
+POST   /api/game-bets/calculate-payout // Calculate potential payout
+GET    /api/game-bets/stats/overview  // Get betting statistics
 
-// Telegram Payments
-POST   /api/payments/stars/invoice    // Create invoice
-POST   /api/payments/stars/webhook    // Telegram webhook
+// Telegram Payments ✅
+POST   /api/payment/create-invoice    // Create Stars invoice
+POST   /api/payment/pre-checkout      // Validate pre-checkout query
+POST   /api/payment/successful-payment // Process successful payment
+GET    /api/payment/packages          // Get Stars packages with bonuses
 ```
 
 ---
@@ -444,24 +476,57 @@ POST   /api/payments/stars/webhook    // Telegram webhook
 - React hooks (useWallet, useGameBet)
 - UI компоненты (4 popup'а)
 
-### Backend ⏳
-- Модули нужно создать
-- Telegram Stars интеграция
+### Backend ✅
+- WalletModule и GameBetsModule созданы
+- PaymentModule для Telegram Stars интеграции
+- REST API endpoints
 
-### Integration ⏳
-- MainMenu обновить
-- OnlineGamePage обновить
+### Integration ✅
+- MainMenu интегрирован с betting flow
+- OnlineGamePage обрабатывает все popup'ы
+- Локализация (EN/RU) добавлена
 
 ---
 
 ## 🚀 Следующие шаги
 
-1. Создать backend модули (Wallet, GameBets, TelegramPayment)
-2. Интегрировать компоненты в MainMenu и OnlineGamePage
-3. Добавить локализацию
-4. Протестировать все сценарии
-5. Деплой миграций на production Supabase
-6. Настроить Telegram bot для платежей
+1. ✅ ~~Создать backend модули (Wallet, GameBets, Payment)~~
+2. ✅ ~~Интегрировать компоненты в MainMenu и OnlineGamePage~~
+3. ✅ ~~Добавить локализацию~~
+4. ⏳ Протестировать все сценарии
+5. ⏳ Деплой миграций на production Supabase
+6. ⏳ Настроить Telegram bot для платежей (для работы Stars нужен Bot Token)
+7. ⏳ E2E тестирование betting flow
+
+## 📦 Компоненты готовы к использованию
+
+### Backend Modules:
+- ✅ `WalletModule` - управление кошельками
+- ✅ `GameBetsModule` - система ставок
+- ✅ `PaymentModule` - Telegram Stars покупки
+
+### Frontend Components:
+- ✅ `GameModePopup` - выбор режима игры
+- ✅ `BetAmountPopup` - ввод суммы ставки
+- ✅ `BetConfirmationPopup` - подтверждение условий
+- ✅ `DepositWaitingPopup` - ожидание депозитов
+- ✅ `PurchaseStarsPopup` - покупка Telegram Stars
+
+### Hooks:
+- ✅ `useWallet` - управление кошельком
+- ✅ `useGameBet` - управление ставками
+- ✅ `useTelegramPayment` - покупка Stars
+
+### Localization:
+- ✅ English (EN)
+- ✅ Russian (RU)
+
+## 🎉 Система полностью готова!
+
+Все основные компоненты реализованы. Для запуска в production необходимо:
+1. Применить миграции к production базе данных
+2. Настроить Telegram Bot с поддержкой платежей
+3. Провести полное тестирование всех сценариев
 
 ---
 
