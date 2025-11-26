@@ -183,12 +183,22 @@ const LeaderboardPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                   {/* Rank */}
                   <div className="w-12 text-center">
-                    <div className="text-xl font-black text-slate-400">#{rank}</div>
+                    <div
+                      className={`
+                        inline-flex items-center justify-center
+                        w-10 h-10 rounded-full
+                        bg-gradient-to-br ${getRankColor(rank)}
+                        text-lg font-black
+                      `}
+                    >
+                      {getRankIcon(rank)}
+                    </div>
                   </div>
 
                   {/* Avatar & Name */}
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-lg">
+                    <div
+                      className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-lg">
                       {player.username[0]}
                     </div>
                     <div className="flex-1 min-w-0">

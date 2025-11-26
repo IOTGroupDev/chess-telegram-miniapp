@@ -20,7 +20,7 @@ export interface PlayerStats {
   winStreak: number;
   bestWinStreak: number;
   totalSpectators: number;
-  badges: Badge[];
+  badges: string[];
   tipsReceived: number;
 }
 
