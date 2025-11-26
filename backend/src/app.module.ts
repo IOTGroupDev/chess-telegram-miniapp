@@ -20,6 +20,7 @@ import { TournamentModule } from './tournament/tournament.module';
 import { PuzzleModule } from './puzzle/puzzle.module';
 import { WalletModule } from './wallet/wallet.module';
 import { GameBetsModule } from './game-bets/game-bets.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -52,6 +53,9 @@ import { GameBetsModule } from './game-bets/game-bets.module';
 
     // Game betting system
     GameBetsModule,
+
+    // Telegram Stars payment integration
+    PaymentModule,
   ],
 })
 export class AppModule {}

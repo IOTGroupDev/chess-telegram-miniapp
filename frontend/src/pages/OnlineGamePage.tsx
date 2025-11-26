@@ -6,6 +6,10 @@ import { useSupabaseGame } from '../hooks/useSupabaseGame';
 import { useAppStore } from '../store/useAppStore';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { telegramService } from '../services/telegramService';
+import { useWallet } from '../hooks/useWallet';
+import { useGameBet } from '../hooks/useGameBet';
+import { BetConfirmationPopup } from '../components/BetConfirmationPopup';
+import { DepositWaitingPopup } from '../components/DepositWaitingPopup';
 import type { GameState } from '../types';
 
 export const OnlineGamePage: React.FC = () => {
@@ -33,6 +37,10 @@ export const OnlineGamePage: React.FC = () => {
     offerDraw: offerDrawGame,
   } = useSupabaseGame(gameId || '', String(user?.id || ''));
 
+  // Betting hooks
+  const { wallet } = useWallet(user?.id || null);
+  const { bet, acceptBet, depositBet } = useGameBet(gameId || null, user?.id || null);
+
   // Derived state
   const isWaiting = game?.status === 'waiting';
   const gameStatus = game?.status || 'waiting';
@@ -41,6 +49,62 @@ export const OnlineGamePage: React.FC = () => {
     game?.status === 'active' &&
     ((game.move_number % 2 === 0 && game.white_player_id === String(user?.id)) ||
      (game.move_number % 2 === 1 && game.black_player_id === String(user?.id)));
+
+  // Betting state
+  const amIWhite = game?.white_player_id === String(user?.id);
+  const isWhitePlayer = amIWhite;
+  const showBetConfirmation =
+    game?.status === 'pending_bet_acceptance' && !isWhitePlayer && bet;
+  const showDepositWaiting = game?.status === 'pending_deposits' && bet;
+
+  // Bet handlers
+  const handleAcceptBet = async () => {
+    try {
+      await acceptBet();
+      telegramService.notificationOccurred('success');
+    } catch (error) {
+      console.error('Failed to accept bet:', error);
+      telegramService.notificationOccurred('error');
+      telegramService.showAlert('Failed to accept bet terms');
+    }
+  };
+
+  const handleDeclineBet = async () => {
+    const confirmed = await telegramService.showConfirm(
+      'Are you sure you want to decline this bet?'
+    );
+    if (confirmed) {
+      navigate('/main');
+    }
+  };
+
+  const handleDepositBet = async () => {
+    try {
+      const result = await depositBet();
+      if (result.success) {
+        telegramService.notificationOccurred('success');
+        if (result.bothDeposited) {
+          telegramService.showAlert('Game starting!');
+        }
+      } else {
+        telegramService.notificationOccurred('error');
+        telegramService.showAlert(result.error || 'Failed to deposit bet');
+      }
+    } catch (error) {
+      console.error('Failed to deposit bet:', error);
+      telegramService.notificationOccurred('error');
+      telegramService.showAlert('Failed to deposit bet');
+    }
+  };
+
+  const handleCancelBet = async () => {
+    const confirmed = await telegramService.showConfirm(
+      'Are you sure you want to cancel the bet?'
+    );
+    if (confirmed) {
+      navigate('/main');
+    }
+  };
 
   // Create gameState for ChessBoard
   const gameStateForBoard = useMemo((): GameState => ({
@@ -335,6 +399,27 @@ export const OnlineGamePage: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Betting Flow Popups */}
+        {showBetConfirmation && bet && (
+          <BetConfirmationPopup
+            show={true}
+            bet={bet}
+            onAccept={handleAcceptBet}
+            onDecline={handleDeclineBet}
+            isProposer={false}
+          />
+        )}
+
+        {showDepositWaiting && bet && (
+          <DepositWaitingPopup
+            show={true}
+            bet={bet}
+            isWhitePlayer={isWhitePlayer}
+            onDeposit={handleDepositBet}
+            onCancel={handleCancelBet}
+          />
         )}
       </div>
     </div>
