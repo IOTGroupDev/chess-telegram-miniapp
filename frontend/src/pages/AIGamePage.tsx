@@ -196,6 +196,10 @@ export const AIGamePage: React.FC = () => {
     const success = chess.makeMove(sourceSquare as Square, targetSquare as Square);
 
     if (success) {
+      // Clear selection after successful move
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+
       // Play appropriate sound
       playSound(isCapture ? 'capture' : 'move');
       telegramService.notificationOccurred('success');
