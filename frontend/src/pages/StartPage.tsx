@@ -2,10 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
+import { AuthService } from '../services/authService';
 
 export const StartPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthorized, isLoading, error, setLoading, setError, clearError } = useAppStore();
+  const {
+    user,
+    isAuthorized,
+    isLoading,
+    error,
+    setUser,
+    setAuthorized,
+    setAccessToken,
+    setSupabaseUserId,
+    setLoading,
+    setError,
+    clearError,
+  } = useAppStore();
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
@@ -13,17 +26,50 @@ export const StartPage: React.FC = () => {
       try {
         setLoading(true);
         clearError();
-        
-        // Wait a bit for Telegram WebApp to initialize
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
+        // Check if user is already authorized with stored token
         if (isAuthorized && user) {
-          // User is already authorized, go to main menu
           navigate('/main');
+          return;
+        }
+
+        // Try Telegram authentication
+        const tg = window.Telegram?.WebApp;
+
+        if (tg?.initData && tg.initDataUnsafe?.user) {
+          console.log('[Auth] Telegram initData found, authenticating...');
+
+          try {
+            const result = await AuthService.authenticateWithTelegram(tg.initData);
+
+            // Map backend user to Telegram user format
+            const telegramUser = {
+              id: result.user.telegram_id,
+              first_name: result.user.first_name || 'User',
+              last_name: result.user.last_name || undefined,
+              username: result.user.username || undefined,
+              photo_url: result.user.avatar_url || undefined,
+            };
+
+            setUser(telegramUser);
+            setAuthorized(true);
+            setAccessToken(result.accessToken);
+            setSupabaseUserId(result.user.id);
+
+            console.log('[Auth] Authentication successful', result.user.id);
+
+            // Navigate to main menu
+            navigate('/main');
+          } catch (authError) {
+            console.error('[Auth] Telegram authentication failed:', authError);
+            setError('Ошибка авторизации через Telegram');
+          }
+        } else {
+          console.log('[Auth] No Telegram initData, guest mode available');
         }
       } catch (err) {
-        console.error('Failed to initialize app:', err);
-        setError('Failed to initialize app');
+        console.error('[Auth] Failed to initialize app:', err);
+        setError('Не удалось инициализировать приложение');
       } finally {
         setLoading(false);
         setIsInitializing(false);
@@ -31,7 +77,7 @@ export const StartPage: React.FC = () => {
     };
 
     initializeApp();
-  }, [isAuthorized, user, navigate, setLoading, setError, clearError]);
+  }, []); // Empty deps to run only once on mount
 
   const handlePlayAsGuest = () => {
     // Create a guest user
@@ -41,9 +87,9 @@ export const StartPage: React.FC = () => {
       username: 'guest',
       language_code: 'en',
     };
-    
-    useAppStore.getState().setUser(guestUser);
-    useAppStore.getState().setAuthorized(true);
+
+    setUser(guestUser);
+    setAuthorized(true);
     navigate('/main');
   };
 
@@ -117,7 +163,7 @@ export const StartPage: React.FC = () => {
         <p className="text-slate-400 text-lg mb-8">
           Играйте в шахматы с друзьями или против ИИ
         </p>
-        
+
         <div className="space-y-4">
           <Button
             onClick={handlePlayAsGuest}
@@ -126,7 +172,7 @@ export const StartPage: React.FC = () => {
           >
             🎮 Начать игру
           </Button>
-          
+
           <div className="text-sm text-telegram-hint">
             Для полного функционала откройте приложение через Telegram
           </div>

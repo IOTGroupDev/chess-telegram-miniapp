@@ -15,18 +15,24 @@ export interface AppState {
   // Telegram user data
   user: TelegramUser | null;
   isAuthorized: boolean;
-  
+
+  // Auth
+  accessToken: string | null;
+  supabaseUserId: string | null;
+
   // App state
   isLoading: boolean;
   error: string | null;
-  
+
   // Game state
   currentGameId: string | null;
   gameMode: 'ai' | 'online' | null;
-  
+
   // Actions
   setUser: (user: TelegramUser | null) => void;
   setAuthorized: (authorized: boolean) => void;
+  setAccessToken: (token: string | null) => void;
+  setSupabaseUserId: (userId: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setCurrentGame: (gameId: string | null, mode: 'ai' | 'online' | null) => void;
@@ -40,6 +46,8 @@ export const useAppStore = create<AppState>()(
       // Initial state
       user: null,
       isAuthorized: false,
+      accessToken: null,
+      supabaseUserId: null,
       isLoading: false,
       error: null,
       currentGameId: null,
@@ -48,6 +56,8 @@ export const useAppStore = create<AppState>()(
       // Actions
       setUser: (user) => set({ user, isAuthorized: !!user }),
       setAuthorized: (authorized) => set({ isAuthorized: authorized }),
+      setAccessToken: (token) => set({ accessToken: token }),
+      setSupabaseUserId: (userId) => set({ supabaseUserId: userId }),
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
       setCurrentGame: (gameId, mode) => set({ currentGameId: gameId, gameMode: mode }),
@@ -55,6 +65,8 @@ export const useAppStore = create<AppState>()(
       reset: () => set({
         user: null,
         isAuthorized: false,
+        accessToken: null,
+        supabaseUserId: null,
         isLoading: false,
         error: null,
         currentGameId: null,
@@ -66,6 +78,8 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthorized: state.isAuthorized,
+        accessToken: state.accessToken,
+        supabaseUserId: state.supabaseUserId,
       }),
     }
   )
