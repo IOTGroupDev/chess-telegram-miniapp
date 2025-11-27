@@ -149,12 +149,12 @@ export const MainMenu: React.FC = () => {
         const { data: game } = await supabase
           .from('games')
           .select('invite_code')
-          .eq('id', pendingGameId)
+          .eq('id', pendingGameId || '')
           .single();
 
-        if (game?.invite_code) {
+        if ((game as any)?.invite_code) {
           const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(
-            `${window.location.origin}/join/${game.invite_code}`
+            `${window.location.origin}/join/${(game as any).invite_code}`
           )}`;
           telegramService.openLink(inviteLink);
         }

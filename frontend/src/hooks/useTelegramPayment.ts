@@ -4,7 +4,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -46,11 +45,12 @@ export function useTelegramPayment(token: string | null): UseTelegramPaymentRetu
       setLoading(true);
       setError(null);
 
-      const response = await axios.get(`${API_URL}/payment/packages`);
-      setPackages(response.data.packages || []);
+      const response = await fetch(`${API_URL}/payment/packages`);
+      const data = await response.json();
+      setPackages(data.packages || []);
     } catch (err: any) {
       console.error('Failed to fetch packages:', err);
-      setError(err.response?.data?.message || 'Failed to fetch packages');
+      setError(err.message || 'Failed to fetch packages');
     } finally {
       setLoading(false);
     }
@@ -70,20 +70,20 @@ export function useTelegramPayment(token: string | null): UseTelegramPaymentRetu
         setLoading(true);
         setError(null);
 
-        const response = await axios.post(
-          `${API_URL}/payment/create-invoice`,
-          { amount, description },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const response = await fetch(`${API_URL}/payment/create-invoice`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
-        );
+          body: JSON.stringify({ amount, description }),
+        });
 
-        return response.data.invoice;
+        const data = await response.json();
+        return data.invoice;
       } catch (err: any) {
         console.error('Failed to create invoice:', err);
-        setError(err.response?.data?.message || 'Failed to create invoice');
+        setError(err.message || 'Failed to create invoice');
         return null;
       } finally {
         setLoading(false);
@@ -145,20 +145,19 @@ export function useTelegramPayment(token: string | null): UseTelegramPaymentRetu
         setLoading(true);
         setError(null);
 
-        await axios.post(
-          `${API_URL}/payment/successful-payment`,
-          payment,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        await fetch(`${API_URL}/payment/successful-payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
-        );
+          body: JSON.stringify(payment),
+        });
 
         return true;
       } catch (err: any) {
         console.error('Failed to process payment:', err);
-        setError(err.response?.data?.message || 'Failed to process payment');
+        setError(err.message || 'Failed to process payment');
         return false;
       } finally {
         setLoading(false);
