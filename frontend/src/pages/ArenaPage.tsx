@@ -7,6 +7,7 @@ import type { Tournament, TournamentMatch } from '../types/arena';
 
 const ArenaPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   useTelegramBackButton(() => navigate('/main'));
 
   // Mock tournament data (в стиле Mortal Kombat ladder)
@@ -49,7 +50,7 @@ const ArenaPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'bracket' | 'matches' | 'leaderboard'>('bracket');
 
   const handleJoinArena = () => {
-    telegramService.showAlert('Arena matches coming soon! 🎮');
+    telegramService.showAlert(t('arena.comingSoon'));
   };
 
   const handleSpectate = (matchId: string) => {
@@ -96,7 +97,7 @@ const ArenaPage: React.FC = () => {
 
           {/* VS Divider */}
           <div className="text-center py-1">
-            <span className="text-red-500 font-black text-sm">VS</span>
+            <span className="text-red-500 font-black text-sm">{t('arena.vs')}</span>
           </div>
 
           {/* Player 2 */}
@@ -119,7 +120,7 @@ const ArenaPage: React.FC = () => {
             </div>
           ) : (
             <div className="p-2 rounded-lg bg-slate-700/30 border border-dashed border-slate-600">
-              <div className="text-sm text-slate-500 text-center">Awaiting Winner</div>
+              <div className="text-sm text-slate-500 text-center">{t('arena.status.awaitingWinner')}</div>
             </div>
           )}
 
@@ -129,7 +130,7 @@ const ArenaPage: React.FC = () => {
               onClick={() => handleSpectate(match.id)}
               className="mt-2 w-full bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold py-2 rounded-lg text-xs hover:from-red-500 hover:to-orange-500 transition-all active:scale-95"
             >
-              🔴 WATCH LIVE
+              🔴 {t('arena.watchLive').toUpperCase()}
             </button>
           )}
         </div>
@@ -155,7 +156,7 @@ const ArenaPage: React.FC = () => {
               ⚔️ ARENA ⚔️
             </h1>
             <p className="text-sm text-red-400 uppercase tracking-widest font-bold">
-              Mortal Chess Championship
+              {t('arena.subtitle')}
             </p>
           </div>
         </div>
@@ -175,7 +176,7 @@ const ArenaPage: React.FC = () => {
               onClick={handleJoinArena}
               className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-black px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg"
             >
-              JOIN ARENA
+              {t('arena.joinArena').toUpperCase()}
               <div className="text-xs opacity-80">{tournament.entryFee} ⭐</div>
             </button>
           </div>
@@ -193,9 +194,9 @@ const ArenaPage: React.FC = () => {
                   : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
               }`}
             >
-              {tab === 'bracket' && '🏆 Bracket'}
-              {tab === 'matches' && '⚔️ Matches'}
-              {tab === 'leaderboard' && '📊 Ranks'}
+              {tab === 'bracket' && `🏆 ${t('arena.bracket')}`}
+              {tab === 'matches' && `⚔️ ${t('arena.matches')}`}
+              {tab === 'leaderboard' && `📊 ${t('arena.leaderboard')}`}
             </button>
           ))}
         </div>
@@ -205,36 +206,36 @@ const ArenaPage: React.FC = () => {
           <div className="space-y-4">
             <div className="text-center mb-4">
               <div className="inline-block bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-black px-6 py-2 rounded-full text-sm uppercase">
-                Ladder Tournament - Climb to Victory!
+                {t('arena.description')}
               </div>
             </div>
 
             {/* Quarter Finals */}
             <div>
-              <h3 className="text-lg font-black text-red-400 mb-3 uppercase tracking-wider">⚔️ Quarter Finals</h3>
+              <h3 className="text-lg font-black text-red-400 mb-3 uppercase tracking-wider">⚔️ {t('arena.rounds.quarterFinals')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {tournament.matches.filter(m => m.round === 1).map((match) => (
-                  <MatchCard key={match.id} match={match} roundName="Quarter Final" />
+                  <MatchCard key={match.id} match={match} roundName={t('arena.rounds.quarterFinals')} />
                 ))}
               </div>
             </div>
 
             {/* Semi Finals */}
             <div>
-              <h3 className="text-lg font-black text-orange-400 mb-3 uppercase tracking-wider">🔥 Semi Finals</h3>
+              <h3 className="text-lg font-black text-orange-400 mb-3 uppercase tracking-wider">🔥 {t('arena.rounds.semiFinals')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {tournament.matches.filter(m => m.round === 2).map((match) => (
-                  <MatchCard key={match.id} match={match} roundName="Semi Final" />
+                  <MatchCard key={match.id} match={match} roundName={t('arena.rounds.semiFinals')} />
                 ))}
               </div>
             </div>
 
             {/* Finals */}
             <div>
-              <h3 className="text-lg font-black text-yellow-400 mb-3 uppercase tracking-wider">👑 Grand Final</h3>
+              <h3 className="text-lg font-black text-yellow-400 mb-3 uppercase tracking-wider">👑 {t('arena.rounds.grandFinal')}</h3>
               <div className="max-w-md mx-auto">
                 {tournament.matches.filter(m => m.round === 3).map((match) => (
-                  <MatchCard key={match.id} match={match} roundName="Championship Match" />
+                  <MatchCard key={match.id} match={match} roundName={t('arena.rounds.championshipMatch')} />
                 ))}
               </div>
             </div>
@@ -249,20 +250,20 @@ const ArenaPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                    <span className="text-red-400 font-bold text-sm">LIVE NOW</span>
+                    <span className="text-red-400 font-bold text-sm">{t('arena.status.liveNow').toUpperCase()}</span>
                   </div>
-                  <span className="text-xs text-slate-400">Round {match.round}</span>
+                  <span className="text-xs text-slate-400">{t('arena.rounds.round')} {match.round}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <div className="text-white font-bold">{match.player1?.username}</div>
-                  <span className="text-red-500 font-black">VS</span>
+                  <span className="text-red-500 font-black">{t('arena.vs')}</span>
                   <div className="text-white font-bold">{match.player2?.username}</div>
                 </div>
                 <button
                   onClick={() => handleSpectate(match.id)}
                   className="mt-3 w-full bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold py-2 rounded-lg hover:from-red-500 hover:to-orange-500 transition-all active:scale-95"
                 >
-                  👁️ SPECTATE BATTLE
+                  👁️ {t('arena.spectateBattle').toUpperCase()}
                 </button>
               </div>
             ))}
