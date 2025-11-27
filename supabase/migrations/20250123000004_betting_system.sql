@@ -8,41 +8,63 @@
 -- =====================================================
 
 -- Bet type enum
-DO $$ BEGIN
-  CREATE TYPE bet_type AS ENUM ('free', 'coins', 'stars');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'bet_type') THEN
+        CREATE TYPE bet_type AS ENUM ('free', 'coins', 'stars');
+    END IF;
 END $$;
 
 -- Bet status enum
-DO $$ BEGIN
-  CREATE TYPE bet_status AS ENUM ('pending', 'locked', 'completed', 'cancelled', 'refunded');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'bet_status') THEN
+        CREATE TYPE bet_status AS ENUM ('pending', 'locked', 'completed', 'cancelled', 'refunded');
+    END IF;
 END $$;
 
 -- Transaction type enum
-DO $$ BEGIN
-  CREATE TYPE transaction_type AS ENUM (
-    'deposit_bet',
-    'refund_bet',
-    'win_payout',
-    'deposit_stars',
-    'withdraw_coins',
-    'platform_fee',
-    'draw_refund'
-  );
-EXCEPTION
-  WHEN duplicate_object THEN null;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN
+        CREATE TYPE transaction_type AS ENUM (
+            'deposit_bet',
+            'refund_bet',
+            'win_payout',
+            'deposit_stars',
+            'withdraw_coins',
+            'platform_fee',
+            'draw_refund'
+        );
+    END IF;
 END $$;
 
 -- Add new game statuses for betting flow
-DO $$ BEGIN
-  ALTER TYPE game_status ADD VALUE IF NOT EXISTS 'pending_bet_setup';
-  ALTER TYPE game_status ADD VALUE IF NOT EXISTS 'pending_bet_acceptance';
-  ALTER TYPE game_status ADD VALUE IF NOT EXISTS 'pending_deposits';
-EXCEPTION
-  WHEN duplicate_object THEN null;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'game_status' AND e.enumlabel = 'pending_bet_setup'
+    ) THEN
+        ALTER TYPE game_status ADD VALUE 'pending_bet_setup';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'game_status' AND e.enumlabel = 'pending_bet_acceptance'
+    ) THEN
+        ALTER TYPE game_status ADD VALUE 'pending_bet_acceptance';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'game_status' AND e.enumlabel = 'pending_deposits'
+    ) THEN
+        ALTER TYPE game_status ADD VALUE 'pending_deposits';
+    END IF;
 END $$;
 
 -- =====================================================
