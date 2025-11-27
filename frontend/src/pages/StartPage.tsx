@@ -23,12 +23,15 @@ export const StartPage: React.FC = () => {
 
   useEffect(() => {
     const initializeApp = async () => {
+      console.log('[StartPage] 🚀 Initializing app...');
+
       try {
         setLoading(true);
         clearError();
 
         // Check if user is already authorized with stored token
         if (isAuthorized && user) {
+          console.log('[StartPage] User already authorized, navigating to main');
           navigate('/main');
           return;
         }
@@ -36,11 +39,23 @@ export const StartPage: React.FC = () => {
         // Try Telegram authentication
         const tg = window.Telegram?.WebApp;
 
+        console.log('[StartPage] Telegram WebApp available:', !!tg);
+        console.log('[StartPage] initData present:', !!tg?.initData);
+        console.log('[StartPage] initDataUnsafe.user present:', !!tg?.initDataUnsafe?.user);
+
         if (tg?.initData && tg.initDataUnsafe?.user) {
-          console.log('[Auth] Telegram initData found, authenticating...');
+          console.log('[StartPage] ✅ Telegram initData found!');
+          console.log('[StartPage] User data:', {
+            id: tg.initDataUnsafe.user.id,
+            firstName: tg.initDataUnsafe.user.first_name,
+            username: tg.initDataUnsafe.user.username,
+          });
 
           try {
+            console.log('[StartPage] Calling AuthService.authenticateWithTelegram...');
             const result = await AuthService.authenticateWithTelegram(tg.initData);
+
+            console.log('[StartPage] AuthService returned successfully');
 
             // Map backend user to Telegram user format
             const telegramUser = {
@@ -51,28 +66,32 @@ export const StartPage: React.FC = () => {
               photo_url: result.user.avatar_url || undefined,
             };
 
+            console.log('[StartPage] Setting user in store...');
             setUser(telegramUser);
             setAuthorized(true);
             setAccessToken(result.accessToken);
             setSupabaseUserId(result.user.id);
 
-            console.log('[Auth] Authentication successful', result.user.id);
+            console.log('[StartPage] ✅ Authentication successful!');
+            console.log('[StartPage] Supabase User ID:', result.user.id);
 
             // Navigate to main menu
             navigate('/main');
           } catch (authError) {
-            console.error('[Auth] Telegram authentication failed:', authError);
+            console.error('[StartPage] ❌ Telegram authentication failed:', authError);
             setError('Ошибка авторизации через Telegram');
           }
         } else {
-          console.log('[Auth] No Telegram initData, guest mode available');
+          console.log('[StartPage] ⚠️ No Telegram initData, guest mode available');
+          console.log('[StartPage] This is normal for web browsers');
         }
       } catch (err) {
-        console.error('[Auth] Failed to initialize app:', err);
+        console.error('[StartPage] ❌ Failed to initialize app:', err);
         setError('Не удалось инициализировать приложение');
       } finally {
         setLoading(false);
         setIsInitializing(false);
+        console.log('[StartPage] Initialization complete');
       }
     };
 
