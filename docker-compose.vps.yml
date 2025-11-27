@@ -95,6 +95,9 @@ services:
       # Telegram Bot (for authentication)
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
 
+      # CORS Configuration
+      FRONTEND_URL: ${FRONTEND_URL:-*}
+
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -156,7 +159,8 @@ services:
         # Supabase for database/realtime
         VITE_SUPABASE_URL: ${SUPABASE_URL}
         VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-        # Backend for engine API
+        # Backend for authentication and engine API
+        VITE_BACKEND_URL: ${BACKEND_URL}
         VITE_ENGINE_API_URL: ${BACKEND_URL}
 
     container_name: chess-frontend
