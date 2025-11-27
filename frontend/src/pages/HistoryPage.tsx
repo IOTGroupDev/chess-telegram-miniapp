@@ -6,7 +6,7 @@ import supabase from '../lib/supabaseClient';
 import type { GameWithPlayers } from '../types/supabase';
 
 export const HistoryPage: React.FC = () => {
-  const { user, supabaseUserId } = useAppStore();
+  const { supabaseUserId } = useAppStore();
   const [games, setGames] = useState<GameWithPlayers[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
