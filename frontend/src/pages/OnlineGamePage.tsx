@@ -14,7 +14,7 @@ import type { GameState } from '../types';
 export const OnlineGamePage: React.FC = () => {
   const navigate = useNavigate();
   const { gameId } = useParams<{ gameId: string }>();
-  const { user } = useAppStore();
+  const { user, supabaseUserId } = useAppStore();
   const [showDrawOffer, setShowDrawOffer] = useState(false);
 
   // Click-to-move state
@@ -34,10 +34,10 @@ export const OnlineGamePage: React.FC = () => {
     makeMove: makeSupabaseMove,
     resign: resignGame,
     offerDraw: offerDrawGame,
-  } = useSupabaseGame(gameId || '', String(user?.id || ''));
+  } = useSupabaseGame(gameId || '', supabaseUserId || '');
 
   // Betting hooks
-  const { bet, acceptBet, depositBet } = useGameBet(gameId || null, user?.id?.toString() || null);
+  const { bet, acceptBet, depositBet } = useGameBet(gameId || null, supabaseUserId);
 
   // Derived state
   const isWaiting = game?.status === 'waiting';
@@ -45,11 +45,11 @@ export const OnlineGamePage: React.FC = () => {
   const winner = game?.winner;
   const isMyTurn =
     game?.status === 'active' &&
-    ((game.move_number % 2 === 0 && game.white_player_id === String(user?.id)) ||
-     (game.move_number % 2 === 1 && game.black_player_id === String(user?.id)));
+    ((game.move_number % 2 === 0 && game.white_player_id === supabaseUserId) ||
+     (game.move_number % 2 === 1 && game.black_player_id === supabaseUserId));
 
   // Betting state
-  const amIWhite = game?.white_player_id === String(user?.id);
+  const amIWhite = game?.white_player_id === supabaseUserId;
   const isWhitePlayer = amIWhite;
   const showBetConfirmation =
     game?.status === 'pending_bet_acceptance' && !isWhitePlayer && bet;

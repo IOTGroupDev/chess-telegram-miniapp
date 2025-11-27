@@ -22,8 +22,8 @@ export const PurchaseStarsPopup: React.FC<PurchaseStarsPopupProps> = ({
   onPurchaseSuccess,
 }) => {
   const { t } = useTranslation();
-  const { user } = useAppStore();
-  const { wallet, refreshWallet } = useWallet(user?.id.toString() || null);
+  const { user, supabaseUserId } = useAppStore();
+  const { wallet, refreshWallet } = useWallet(supabaseUserId);
   const { packages, fetchPackages, createInvoice, sendInvoice, loading } =
     useTelegramPayment(null);
   const [selectedPackage, setSelectedPackage] = useState<StarsPackage | null>(null);
