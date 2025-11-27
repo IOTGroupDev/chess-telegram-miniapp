@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GameBet, CurrencyType } from '../types/supabase';
+import type { GameBet } from '../types/supabase';
 import { Button } from './Button';
 import { useTranslation } from 'react-i18next';
 

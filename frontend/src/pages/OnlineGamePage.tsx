@@ -38,8 +38,7 @@ export const OnlineGamePage: React.FC = () => {
   } = useSupabaseGame(gameId || '', String(user?.id || ''));
 
   // Betting hooks
-  const { wallet } = useWallet(user?.id || null);
-  const { bet, acceptBet, depositBet } = useGameBet(gameId || null, user?.id || null);
+  const { bet, acceptBet, depositBet } = useGameBet(gameId || null, user?.id?.toString() || null);
 
   // Derived state
   const isWaiting = game?.status === 'waiting';
@@ -128,7 +127,6 @@ export const OnlineGamePage: React.FC = () => {
     }
 
     const piece = chess.get(square);
-    const amIWhite = game?.white_player_id === String(user?.id);
     const myColorCode = amIWhite ? 'w' : 'b';
 
     // If no piece selected yet
@@ -228,7 +226,6 @@ export const OnlineGamePage: React.FC = () => {
   }
 
   // Determine player colors and names
-  const amIWhite = game?.white_player_id === String(user?.id);
   const myColor = amIWhite ? 'white' : 'black';
   const opponentColor = amIWhite ? 'black' : 'white';
 
