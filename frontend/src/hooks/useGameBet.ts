@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../config/supabase';
-import { GameBet, BetType, CurrencyType } from '../types/supabase';
+import supabase from '../lib/supabaseClient';
+import type { GameBet, BetType, CurrencyType } from '../types/supabase';
 
 interface UseGameBetReturn {
   bet: GameBet | null;
@@ -258,7 +258,7 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
           table: 'game_bets',
           filter: `game_id=eq.${gameId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Bet updated:', payload);
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {

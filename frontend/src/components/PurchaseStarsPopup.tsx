@@ -5,9 +5,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTelegramPayment, StarsPackage } from '../hooks/useTelegramPayment';
+import { useTelegramPayment } from '../hooks/useTelegramPayment';
+import type { StarsPackage } from '../hooks/useTelegramPayment';
 import { useWallet } from '../hooks/useWallet';
-import { useAuth } from '../contexts/AuthContext';
+import { useAppStore } from '../store/useAppStore';
 
 interface PurchaseStarsPopupProps {
   isOpen: boolean;
@@ -21,10 +22,10 @@ export const PurchaseStarsPopup: React.FC<PurchaseStarsPopupProps> = ({
   onPurchaseSuccess,
 }) => {
   const { t } = useTranslation();
-  const { user, token } = useAuth();
-  const { wallet, refreshWallet } = useWallet(user?.id || null);
+  const { user } = useAppStore();
+  const { wallet, refreshWallet } = useWallet(user?.id.toString() || null);
   const { packages, fetchPackages, createInvoice, sendInvoice, loading } =
-    useTelegramPayment(token);
+    useTelegramPayment(null);
   const [selectedPackage, setSelectedPackage] = useState<StarsPackage | null>(null);
   const [customAmount, setCustomAmount] = useState<string>('');
 
@@ -35,7 +36,7 @@ export const PurchaseStarsPopup: React.FC<PurchaseStarsPopupProps> = ({
   }, [isOpen, fetchPackages]);
 
   const handlePurchase = async (amount: number) => {
-    if (!user || !token) return;
+    if (!user) return;
 
     const invoice = await createInvoice(
       amount,
@@ -178,7 +179,7 @@ export const PurchaseStarsPopup: React.FC<PurchaseStarsPopupProps> = ({
             disabled={
               loading ||
               (!selectedPackage && !customAmount) ||
-              (customAmount && parseInt(customAmount, 10) < 1)
+              (Boolean(customAmount) && parseInt(customAmount, 10) < 1)
             }
             className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500
                      rounded-xl font-semibold disabled:opacity-50

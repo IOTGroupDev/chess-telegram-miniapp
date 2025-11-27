@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../config/supabase';
-import { UserWallet, WalletTransaction, CurrencyType } from '../types/supabase';
+import supabase from '../lib/supabaseClient';
+import type { UserWallet, WalletTransaction, CurrencyType } from '../types/supabase';
 
 interface UseWalletReturn {
   wallet: UserWallet | null;
@@ -122,7 +122,7 @@ export function useWallet(userId: string | null): UseWalletReturn {
           table: 'user_wallets',
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Wallet updated:', payload);
           setWallet(payload.new as UserWallet);
         }
@@ -135,7 +135,7 @@ export function useWallet(userId: string | null): UseWalletReturn {
           table: 'wallet_transactions',
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log('New transaction:', payload);
           setTransactions((prev) => [payload.new as WalletTransaction, ...prev]);
         }

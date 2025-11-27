@@ -1,5 +1,5 @@
 import React from 'react';
-import { BetType } from '../types/supabase';
+import type { BetType } from '../types/supabase';
 import { Button } from './Button';
 import { useTranslation } from 'react-i18next';
 
