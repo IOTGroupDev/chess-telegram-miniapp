@@ -98,8 +98,8 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
               terms_accepted_by_white: true,
               terms_accepted_by_black: true,
               status: 'completed',
-            })
-            .eq('id', data.id);
+            } as any)
+            .eq('id', (data as any).id);
 
           // Start the game immediately
           await supabase
@@ -107,13 +107,13 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
             .update({
               status: 'active',
               started_at: new Date().toISOString(),
-            })
+            } as any)
             .eq('id', gameId);
         } else {
           // For paid games, update game status to pending bet acceptance
           await supabase
             .from('games')
-            .update({ status: 'pending_bet_acceptance' })
+            .update({ status: 'pending_bet_acceptance' } as any)
             .eq('id', gameId);
         }
       } catch (err) {
@@ -148,7 +148,7 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
 
       if (!game) throw new Error('Game not found');
 
-      const isWhitePlayer = game.white_player_id === userId;
+      const isWhitePlayer = (game as any).white_player_id === userId;
       const fieldToUpdate = isWhitePlayer
         ? 'terms_accepted_by_white'
         : 'terms_accepted_by_black';
@@ -156,7 +156,7 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
       // Update bet to mark terms as accepted
       const { error: updateError } = await supabase
         .from('game_bets')
-        .update({ [fieldToUpdate]: true })
+        .update({ [fieldToUpdate]: true } as any)
         .eq('game_id', gameId);
 
       if (updateError) throw updateError;
@@ -170,13 +170,13 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
 
       if (
         updatedBet &&
-        updatedBet.terms_accepted_by_white &&
-        updatedBet.terms_accepted_by_black
+        (updatedBet as any).terms_accepted_by_white &&
+        (updatedBet as any).terms_accepted_by_black
       ) {
         // Both accepted - move to pending deposits
         await supabase
           .from('games')
-          .update({ status: 'pending_deposits' })
+          .update({ status: 'pending_deposits' } as any)
           .eq('id', gameId);
       }
 
@@ -210,7 +210,7 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
       const { data, error: depositError } = await supabase.rpc('deposit_game_bet', {
         p_game_id: gameId,
         p_user_id: userId,
-      });
+      } as any);
 
       if (depositError) {
         throw depositError;
@@ -219,9 +219,9 @@ export function useGameBet(gameId: string | null, userId: string | null): UseGam
       await refreshBet();
 
       return {
-        success: data.success,
-        bothDeposited: data.both_deposited,
-        error: data.error,
+        success: (data as any)?.success,
+        bothDeposited: (data as any)?.both_deposited,
+        error: (data as any)?.error,
       };
     } catch (err) {
       console.error('Error depositing bet:', err);

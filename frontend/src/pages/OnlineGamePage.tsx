@@ -6,7 +6,6 @@ import { useSupabaseGame } from '../hooks/useSupabaseGame';
 import { useAppStore } from '../store/useAppStore';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { telegramService } from '../services/telegramService';
-import { useWallet } from '../hooks/useWallet';
 import { useGameBet } from '../hooks/useGameBet';
 import { BetConfirmationPopup } from '../components/BetConfirmationPopup';
 import { DepositWaitingPopup } from '../components/DepositWaitingPopup';
