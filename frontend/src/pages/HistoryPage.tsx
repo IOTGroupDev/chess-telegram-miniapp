@@ -6,16 +6,16 @@ import supabase from '../lib/supabaseClient';
 import type { GameWithPlayers } from '../types/supabase';
 
 export const HistoryPage: React.FC = () => {
-  const { user } = useAppStore();
+  const { user, supabaseUserId } = useAppStore();
   const [games, setGames] = useState<GameWithPlayers[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.id) {
+    if (supabaseUserId) {
       loadGameHistory();
     }
-  }, [user?.id]);
+  }, [supabaseUserId]);
 
   const loadGameHistory = async () => {
     try {
@@ -29,7 +29,7 @@ export const HistoryPage: React.FC = () => {
           white_player:users!white_player_id(*),
           black_player:users!black_player_id(*)
         `)
-        .or(`white_player_id.eq.${user?.id},black_player_id.eq.${user?.id}`)
+        .or(`white_player_id.eq.${supabaseUserId},black_player_id.eq.${supabaseUserId}`)
         .order('created_at', { ascending: false })
         .limit(20);
 

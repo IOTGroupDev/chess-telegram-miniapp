@@ -13,7 +13,7 @@ import type { BetType, CurrencyType } from '../types/supabase';
 export const MainMenu: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user, setCurrentGame } = useAppStore();
+  const { user, supabaseUserId, setCurrentGame } = useAppStore();
   const [isCreatingGame, setIsCreatingGame] = useState(false);
 
   // Betting flow state
@@ -24,8 +24,8 @@ export const MainMenu: React.FC = () => {
   const [pendingGameId, setPendingGameId] = useState<string | null>(null);
 
   // Hooks
-  const { wallet } = useWallet(user?.id?.toString() || null);
-  const { createBet } = useGameBet(pendingGameId, user?.id?.toString() || null);
+  const { wallet } = useWallet(supabaseUserId);
+  const { createBet } = useGameBet(pendingGameId, supabaseUserId);
 
   const handlePlayAI = () => {
     setCurrentGame(null, 'ai');
