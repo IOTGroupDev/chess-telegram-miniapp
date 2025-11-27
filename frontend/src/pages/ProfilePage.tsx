@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { telegramService } from '../services/telegramService';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { ThemeSelector } from '../components/ThemeSelector';
@@ -11,6 +12,7 @@ import { BADGES } from '../types/arena';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const user = telegramService.getUser();
   const { stats, recentlyUnlocked } = useAchievements();
 
@@ -26,7 +28,7 @@ export const ProfilePage: React.FC = () => {
         {/* Header */}
         <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
           <span className="text-3xl">👤</span>
-          <span>Profile & Settings</span>
+          <span>{t('profile.title')}</span>
         </h1>
 
         {/* User Info Card */}
@@ -40,7 +42,7 @@ export const ProfilePage: React.FC = () => {
 
             <div className="flex-1">
               <h2 className="text-xl font-bold text-white mb-1">
-                {user?.first_name || 'Player'} {user?.last_name || ''}
+                {user?.first_name || t('common.player')} {user?.last_name || ''}
               </h2>
 
               {user?.username && (
@@ -55,7 +57,7 @@ export const ProfilePage: React.FC = () => {
                 {stats.currentRating}
               </div>
               <p className="text-xs text-slate-400 font-medium">
-                Rating
+                {t('profile.rating')}
               </p>
             </div>
           </div>
@@ -68,7 +70,7 @@ export const ProfilePage: React.FC = () => {
               {stats.wins}
             </div>
             <p className="text-xs text-slate-400 font-medium">
-              Wins
+              {t('profile.wins')}
             </p>
           </div>
 
@@ -77,7 +79,7 @@ export const ProfilePage: React.FC = () => {
               {stats.losses}
             </div>
             <p className="text-xs text-slate-400 font-medium">
-              Losses
+              {t('profile.losses')}
             </p>
           </div>
 
@@ -86,7 +88,7 @@ export const ProfilePage: React.FC = () => {
               {stats.draws}
             </div>
             <p className="text-xs text-slate-400 font-medium">
-              Draws
+              {t('profile.draws')}
             </p>
           </div>
         </div>
@@ -105,7 +107,7 @@ export const ProfilePage: React.FC = () => {
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-6">
           <h3 className="text-white font-bold mb-4 flex items-center gap-2">
             <span className="text-xl">⚔️</span>
-            <span>Arena Badges</span>
+            <span>{t('profile.arenaBadges')}</span>
           </h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -162,12 +164,12 @@ export const ProfilePage: React.FC = () => {
           <div className="mt-4 flex items-center justify-center gap-6 text-sm">
             <div className="text-center">
               <div className="text-lg font-bold text-yellow-400">{unlockedBadges.length}</div>
-              <div className="text-xs text-slate-400">Unlocked</div>
+              <div className="text-xs text-slate-400">{t('profile.unlocked')}</div>
             </div>
             <div className="w-px h-8 bg-white/10"></div>
             <div className="text-center">
               <div className="text-lg font-bold text-blue-400">{Object.keys(BADGES).length}</div>
-              <div className="text-xs text-slate-400">Total</div>
+              <div className="text-xs text-slate-400">{t('profile.total')}</div>
             </div>
           </div>
 
@@ -175,7 +177,7 @@ export const ProfilePage: React.FC = () => {
             onClick={() => navigate('/arena')}
             className="mt-4 w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl transition-all active:scale-95"
           >
-            ⚔️ Enter Arena to Unlock More
+            {t('profile.enterArenaToUnlock')}
           </button>
         </div>
 
@@ -186,20 +188,20 @@ export const ProfilePage: React.FC = () => {
         <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 mt-6">
           <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
             <span className="text-xl">🚀</span>
-            <span>Coming Soon</span>
+            <span>{t('profile.comingSoon')}</span>
           </h3>
           <ul className="text-slate-300 text-sm space-y-2">
             <li className="flex items-center gap-2">
               <span className="text-green-400">•</span>
-              <span>Detailed statistics & rating history</span>
+              <span>{t('profile.comingSoonItems.statistics')}</span>
             </li>
             <li className="flex items-center gap-2">
               <span className="text-orange-400">•</span>
-              <span>Leaderboards</span>
+              <span>{t('profile.comingSoonItems.leaderboards')}</span>
             </li>
             <li className="flex items-center gap-2">
               <span className="text-yellow-400">•</span>
-              <span>Daily challenges</span>
+              <span>{t('profile.comingSoonItems.dailyChallenges')}</span>
             </li>
           </ul>
         </div>
