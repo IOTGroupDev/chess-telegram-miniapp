@@ -8,31 +8,47 @@
 -- =====================================================
 
 -- Bet type enum
-CREATE TYPE bet_type AS ENUM ('free', 'coins', 'stars');
+DO $$ BEGIN
+  CREATE TYPE bet_type AS ENUM ('free', 'coins', 'stars');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Bet status enum
-CREATE TYPE bet_status AS ENUM ('pending', 'locked', 'completed', 'cancelled', 'refunded');
+DO $$ BEGIN
+  CREATE TYPE bet_status AS ENUM ('pending', 'locked', 'completed', 'cancelled', 'refunded');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Transaction type enum
-CREATE TYPE transaction_type AS ENUM (
-  'deposit_bet',
-  'refund_bet',
-  'win_payout',
-  'deposit_stars',
-  'withdraw_coins',
-  'platform_fee',
-  'draw_refund'
-);
+DO $$ BEGIN
+  CREATE TYPE transaction_type AS ENUM (
+    'deposit_bet',
+    'refund_bet',
+    'win_payout',
+    'deposit_stars',
+    'withdraw_coins',
+    'platform_fee',
+    'draw_refund'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Add new game statuses for betting flow
-ALTER TYPE game_status ADD VALUE 'pending_bet_setup';
-ALTER TYPE game_status ADD VALUE 'pending_bet_acceptance';
-ALTER TYPE game_status ADD VALUE 'pending_deposits';
+DO $$ BEGIN
+  ALTER TYPE game_status ADD VALUE IF NOT EXISTS 'pending_bet_setup';
+  ALTER TYPE game_status ADD VALUE IF NOT EXISTS 'pending_bet_acceptance';
+  ALTER TYPE game_status ADD VALUE IF NOT EXISTS 'pending_deposits';
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- =====================================================
 -- USER WALLETS TABLE
 -- =====================================================
-CREATE TABLE user_wallets (
+CREATE TABLE IF NOT EXISTS user_wallets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -52,9 +68,10 @@ CREATE TABLE user_wallets (
 );
 
 -- Indexes for wallets
-CREATE INDEX idx_user_wallets_user_id ON user_wallets(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_wallets_user_id ON user_wallets(user_id);
 
 -- Trigger for wallet updated_at
+DROP TRIGGER IF EXISTS update_user_wallets_updated_at ON user_wallets;
 CREATE TRIGGER update_user_wallets_updated_at
   BEFORE UPDATE ON user_wallets
   FOR EACH ROW
@@ -63,7 +80,7 @@ CREATE TRIGGER update_user_wallets_updated_at
 -- =====================================================
 -- GAME BETS TABLE
 -- =====================================================
-CREATE TABLE game_bets (
+CREATE TABLE IF NOT EXISTS game_bets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   game_id UUID UNIQUE NOT NULL REFERENCES games(id) ON DELETE CASCADE,
 
@@ -109,11 +126,12 @@ CREATE TABLE game_bets (
 );
 
 -- Indexes for game_bets
-CREATE INDEX idx_game_bets_game_id ON game_bets(game_id);
-CREATE INDEX idx_game_bets_status ON game_bets(status);
-CREATE INDEX idx_game_bets_created_at ON game_bets(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_bets_game_id ON game_bets(game_id);
+CREATE INDEX IF NOT EXISTS idx_game_bets_status ON game_bets(status);
+CREATE INDEX IF NOT EXISTS idx_game_bets_created_at ON game_bets(created_at DESC);
 
 -- Trigger for game_bets updated_at
+DROP TRIGGER IF EXISTS update_game_bets_updated_at ON game_bets;
 CREATE TRIGGER update_game_bets_updated_at
   BEFORE UPDATE ON game_bets
   FOR EACH ROW
@@ -122,7 +140,7 @@ CREATE TRIGGER update_game_bets_updated_at
 -- =====================================================
 -- WALLET TRANSACTIONS TABLE
 -- =====================================================
-CREATE TABLE wallet_transactions (
+CREATE TABLE IF NOT EXISTS wallet_transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   wallet_id UUID NOT NULL REFERENCES user_wallets(id) ON DELETE CASCADE,
@@ -148,10 +166,10 @@ CREATE TABLE wallet_transactions (
 );
 
 -- Indexes for transactions
-CREATE INDEX idx_wallet_transactions_user_id ON wallet_transactions(user_id, created_at DESC);
-CREATE INDEX idx_wallet_transactions_wallet_id ON wallet_transactions(wallet_id, created_at DESC);
-CREATE INDEX idx_wallet_transactions_game_id ON wallet_transactions(game_id) WHERE game_id IS NOT NULL;
-CREATE INDEX idx_wallet_transactions_type ON wallet_transactions(transaction_type);
+CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user_id ON wallet_transactions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_wallet_transactions_wallet_id ON wallet_transactions(wallet_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_wallet_transactions_game_id ON wallet_transactions(game_id) WHERE game_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_wallet_transactions_type ON wallet_transactions(transaction_type);
 
 -- =====================================================
 -- FUNCTIONS
@@ -168,6 +186,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to auto-create wallet when user is created
+DROP TRIGGER IF EXISTS create_wallet_on_user_insert ON users;
 CREATE TRIGGER create_wallet_on_user_insert
   AFTER INSERT ON users
   FOR EACH ROW
@@ -409,6 +428,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to process payout when game finishes
+DROP TRIGGER IF EXISTS process_bet_payout_trigger ON games;
 CREATE TRIGGER process_bet_payout_trigger
   AFTER UPDATE ON games
   FOR EACH ROW
