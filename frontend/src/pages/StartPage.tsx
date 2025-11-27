@@ -9,6 +9,7 @@ export const StartPage: React.FC = () => {
   const {
     user,
     isAuthorized,
+    supabaseUserId,
     isLoading,
     error,
     setUser,
@@ -29,20 +30,15 @@ export const StartPage: React.FC = () => {
         setLoading(true);
         clearError();
 
-        // Check if user is already authorized with stored token
-        if (isAuthorized && user) {
-          console.log('[StartPage] User already authorized, navigating to main');
-          navigate('/main');
-          return;
-        }
-
-        // Try Telegram authentication
+        // Try Telegram authentication first
         const tg = window.Telegram?.WebApp;
 
         console.log('[StartPage] Telegram WebApp available:', !!tg);
         console.log('[StartPage] initData present:', !!tg?.initData);
         console.log('[StartPage] initDataUnsafe.user present:', !!tg?.initDataUnsafe?.user);
 
+        // If we have Telegram data, always re-authenticate to ensure user is in DB
+        // This also handles the case where user was created as Guest before
         if (tg?.initData && tg.initDataUnsafe?.user) {
           console.log('[StartPage] ✅ Telegram initData found!');
           console.log('[StartPage] User data:', {
@@ -81,6 +77,11 @@ export const StartPage: React.FC = () => {
             console.error('[StartPage] ❌ Telegram authentication failed:', authError);
             setError('Ошибка авторизации через Telegram');
           }
+        } else if (isAuthorized && user && supabaseUserId) {
+          // User is already authorized with valid Supabase ID
+          console.log('[StartPage] User already authorized with Supabase ID, navigating to main');
+          navigate('/main');
+          return;
         } else {
           console.log('[StartPage] ⚠️ No Telegram initData, guest mode available');
           console.log('[StartPage] This is normal for web browsers');
