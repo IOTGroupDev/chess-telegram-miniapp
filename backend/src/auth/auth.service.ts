@@ -323,7 +323,7 @@ export class AuthService {
       role: 'authenticated',
       aud: 'authenticated',
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
+      // exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
     };
 
     return this.jwtService.sign(payload);
