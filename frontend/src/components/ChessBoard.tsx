@@ -36,7 +36,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     const [board] = fen.split(' ');
     const rows = board.split('/');
     const pieces: { [key: string]: string } = {};
-    
+
     rows.forEach((row, rankIndex) => {
       let fileIndex = 0;
       for (let i = 0; i < row.length; i++) {
@@ -50,7 +50,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         }
       }
     });
-    
+
     return pieces;
   };
 
@@ -61,12 +61,22 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const getSquareStyles = (square: Square) => {
     const styles: React.CSSProperties = {};
 
+    // Подсветка выбранной клетки игрока
     if (gameState.selectedSquare === square) {
       styles.backgroundColor = '#4ade80';
       styles.opacity = 0.8;
     } else if (gameState.possibleMoves.includes(square)) {
+      // Подсветка возможных ходов
       styles.backgroundColor = '#ffff00';
       styles.opacity = 0.8;
+    }
+
+    // Подсветка последнего хода соперника (верхним слоем через box-shadow)
+    if (gameState.lastMoveFrom === square) {
+      styles.boxShadow = 'inset 0 0 0 3px rgba(250, 204, 21, 0.9)'; // жёлтый ободок
+    }
+    if (gameState.lastMoveTo === square) {
+      styles.boxShadow = 'inset 0 0 0 3px rgba(34, 197, 94, 0.9)'; // зелёный ободок
     }
 
     return styles;
@@ -86,7 +96,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       const square = `${files[file]}${ranks[rank]}` as Square;
       const isLight = (rank + file) % 2 === 0;
       const piece = pieces[square];
-      
+
       const squareStyle: React.CSSProperties = {
         width: `${boardWidth / 8}px`,
         height: `${boardWidth / 8}px`,

@@ -54,6 +54,7 @@ export const AIGamePage: React.FC = () => {
   const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<AiLevelConfig | null>(null);
   const [showLevelPopup, setShowLevelPopup] = useState(true);
+  const [lastOpponentMove, setLastOpponentMove] = useState<{ from: Square; to: Square } | null>(null);
 
   const chess = useChess();
   const stockfish = useStockfish();
@@ -90,7 +91,9 @@ export const AIGamePage: React.FC = () => {
     fen: chess.getFen(),
     moves: [],
     status: chess.gameState.isGameOver ? 'finished' : 'active',
-  }), [chess.gameState, selectedSquare, possibleMoves, chess]);
+    lastMoveFrom: lastOpponentMove?.from || null,
+    lastMoveTo: lastOpponentMove?.to || null,
+  }), [chess.gameState, selectedSquare, possibleMoves, chess, lastOpponentMove]);
 
   const initializeGame = useCallback(async () => {
     try {
@@ -185,9 +188,10 @@ export const AIGamePage: React.FC = () => {
     const success = chess.makeMove(selectedSquare, square);
 
     if (success) {
-      // Clear selection
+      // Clear selection и подсветку последнего хода соперника
       setSelectedSquare(null);
       setPossibleMoves([]);
+      setLastOpponentMove(null);
 
       // Play appropriate sound
       playSound(isCapture ? 'capture' : 'move');
@@ -218,6 +222,9 @@ export const AIGamePage: React.FC = () => {
                   setTimeout(() => playSound('gameEnd'), 300);
                 }
 
+                // Подсветка последнего хода ИИ
+                setLastOpponentMove({ from, to });
+
                 forceUpdate({});
                 telegramService.notificationOccurred('success');
               }
@@ -247,9 +254,10 @@ export const AIGamePage: React.FC = () => {
     const success = chess.makeMove(sourceSquare as Square, targetSquare as Square);
 
     if (success) {
-      // Clear selection after successful move
+      // Clear selection и подсветку последнего хода соперника после успешного нашего хода
       setSelectedSquare(null);
       setPossibleMoves([]);
+      setLastOpponentMove(null);
 
       // Play appropriate sound
       playSound(isCapture ? 'capture' : 'move');
@@ -282,6 +290,9 @@ export const AIGamePage: React.FC = () => {
                 if (chess.gameState.isGameOver) {
                   setTimeout(() => playSound('gameEnd'), 300);
                 }
+
+                // Подсветка последнего хода ИИ
+                setLastOpponentMove({ from, to });
 
                 forceUpdate({}); // Force re-render after AI move
                 telegramService.notificationOccurred('success');

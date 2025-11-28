@@ -83,8 +83,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   // Modern color schemes (Chess.com inspired)
   const lightSquare = '#f0d9b5';
   const darkSquare = '#b58863';
-  const selectedSquare = '#f7f769';
+  const selectedSquareColor = '#f7f769';
   const possibleMoveSquare = '#6BBF59';
+  const lastMoveFromColor = '#facc15'; // жёлтый — откуда пошёл соперник
+  const lastMoveToColor = '#22c55e';   // зелёный — куда пришёл соперник
 
   const squares = [];
   for (let rank = 0; rank < 8; rank++) {
@@ -94,9 +96,21 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       const piece = pieces[square];
       const isSelected = gameState.selectedSquare === square;
       const isPossibleMove = gameState.possibleMoves.includes(square);
+      const isLastFrom = gameState.lastMoveFrom === square;
+      const isLastTo = gameState.lastMoveTo === square;
 
       let bgColor = isLight ? lightSquare : darkSquare;
-      if (isSelected) bgColor = selectedSquare;
+
+      // Подсветка последнего хода соперника: сначала from, потом to (to имеет приоритет)
+      if (isLastFrom) {
+        bgColor = lastMoveFromColor;
+      }
+      if (isLastTo) {
+        bgColor = lastMoveToColor;
+      }
+
+      // Подсветка выбранной клетки игрока перекрывает подсветку last-move
+      if (isSelected) bgColor = selectedSquareColor;
 
       squares.push(
         <div

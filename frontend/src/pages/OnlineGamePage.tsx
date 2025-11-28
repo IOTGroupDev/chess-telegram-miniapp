@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Square } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoardModern';
@@ -20,6 +20,10 @@ export const OnlineGamePage: React.FC = () => {
   // Click-to-move state
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
+
+  // Last opponent move (for highlighting on the board)
+  const [lastOpponentMove, setLastOpponentMove] = useState<{ from: Square; to: Square } | null>(null);
+  const [seenOpponentMoves, setSeenOpponentMoves] = useState(0);
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -115,7 +119,37 @@ export const OnlineGamePage: React.FC = () => {
     fen: chess?.fen() || '',
     moves: moves as any, // Supabase moves have different structure
     status: gameStatus as 'active' | 'finished' | 'waiting',
-  }), [game, isMyTurn, selectedSquare, possibleMoves, gameStatus, winner, chess, moves]);
+    lastMoveFrom: lastOpponentMove?.from || null,
+    lastMoveTo: lastOpponentMove?.to || null,
+  }), [game, isMyTurn, selectedSquare, possibleMoves, gameStatus, winner, chess, moves, lastOpponentMove]);
+
+  /**
+   * Track and highlight last opponent move
+   */
+  useEffect(() => {
+    if (!moves || !supabaseUserId) return;
+
+    // Определяем ходы соперника по user_id
+    const opponentMoves = (moves as any[]).filter(
+      (m) => m.user_id && m.user_id !== supabaseUserId
+    );
+    const newCount = opponentMoves.length;
+    if (newCount === 0) return;
+
+    setSeenOpponentMoves((prevSeen) => {
+      if (newCount > prevSeen) {
+        const last = opponentMoves[opponentMoves.length - 1] as any;
+        const uci: string = last.uci;
+        if (uci && uci.length >= 4) {
+          const from = uci.slice(0, 2) as Square;
+          const to = uci.slice(2, 4) as Square;
+          setLastOpponentMove({ from, to });
+        }
+        return newCount;
+      }
+      return prevSeen;
+    });
+  }, [moves, supabaseUserId]);
 
   /**
    * Handle square click (click-to-move)
@@ -169,6 +203,15 @@ export const OnlineGamePage: React.FC = () => {
         // Clear selection after successful move
         setSelectedSquare(null);
         setPossibleMoves([]);
+        // Снимаем подсветку последнего хода соперника после нашего хода
+        setLastOpponentMove(null);
+        // Обновляем счётчик увиденных ходов соперника,
+        // чтобы эффект не подсветил старые ходы
+        const opponentCount = (moves as any[]).filter(
+          (m) => m.user_id && m.user_id !== supabaseUserId
+        ).length;
+        setSeenOpponentMoves(opponentCount);
+
         telegramService.notificationOccurred('success');
       } else {
         telegramService.notificationOccurred('error');

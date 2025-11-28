@@ -43,6 +43,17 @@ export interface GameState {
   fen: string;
   moves: Move[];
   status: 'waiting' | 'active' | 'finished';
+
+  /**
+   * Подсветка последнего хода соперника:
+   * - lastMoveFrom: из какой клетки была сделана последняя ход соперника
+   * - lastMoveTo: в какую клетку пришла фигура соперника
+   *
+   * Эти поля используются визуальными компонентами доски для
+   * отображения направления и фигуры последнего хода оппонента.
+   */
+  lastMoveFrom?: string | null;
+  lastMoveTo?: string | null;
 }
 
 export type GameMode = 'ai' | 'online';
