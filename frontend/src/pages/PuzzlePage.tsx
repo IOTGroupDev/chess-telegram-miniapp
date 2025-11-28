@@ -78,10 +78,9 @@ const PuzzlePage: React.FC = () => {
       setShowHint(false);
       setResult(null);
 
-      // Make opponent's first move if needed
-      if (sideToMove === chess.turn()) {
-        setTimeout(() => makeOpponentMove(chess, moves, 0), 500);
-      }
+      // Оппонент делает ходы автоматически ТОЛЬКО после корректного хода игрока
+      // (см. вызов makeOpponentMove в обработчике onDrop).
+      // Стартовую позицию оставляем как есть, первый ход всегда за игроком.
     }
   }, [currentPuzzle]);
 
