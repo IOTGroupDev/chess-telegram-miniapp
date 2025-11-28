@@ -18,6 +18,7 @@ import ArenaPage from './pages/ArenaPage.tsx';
 import PublicMatchesPage from './pages/PublicMatchesPage.tsx';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ArenaStatsPage from './pages/ArenaStatsPage';
+import OnlineChallengePage from './pages/OnlineChallengePage.tsx';
 
 function AppRoutes() {
   // Theme is initialized in main.tsx via telegramThemeService
@@ -28,6 +29,7 @@ function AppRoutes() {
       '/ai-game',
       '/ai-training',
       '/online-game',
+      '/online-challenge',
     ];
 
     const shouldKeepAwake = pathsThatNeedWakeLock.some((path) =>
@@ -48,6 +50,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<StartPage />} />
         <Route path="/main" element={<MainMenu />} />
+        <Route path="/online-challenge" element={<OnlineChallengePage />} />
         <Route path="/ai-game" element={<AIGamePage />} />
         <Route path="/ai-training" element={<AITrainingPage />} />
         <Route path="/online-game/:gameId" element={<OnlineGamePage />} />

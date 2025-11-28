@@ -32,66 +32,13 @@ export const MainMenu: React.FC = () => {
     navigate('/ai-game');
   };
 
-  const handlePlayOnline = async () => {
+  const handlePlayOnline = () => {
     if (!user?.id) {
       telegramService.showAlert(t('errors.authRequired'));
       return;
     }
 
-    try {
-      setIsCreatingGame(true);
-
-      // Try to join an existing waiting game
-      const { data: waitingGames } = await supabase
-        .from('games')
-        .select('id')
-        .eq('status', 'waiting')
-        .neq('white_player_id', user.id)
-        .order('created_at', { ascending: true })
-        .limit(1);
-
-      if (waitingGames && waitingGames.length > 0) {
-        // Join existing game
-        const gameId = (waitingGames[0] as any).id;
-
-        const { error: updateError } = await supabase
-          // @ts-ignore
-          .from('games')          .update({
-            black_player_id: user.id,
-            status: 'active',
-            started_at: new Date().toISOString(),
-          })
-          .eq('id', gameId);
-
-        if (updateError) throw updateError;
-
-        setCurrentGame(gameId, 'online');
-        navigate(`/online-game/${gameId}`);
-      } else {
-        // No players found - offer to play with AI
-        setIsCreatingGame(false);
-
-        const webApp = telegramService.getWebApp();
-        webApp.showPopup({
-          title: t('game.noPlayersOnline'),
-          message: t('game.noPlayersMessage'),
-          buttons: [
-            { id: 'ai', type: 'default', text: t('game.playWithAI') },
-            { id: 'cancel', type: 'cancel', text: t('game.cancel') }
-          ]
-        }, (buttonId: string) => {
-          if (buttonId === 'ai') {
-            // Redirect to AI game
-            setCurrentGame(null, 'ai');
-            navigate('/ai-game');
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to create online game:', error);
-      telegramService.showAlert(t('errors.createGameFailed'));
-      setIsCreatingGame(false);
-    }
+    navigate('/online-challenge');
   };
 
   const handleCreateInviteLink = async () => {
