@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Square } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoardModern';
 import { useChess } from '../hooks/useChess';
-import { useStockfish } from '../hooks/useStockfish';
+import { useStockfish, BestMoveOptions } from '../hooks/useStockfish';
 import { useTelegramBackButton } from '../hooks/useTelegramBackButton';
 import { useSound } from '../hooks/useSound';
 import { useAchievements } from '../hooks/useAchievements';
@@ -13,6 +13,36 @@ import { telegramService } from '../services/telegramService';
 import { wakeLockService } from '../services/wakeLockService';
 import type { GameState } from '../types';
 
+type AiLevelId = 1 | 2 | 3 | 4;
+
+interface AiLevelConfig {
+  id: AiLevelId;
+  name: string;
+  description: string;
+  uciElo?: number;
+  moveTime?: number; // ms
+}
+
+/**
+ * 4 агрегированных уровня для пользователя:
+ * - Новичок
+ * - Средний
+ * - Продвинутый
+ * - Гроссмейстер
+ *
+ * Значения ELO / movetime подобраны на основе исходной сетки.
+ */
+const AI_LEVELS: AiLevelConfig[] = [
+  // Beginner
+  { id: 1, name: 'Новичок', description: 'Начальный уровень (до ~800 Elo)', uciElo: 800, moveTime: 300 },
+  // Club player / Amateur
+  { id: 2, name: 'Любитель', description: 'Клубный игрок (~800–1200 Elo)', uciElo: 1200, moveTime: 500 },
+  // Candidate Master
+  { id: 3, name: 'Кандидат в мастера', description: 'Сильный разрядник (~1200–1600 Elo)', uciElo: 1600, moveTime: 800 },
+  // Grandmaster
+  { id: 4, name: 'Гроссмейстер', description: 'Титулованный уровень (1600+ Elo)', uciElo: 2000, moveTime: 1200 },
+];
+
 export const AIGamePage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -21,9 +51,29 @@ export const AIGamePage: React.FC = () => {
   const [gameProcessed, setGameProcessed] = useState(false);
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
+  const [selectedLevel, setSelectedLevel] = useState<AiLevelConfig | null>(null);
+  const [showLevelPopup, setShowLevelPopup] = useState(true);
 
   const chess = useChess();
   const stockfish = useStockfish();
+
+  const getAiOptions = useCallback((): BestMoveOptions => {
+    // Если уровень не выбран, используем самый сложный (Гроссмейстер)
+    const lvl = selectedLevel ?? AI_LEVELS[AI_LEVELS.length - 1];
+
+    const opts: BestMoveOptions = {};
+    if (lvl.uciElo) {
+      opts.uciElo = lvl.uciElo;
+    }
+    if (lvl.moveTime) {
+      opts.moveTime = lvl.moveTime;
+    } else {
+      // Для максимального уровня — ограничиваемся глубиной
+      opts.depth = 20;
+    }
+
+    return opts;
+  }, [selectedLevel]);
   const { playSound } = useSound();
   const { recordWin, recordLoss, recordDraw, recentlyUnlocked } = useAchievements();
   const { trackWin, trackLoss, trackDraw } = useChallenges();
@@ -151,7 +201,7 @@ export const AIGamePage: React.FC = () => {
       if (!chess.gameState.isGameOver) {
         setTimeout(async () => {
           try {
-            const aiMove = await stockfish.getBestMove(chess.getFen());
+            const aiMove = await stockfish.getBestMove(chess.getFen(), getAiOptions());
             if (aiMove && aiMove.length >= 4) {
               const from = aiMove.slice(0, 2) as Square;
               const to = aiMove.slice(2, 4) as Square;
@@ -213,7 +263,7 @@ export const AIGamePage: React.FC = () => {
       if (!chess.gameState.isGameOver) {
         setTimeout(async () => {
           try {
-            const aiMove = await stockfish.getBestMove(chess.getFen());
+            const aiMove = await stockfish.getBestMove(chess.getFen(), getAiOptions());
             if (aiMove && aiMove.length >= 4) {
               const from = aiMove.slice(0, 2) as Square;
               const to = aiMove.slice(2, 4) as Square;
@@ -365,7 +415,11 @@ export const AIGamePage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-base font-bold leading-tight" style={{ color: textColor }}>Stockfish AI</h3>
-                <p className="text-xs opacity-60" style={{ color: textColor }}>Depth: 15</p>
+                <p className="text-xs opacity-60" style={{ color: textColor }}>
+                  {selectedLevel
+                    ? `Уровень: ${selectedLevel.name} (${selectedLevel.description})`
+                    : 'Уровень: Гроссмейстер (Максимальная сила ИИ)'}
+                </p>
               </div>
             </div>
             {stockfish.isThinking && (
@@ -469,6 +523,47 @@ export const AIGamePage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* AI Level Selection Popup */}
+      {showLevelPopup && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-slate-900 rounded-2xl p-4 max-w-sm w-full border border-white/10">
+            <h2 className="text-white text-lg font-bold mb-2">Выберите уровень ИИ</h2>
+            <p className="text-slate-300 text-xs mb-3">
+              От новичка до гроссмейстера. Чем выше уровень — тем сильнее и дольше думает движок.
+            </p>
+            <div className="max-h-80 overflow-y-auto space-y-2">
+              {AI_LEVELS.map((lvl) => (
+                <button
+                  key={lvl.id}
+                  onClick={() => {
+                    setSelectedLevel(lvl);
+                    setShowLevelPopup(false);
+                    telegramService.impactOccurred('light');
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 hover:border-blue-400 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-white text-sm font-semibold">
+                        {lvl.name}
+                      </div>
+                      <div className="text-slate-400 text-xs">
+                        {lvl.description}
+                      </div>
+                    </div>
+                    <div className="text-right text-xs text-slate-300">
+                      {lvl.uciElo ? `Elo ~${lvl.uciElo}` : 'Максимум'}
+                      <br />
+                      {lvl.moveTime ? `${lvl.moveTime} ms/ход` : 'по глубине'}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Achievement Notification */}
       <AchievementNotification

@@ -13,7 +13,7 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, Min } from 'class-validator';
 import { EngineManagerService } from './engine-manager.service';
 import { EngineFactory, EngineType } from './engine.factory';
 import { EngineOptions } from './stockfish.service';
@@ -32,6 +32,16 @@ class AnalyzePositionDto {
   multiPv?: number;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  uciElo?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  moveTime?: number;
+
+  @IsOptional()
   @IsEnum(['stockfish', 'leela', 'komodo'])
   engine?: EngineType;
 }
@@ -43,6 +53,16 @@ class GetBestMoveDto {
   @IsOptional()
   @IsNumber()
   depth?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  uciElo?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  moveTime?: number;
 
   @IsOptional()
   @IsEnum(['stockfish', 'leela', 'komodo'])
@@ -97,6 +117,13 @@ export class EngineController {
       multiPv: dto.multiPv || 1,
     };
 
+    if (dto.uciElo !== undefined) {
+      options.uciElo = dto.uciElo;
+    }
+    if (dto.moveTime !== undefined) {
+      options.moveTime = dto.moveTime;
+    }
+
     const result = await this.engineManager.analyzePosition(dto.fen, options);
 
     return {
@@ -122,10 +149,18 @@ export class EngineController {
   @Post('best-move')
   @HttpCode(HttpStatus.OK)
   async getBestMove(@Body() dto: GetBestMoveDto) {
-    const bestMove = await this.engineManager.getBestMove(
-      dto.fen,
-      dto.depth || 20,
-    );
+    const options: EngineOptions = {
+      depth: dto.depth || 20,
+    };
+
+    if (dto.uciElo !== undefined) {
+      options.uciElo = dto.uciElo;
+    }
+    if (dto.moveTime !== undefined) {
+      options.moveTime = dto.moveTime;
+    }
+
+    const bestMove = await this.engineManager.getBestMove(dto.fen, options);
 
     return {
       success: true,

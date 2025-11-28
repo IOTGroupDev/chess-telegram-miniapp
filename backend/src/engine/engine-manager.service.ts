@@ -183,12 +183,13 @@ export class EngineManagerService implements OnModuleInit {
 
   /**
    * Get best move (convenience method)
+   * Accepts full EngineOptions, including depth, uciElo, moveTime, etc.
    */
   async getBestMove(
     fen: string,
-    depth: number = 20,
+    options: EngineOptions = {},
   ): Promise<string> {
-    const result = await this.analyzePosition(fen, { depth });
+    const result = await this.analyzePosition(fen, options);
     return result.bestMove;
   }
 

@@ -42,7 +42,8 @@ export const MainMenu: React.FC = () => {
   };
 
   const handleCreateInviteLink = async () => {
-    if (!user?.id) {
+    // Use Supabase user ID (UUID), not Telegram user ID (number)
+    if (!supabaseUserId) {
       telegramService.showAlert(t('errors.authRequired'));
       return;
     }
@@ -57,7 +58,7 @@ export const MainMenu: React.FC = () => {
       const { data: game, error: gameError } = await supabase
         .from('games')
         .insert({
-          white_player_id: user.id,
+          white_player_id: supabaseUserId,
           status: 'pending_bet_setup',
           invite_code: inviteCode,
           time_control: 'blitz',

@@ -13,6 +13,18 @@ export interface EngineOptions {
   hashSize?: number; // MB
   multiPv?: number;
   depth?: number;
+
+  /**
+   * Limit engine strength using UCI_Elo (approximate ELO rating).
+   * If provided, engine will play weaker than maximum strength.
+   */
+  uciElo?: number;
+
+  /**
+   * Time per move in milliseconds.
+   * If provided, engine will use "go movetime X" instead of "go depth N".
+   */
+  moveTime?: number;
 }
 
 export interface AnalysisResult {
@@ -56,11 +68,14 @@ export class StockfishService extends EventEmitter implements OnModuleDestroy {
     this.stockfishPath = process.env.STOCKFISH_PATH || '/usr/games/stockfish';
 
     // Default options
+    // uciElo и moveTime по умолчанию = 0 (не ограничиваем силу и не задаём время на ход)
     this.defaultOptions = {
       threads: parseInt(process.env.STOCKFISH_THREADS || '2'),
       hashSize: parseInt(process.env.STOCKFISH_HASH_SIZE || '256'),
       multiPv: 1,
       depth: 20,
+      uciElo: 0,
+      moveTime: 0,
     };
 
     this.initialize();
@@ -324,6 +339,8 @@ export class StockfishService extends EventEmitter implements OnModuleDestroy {
 
     const depth = options.depth || this.defaultOptions.depth;
     const multiPv = options.multiPv || this.defaultOptions.multiPv;
+    const uciElo = options.uciElo;
+    const moveTime = options.moveTime;
 
     // Clear output buffer
     this.outputBuffer = [];
@@ -331,13 +348,29 @@ export class StockfishService extends EventEmitter implements OnModuleDestroy {
     // Set position
     await this.sendCommand(`position fen ${fen}`);
 
+    // Strength limiting via UCI_Elo
+    // If uciElo is provided, enable limited strength and set ELO.
+    // Otherwise, disable limit to use maximum strength.
+    if (uciElo && uciElo > 0) {
+      await this.setOption('UCI_LimitStrength', 1);
+      await this.setOption('UCI_Elo', uciElo);
+    } else {
+      await this.setOption('UCI_LimitStrength', 0);
+    }
+
     // Set MultiPV if needed
     if (multiPv > 1) {
       await this.setOption('MultiPV', multiPv);
     }
 
-    // Start analysis
-    await this.sendCommand(`go depth ${depth}`);
+    // Start analysis:
+    // - if moveTime is specified, use fixed time per move
+    // - otherwise fall back to fixed depth (original behaviour)
+    if (moveTime && moveTime > 0) {
+      await this.sendCommand(`go movetime ${moveTime}`);
+    } else {
+      await this.sendCommand(`go depth ${depth}`);
+    }
 
     // Wait for bestmove
     return new Promise((resolve, reject) => {
