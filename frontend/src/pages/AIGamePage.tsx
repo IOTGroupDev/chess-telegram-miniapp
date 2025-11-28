@@ -525,42 +525,73 @@ export const AIGamePage: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Level Selection Popup */}
+      {/* AI Level Selection Popup (styled similar to GameModePopup) */}
       {showLevelPopup && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-slate-900 rounded-2xl p-4 max-w-sm w-full border border-white/10">
-            <h2 className="text-white text-lg font-bold mb-2">Выберите уровень ИИ</h2>
-            <p className="text-slate-300 text-xs mb-3">
-              От новичка до гроссмейстера. Чем выше уровень — тем сильнее и дольше думает движок.
-            </p>
-            <div className="max-h-80 overflow-y-auto space-y-2">
-              {AI_LEVELS.map((lvl) => (
-                <button
-                  key={lvl.id}
-                  onClick={() => {
-                    setSelectedLevel(lvl);
-                    setShowLevelPopup(false);
-                    telegramService.impactOccurred('light');
-                  }}
-                  className="w-full text-left px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 hover:border-blue-400 transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-white text-sm font-semibold">
-                        {lvl.name}
-                      </div>
-                      <div className="text-slate-400 text-xs">
-                        {lvl.description}
-                      </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full mx-4 shadow-2xl border border-white/10">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Выберите уровень игры с ИИ
+              </h2>
+              <p className="text-slate-400 text-sm">
+                От новичка до гроссмейстера. Чем выше уровень — тем сильнее соперник.
+              </p>
+            </div>
+
+            {/* Levels */}
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {AI_LEVELS.map((lvl) => {
+                const gradientClasses =
+                  lvl.id === 1
+                    ? 'from-emerald-500/20 to-green-500/20 border-emerald-400/30 hover:from-emerald-500/30 hover:to-green-500/30 hover:shadow-emerald-500/20'
+                    : lvl.id === 2
+                    ? 'from-blue-500/20 to-cyan-500/20 border-blue-400/30 hover:from-blue-500/30 hover:to-cyan-500/30 hover:shadow-blue-500/20'
+                    : lvl.id === 3
+                    ? 'from-yellow-500/20 to-orange-500/20 border-yellow-400/30 hover:from-yellow-500/30 hover:to-orange-500/30 hover:shadow-yellow-500/20'
+                    : 'from-purple-500/20 to-pink-500/20 border-purple-400/30 hover:from-purple-500/30 hover:to-pink-500/30 hover:shadow-purple-500/20';
+
+                const icon =
+                  lvl.id === 1 ? '🐣' :
+                  lvl.id === 2 ? '♙' :
+                  lvl.id === 3 ? '♝' :
+                  '♛';
+
+                return (
+                  <button
+                    key={lvl.id}
+                    onClick={() => {
+                      setSelectedLevel(lvl);
+                      setShowLevelPopup(false);
+                      telegramService.impactOccurred('light');
+                    }}
+                    className={
+                      'w-full text-left cursor-pointer group rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-4 ' +
+                      `bg-gradient-to-r ${gradientClasses}`
+                    }
+                  >
+                    <div className="text-3xl">
+                      {icon}
                     </div>
-                    <div className="text-right text-xs text-slate-300">
-                      {lvl.uciElo ? `Elo ~${lvl.uciElo}` : 'Максимум'}
+                    <div className="flex-1">
+                      <h3 className="text-white font-bold text-sm mb-1">
+                        {lvl.name}
+                      </h3>
+                      <p className="text-xs text-slate-200">
+                        {lvl.description}
+                      </p>
+                    </div>
+                    <div className="text-right text-xs text-slate-100">
+                      {lvl.uciElo ? `~${lvl.uciElo} Elo` : 'Max'}
                       <br />
                       {lvl.moveTime ? `${lvl.moveTime} ms/ход` : 'по глубине'}
                     </div>
-                  </div>
-                </button>
-              ))}
+                    <div className="text-slate-100 group-hover:translate-x-1 transition-transform ml-2">
+                      ▶
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
