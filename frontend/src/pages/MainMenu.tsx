@@ -87,6 +87,12 @@ export const MainMenu: React.FC = () => {
     setSelectedBetType(betType);
     setShowGameModePopup(false);
 
+    // Safety check: game must be created and ID must be a valid UUID
+    if (!pendingGameId) {
+      telegramService.showAlert(t('errors.createGameFailed'));
+      return;
+    }
+
     if (betType === 'free') {
       // Free game - create bet and share immediately
       try {
@@ -96,7 +102,7 @@ export const MainMenu: React.FC = () => {
         const { data: game } = await supabase
           .from('games')
           .select('invite_code')
-          .eq('id', pendingGameId || '')
+          .eq('id', pendingGameId)
           .single();
 
         if ((game as any)?.invite_code) {
@@ -135,7 +141,7 @@ export const MainMenu: React.FC = () => {
       const { data: game } = await supabase
         .from('games')
         .select('invite_code')
-        .eq('id', pendingGameId || '')
+        .eq('id', pendingGameId)
         .single();
 
       if ((game as any)?.invite_code) {
