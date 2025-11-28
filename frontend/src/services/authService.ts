@@ -5,7 +5,7 @@
 
 import { supabase } from '../lib/supabaseClient';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://asrtalink.vip';
 
 export interface AuthResponse {
   accessToken: string;

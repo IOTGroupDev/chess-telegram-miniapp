@@ -38,8 +38,17 @@ export class AuthService {
     const supabaseServiceKey = this.configService.get<string>('SUPABASE_SERVICE_KEY');
 
     if (!supabaseUrl || !supabaseServiceKey) {
+      this.logger.error('[AuthService] SUPABASE_URL or SUPABASE_SERVICE_KEY is not configured', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey,
+      });
       throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be defined');
     }
+
+    this.logger.log('[AuthService] Supabase client initialized', {
+      supabaseUrl,
+      serviceKeyPrefix: supabaseServiceKey.substring(0, 6),
+    });
 
     this.supabase = createClient(supabaseUrl, supabaseServiceKey);
   }
@@ -52,8 +61,13 @@ export class AuthService {
     const botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
 
     if (!botToken) {
+      this.logger.error('[AuthService] TELEGRAM_BOT_TOKEN is not configured');
       throw new UnauthorizedException('Telegram bot token not configured');
     }
+
+    this.logger.debug('[AuthService] Starting Telegram data validation', {
+      initDataLength: initData?.length ?? 0,
+    });
 
     try {
       // Parse initData
@@ -61,6 +75,7 @@ export class AuthService {
       const hash = urlParams.get('hash');
 
       if (!hash) {
+        this.logger.warn('[AuthService] Missing hash in initData');
         throw new UnauthorizedException('Missing hash in initData');
       }
 
@@ -85,24 +100,40 @@ export class AuthService {
 
       // Verify hash
       if (calculatedHash !== hash) {
+        this.logger.warn('[AuthService] Invalid Telegram data signature', {
+          expectedHash: calculatedHash,
+          receivedHash: hash,
+        });
         throw new UnauthorizedException('Invalid Telegram data signature');
       }
 
       // Check auth_date (data should not be older than 24 hours)
-      const authDate = parseInt(urlParams.get('auth_date') || '0', 10);
+      const authDateStr = urlParams.get('auth_date');
+      const authDate = parseInt(authDateStr || '0', 10);
       const currentTime = Math.floor(Date.now() / 1000);
 
       if (currentTime - authDate > 86400) {
+        this.logger.warn('[AuthService] Telegram data is too old', {
+          authDate,
+          currentTime,
+          diff: currentTime - authDate,
+        });
         throw new UnauthorizedException('Telegram data is too old');
       }
 
       // Parse user data
       const userStr = urlParams.get('user');
       if (!userStr) {
+        this.logger.warn('[AuthService] Missing user data in initData');
         throw new UnauthorizedException('Missing user data in initData');
       }
 
       const user: TelegramUser = JSON.parse(userStr);
+
+      this.logger.debug('[AuthService] Telegram data validated successfully', {
+        telegramUserId: user.id,
+        username: user.username,
+      });
 
       return {
         user,
@@ -110,7 +141,10 @@ export class AuthService {
         hash,
       };
     } catch (error) {
-      this.logger.error('Failed to validate Telegram data', error);
+      this.logger.error('[AuthService] Failed to validate Telegram data', {
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+      });
       throw new UnauthorizedException('Invalid Telegram data');
     }
   }
@@ -122,9 +156,17 @@ export class AuthService {
     accessToken: string;
     user: any;
   }> {
+    this.logger.log('[AuthService] authenticateUser called');
+
     // Validate Telegram data
     const telegramData = this.validateTelegramData(initData);
     const { user: telegramUser } = telegramData;
+
+    this.logger.log('[AuthService] Telegram user validated', {
+      telegramId: telegramUser.id,
+      username: telegramUser.username,
+      language: telegramUser.language_code,
+    });
 
     try {
       // Check if user exists in Supabase
@@ -139,13 +181,20 @@ export class AuthService {
 
       if (fetchError && fetchError.code !== 'PGRST116') {
         // Error other than "not found"
-        this.logger.error('Error fetching user from Supabase', fetchError);
+        this.logger.error('[AuthService] Error fetching user from Supabase', {
+          error: fetchError,
+        });
         throw new Error('Failed to fetch user data');
       }
 
       if (existingUser) {
         // Update existing user
         userId = existingUser.id;
+
+        this.logger.log('[AuthService] Existing user found, updating', {
+          userId,
+          telegramId: existingUser.telegram_id,
+        });
 
         const { data: updatedUser, error: updateError } = await this.supabase
           .from('users')
@@ -163,14 +212,21 @@ export class AuthService {
           .single();
 
         if (updateError) {
-          this.logger.error('Error updating user in Supabase', updateError);
+          this.logger.error('[AuthService] Error updating user in Supabase', {
+            error: updateError,
+            userId,
+          });
           throw new Error('Failed to update user');
         }
 
         userData = updatedUser;
-        this.logger.log(`User ${userId} updated successfully`);
+        this.logger.log('[AuthService] User updated successfully', { userId });
       } else {
         // Create new user
+        this.logger.log('[AuthService] No existing user, creating new', {
+          telegramId: telegramUser.id,
+        });
+
         const { data: newUser, error: insertError } = await this.supabase
           .from('users')
           .insert({
@@ -185,13 +241,19 @@ export class AuthService {
           .single();
 
         if (insertError) {
-          this.logger.error('Error creating user in Supabase', insertError);
+          this.logger.error('[AuthService] Error creating user in Supabase', {
+            error: insertError,
+            telegramId: telegramUser.id,
+          });
           throw new Error('Failed to create user');
         }
 
         userId = newUser.id;
         userData = newUser;
-        this.logger.log(`New user ${userId} created successfully`);
+        this.logger.log('[AuthService] New user created successfully', {
+          userId,
+          telegramId: telegramUser.id,
+        });
 
         // Ensure wallet was created by trigger
         // If trigger failed, create wallet manually using database function
@@ -202,32 +264,51 @@ export class AuthService {
           .single();
 
         if (walletError || !wallet) {
-          this.logger.warn(`Wallet not found for new user ${userId}, creating via fallback`);
+          this.logger.warn('[AuthService] Wallet not found for new user, creating via fallback', {
+            userId,
+            walletError,
+          });
 
           // Call database function to ensure wallet exists
-          const { data: walletId, error: createWalletError } = await this.supabase
-            .rpc('ensure_user_wallet', { p_user_id: userId });
+          const { data: walletId, error: createWalletError } = await this.supabase.rpc(
+            'ensure_user_wallet',
+            { p_user_id: userId },
+          );
 
           if (createWalletError) {
-            this.logger.error(`Failed to create wallet for user ${userId}`, createWalletError);
+            this.logger.error('[AuthService] Failed to create wallet for user', {
+              userId,
+              error: createWalletError,
+            });
             // Don't throw - user is created, wallet can be created later
           } else {
-            this.logger.log(`Wallet ${walletId} created via fallback for user ${userId}`);
+            this.logger.log('[AuthService] Wallet created via fallback for user', {
+              userId,
+              walletId,
+            });
           }
         } else {
-          this.logger.log(`Wallet ${wallet.id} created successfully for user ${userId}`);
+          this.logger.log('[AuthService] Wallet created successfully for new user', {
+            userId,
+            walletId: wallet.id,
+          });
         }
       }
 
       // Generate JWT token compatible with Supabase
       const accessToken = this.generateSupabaseCompatibleJWT(userId);
 
+      this.logger.log('[AuthService] JWT generated for user', { userId });
+
       return {
         accessToken,
         user: userData,
       };
     } catch (error) {
-      this.logger.error('Authentication failed', error);
+      this.logger.error('[AuthService] Authentication failed', {
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+      });
       throw new UnauthorizedException('Authentication failed');
     }
   }
@@ -252,8 +333,17 @@ export class AuthService {
    * Validates JWT token
    */
   async validateToken(token: string): Promise<any> {
+    this.logger.debug('[AuthService] validateToken called');
+
     try {
       const payload = this.jwtService.verify(token);
+
+      this.logger.debug('[AuthService] JWT payload decoded', {
+        sub: payload.sub,
+        role: payload.role,
+        aud: payload.aud,
+        exp: payload.exp,
+      });
 
       // Fetch user from Supabase
       const { data: user, error } = await this.supabase
@@ -263,12 +353,19 @@ export class AuthService {
         .single();
 
       if (error || !user) {
+        this.logger.warn('[AuthService] User not found for token', {
+          userId: payload.sub,
+          error,
+        });
         throw new UnauthorizedException('User not found');
       }
 
       return user;
     } catch (error) {
-      this.logger.error('Token validation failed', error);
+      this.logger.error('[AuthService] Token validation failed', {
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+      });
       throw new UnauthorizedException('Invalid token');
     }
   }
