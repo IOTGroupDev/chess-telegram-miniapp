@@ -23,7 +23,6 @@ export const OnlineGamePage: React.FC = () => {
 
   // Last opponent move (for highlighting on the board)
   const [lastOpponentMove, setLastOpponentMove] = useState<{ from: Square; to: Square } | null>(null);
-  const [seenOpponentMoves, setSeenOpponentMoves] = useState(0);
 
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
@@ -129,26 +128,19 @@ export const OnlineGamePage: React.FC = () => {
   useEffect(() => {
     if (!moves || !supabaseUserId) return;
 
-    // Определяем ходы соперника по user_id
+    // Определяем последний ход соперника по user_id
     const opponentMoves = (moves as any[]).filter(
       (m) => m.user_id && m.user_id !== supabaseUserId
     );
-    const newCount = opponentMoves.length;
-    if (newCount === 0) return;
+    if (opponentMoves.length === 0) return;
 
-    setSeenOpponentMoves((prevSeen) => {
-      if (newCount > prevSeen) {
-        const last = opponentMoves[opponentMoves.length - 1] as any;
-        const uci: string = last.uci;
-        if (uci && uci.length >= 4) {
-          const from = uci.slice(0, 2) as Square;
-          const to = uci.slice(2, 4) as Square;
-          setLastOpponentMove({ from, to });
-        }
-        return newCount;
-      }
-      return prevSeen;
-    });
+    const last = opponentMoves[opponentMoves.length - 1] as any;
+    const uci: string = last.uci;
+    if (uci && uci.length >= 4) {
+      const from = uci.slice(0, 2) as Square;
+      const to = uci.slice(2, 4) as Square;
+      setLastOpponentMove({ from, to });
+    }
   }, [moves, supabaseUserId]);
 
   /**
@@ -205,12 +197,6 @@ export const OnlineGamePage: React.FC = () => {
         setPossibleMoves([]);
         // Снимаем подсветку последнего хода соперника после нашего хода
         setLastOpponentMove(null);
-        // Обновляем счётчик увиденных ходов соперника,
-        // чтобы эффект не подсветил старые ходы
-        const opponentCount = (moves as any[]).filter(
-          (m) => m.user_id && m.user_id !== supabaseUserId
-        ).length;
-        setSeenOpponentMoves(opponentCount);
 
         telegramService.notificationOccurred('success');
       } else {
