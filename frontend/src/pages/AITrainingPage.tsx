@@ -89,7 +89,7 @@ export const AITrainingPage: React.FC = () => {
       if (evalBefore === null) return;
 
       // Get best move for position BEFORE player's move
-      const bestMoveForPosition = await stockfish.getBestMove(fenBeforeMove, 18);
+      const bestMoveForPosition = await stockfish.getBestMove(fenBeforeMove, { depth: 18 });
       if (!bestMoveForPosition) return;
 
       setBestMove(bestMoveForPosition);
@@ -260,7 +260,7 @@ export const AITrainingPage: React.FC = () => {
       if (!chess.gameState.isGameOver) {
         setTimeout(async () => {
           try {
-            const aiMove = await stockfish.getBestMove(chess.getFen(), 15);
+            const aiMove = await stockfish.getBestMove(chess.getFen(), { depth: 15 });
             if (aiMove && aiMove.length >= 4) {
               const from = aiMove.slice(0, 2) as Square;
               const to = aiMove.slice(2, 4) as Square;
@@ -294,7 +294,7 @@ export const AITrainingPage: React.FC = () => {
     if (showHint || stockfish.isThinking) return;
 
     try {
-      const hint = await stockfish.getBestMove(chess.getFen(), 18);
+      const hint = await stockfish.getBestMove(chess.getFen(), { depth: 18 });
       if (hint) {
         setBestMove(hint);
         setShowHint(true);
