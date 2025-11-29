@@ -10,12 +10,19 @@ import { useGameBet } from '../hooks/useGameBet';
 import { BetConfirmationPopup } from '../components/BetConfirmationPopup';
 import { DepositWaitingPopup } from '../components/DepositWaitingPopup';
 import type { GameState } from '../types';
+import supabase from '../lib/supabaseClient';
 
 export const OnlineGamePage: React.FC = () => {
   const navigate = useNavigate();
-  const { gameId } = useParams<{ gameId: string }>();
+  // Support both direct game link (/online-game/:gameId) and invite link (/join/:inviteCode)
+  const { gameId: routeGameId, inviteCode } = useParams<{ gameId?: string; inviteCode?: string }>();
   const { user, supabaseUserId } = useAppStore();
   const [showDrawOffer, setShowDrawOffer] = useState(false);
+
+  // Resolved game ID (from :gameId or by resolving :inviteCode)
+  const [resolvedGameId, setResolvedGameId] = useState<string | null>(routeGameId || null);
+  const [isResolvingInvite, setIsResolvingInvite] = useState(false);
+  const [resolveError, setResolveError] = useState<string | null>(null);
 
   // Click-to-move state
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
@@ -27,20 +34,70 @@ export const OnlineGamePage: React.FC = () => {
   // Use Telegram native BackButton
   useTelegramBackButton(() => navigate('/main'));
 
-  // Use Supabase real-time hook
-  const {
-    game,
-    chess,
-    moves,
-    isLoading,
-    error,
-    makeMove: makeSupabaseMove,
-    resign: resignGame,
-    offerDraw: offerDrawGame,
-  } = useSupabaseGame(gameId || '', supabaseUserId || '');
+    // Resolve game ID from invite code if needed
+    useEffect(() => {
+      // If we already have a direct gameId in the URL, nothing to resolve
+      if (routeGameId) {
+        setResolvedGameId(routeGameId);
+        return;
+      }
 
-  // Betting hooks
-  const { bet, acceptBet, depositBet } = useGameBet(gameId || null, supabaseUserId);
+      // If there is an inviteCode, resolve it to a concrete game ID
+      if (!inviteCode) return;
+
+      let cancelled = false;
+
+      const resolveGameFromInvite = async () => {
+        try {
+          setIsResolvingInvite(true);
+          setResolveError(null);
+
+          const { data, error } = await supabase
+            .from('games')
+            .select('id')
+            .eq('invite_code', inviteCode)
+            .single();
+
+          if (error) throw error;
+
+          if (!cancelled) {
+            setResolvedGameId((data as any).id);
+          }
+        } catch (err) {
+          console.error('Failed to resolve invite code:', err);
+          if (!cancelled) {
+            setResolveError('Игра по приглашению не найдена или уже недоступна');
+          }
+        } finally {
+          if (!cancelled) {
+            setIsResolvingInvite(false);
+          }
+        }
+      };
+
+      resolveGameFromInvite();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [routeGameId, inviteCode]);
+
+    const effectiveGameId = resolvedGameId || '';
+
+    // Use Supabase real-time hook
+    const {
+      game,
+      chess,
+      moves,
+      isLoading,
+      error,
+      makeMove: makeSupabaseMove,
+      resign: resignGame,
+      offerDraw: offerDrawGame,
+    } = useSupabaseGame(effectiveGameId, supabaseUserId || '');
+
+    // Betting hooks
+    const { bet, acceptBet, depositBet } = useGameBet(resolvedGameId, supabaseUserId);
 
   // Derived state
   const isWaiting = game?.status === 'waiting';
@@ -225,7 +282,9 @@ export const OnlineGamePage: React.FC = () => {
   const bgColor = '#1e293b';
   const textColor = window.Telegram?.WebApp?.themeParams?.text_color || '#ffffff';
 
-  if (isLoading) {
+  const combinedError = resolveError || error;
+
+  if (isLoading || isResolvingInvite || (!resolvedGameId && !!inviteCode && !combinedError)) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center">
@@ -236,12 +295,12 @@ export const OnlineGamePage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (combinedError) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
         <div className="text-center p-6">
           <h1 className="text-2xl font-bold mb-4" style={{ color: textColor }}>Ошибка</h1>
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-red-400 mb-4">{combinedError}</p>
           <button
             onClick={() => navigate('/main')}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all active:scale-95"

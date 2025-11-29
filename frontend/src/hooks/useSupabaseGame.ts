@@ -39,25 +39,33 @@ export function useSupabaseGame(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch game data
-  const fetchGame = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+   // Fetch game data
+   const fetchGame = useCallback(async () => {
+     try {
+       // If gameId is empty (for example when opening /join/:inviteCode
+       // before resolving the actual game ID), do not query Supabase.
+       // This avoids "invalid input syntax for type uuid """ errors.
+       if (!gameId) {
+         setIsLoading(false);
+         return;
+       }
 
-      // Fetch game with players and moves
-      const { data: gameData, error: gameError } = await supabase
-        // @ts-ignore - Supabase type limitation
-        .from('games')
-        .select(
-          `
-          *,
-          white_player:users!white_player_id(*),
-          black_player:users!black_player_id(*)
-        `
-        )
-        .eq('id', gameId)
-        .single();
+       setIsLoading(true);
+       setError(null);
+
+       // Fetch game with players and moves
+       const { data: gameData, error: gameError } = await supabase
+         // @ts-ignore - Supabase type limitation
+         .from('games')
+         .select(
+           `
+           *,
+           white_player:users!white_player_id(*),
+           black_player:users!black_player_id(*)
+         `
+         )
+         .eq('id', gameId)
+         .single();
 
       if (gameError) throw gameError;
 
