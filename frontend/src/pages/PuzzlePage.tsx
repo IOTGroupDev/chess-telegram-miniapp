@@ -328,7 +328,7 @@ const PuzzlePage: React.FC = () => {
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <div className="max-w-2xl mx-auto p-3 sm:p-4">
+      <div className="max-w-md mx-auto px-4">
         {/* Compact Header */}
         <div className="flex items-center justify-between mb-4" style={{ paddingTop: 'max(env(safe-area-inset-top), 50px)' }}>
           <div className="flex items-center gap-3">

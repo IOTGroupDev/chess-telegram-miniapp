@@ -551,7 +551,7 @@ export const AIGamePage: React.FC = () => {
             </div>
 
             {/* Levels */}
-            <div className="space-y-3 max-h-80 overflow-y-auto">
+            <div className="space-y-3">
               {AI_LEVELS.map((lvl) => {
                 const gradientClasses =
                   lvl.id === 1
