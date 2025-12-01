@@ -63,13 +63,28 @@ const PuzzlePage: React.FC = () => {
       const chess = new Chess(currentPuzzle.fen);
       setGame(chess);
 
-      // Determine player color (opposite of the side to move in FEN)
+      // Determine player color (side to move in FEN)
       const sideToMove = chess.turn();
       setPlayerColor(sideToMove === 'w' ? 'white' : 'black');
 
       // Parse solution moves
-      const moves = currentPuzzle.moves.split(' ');
-      setSolutionMoves(moves);
+      const rawMoves = currentPuzzle.moves.trim().split(/\s+/);
+
+      // Normalize to UCI: support both "e2e4 e7e5" and "e2 e4 e7 e5" formats
+      let normalizedMoves: string[];
+      if (rawMoves.length > 0 && rawMoves[0].length === 2) {
+        const pairs: string[] = [];
+        for (let i = 0; i < rawMoves.length; i += 2) {
+          if (i + 1 < rawMoves.length) {
+            pairs.push(rawMoves[i] + rawMoves[i + 1]);
+          }
+        }
+        normalizedMoves = pairs;
+      } else {
+        normalizedMoves = rawMoves;
+      }
+
+      setSolutionMoves(normalizedMoves);
       setCurrentMoveIndex(0);
       setMoveHistory([]);
       setStatus('playing');
